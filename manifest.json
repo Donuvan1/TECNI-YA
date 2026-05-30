@@ -1,0 +1,22 @@
+{
+  "name": "TECNI-YA",
+  "short_name": "TECNI-YA",
+  "description": "Red social para conectar y chatear",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#0a84ff",
+  "background_color": "#0a0a0a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://ui-avatars.com/api/?background=0a84ff&color=fff&bold=true&size=192&name=T",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://ui-avatars.com/api/?background=0a84ff&color=fff&bold=true&size=512&name=T",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

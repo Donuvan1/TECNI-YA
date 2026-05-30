@@ -1,0 +1,1562 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <link rel="manifest" href="manifest.json" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>TECNI-YA - Red Social</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        body {
+            background: #0a0a0a;
+            min-height: 100vh;
+            padding: 0;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 50%, rgba(10,132,255,0.08) 0%, rgba(10,10,10,0) 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .container {
+            background: rgba(30, 30, 35, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 32px;
+            padding: 48px 36px;
+            width: 100%;
+            max-width: 440px;
+            margin: 0 auto;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5), 0 0 0 1px rgba(10,132,255,0.15);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .main-container {
+            background: rgba(30, 30, 35, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 0;
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .users-panel {
+            width: 320px;
+            border-right: 1px solid rgba(255,255,255,0.08);
+            display: flex;
+            flex-direction: column;
+            background: rgba(20, 20, 25, 0.8);
+        }
+        
+        .chat-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(26, 26, 30, 0.8);
+        }
+        
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+                height: 100vh;
+            }
+            .users-panel {
+                width: 100%;
+                height: 100%;
+                display: flex;
+            }
+            .chat-panel {
+                display: none;
+                width: 100%;
+                height: 100%;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 10;
+                background: rgba(26, 26, 30, 0.98);
+            }
+            .chat-panel.active-mobile { display: flex; }
+            .back-button {
+                display: flex !important;
+                background: none;
+                padding: 8px;
+                font-size: 24px;
+                width: 40px;
+                height: 40px;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+            }
+            .profile-header {
+                flex-direction: row;
+                justify-content: center;
+                gap: 12px;
+                margin-bottom: 10px;
+            }
+            .profile-pic-large {
+                width: 50px;
+                height: 50px;
+            }
+            .icon-btn, .mic-btn, .location-btn {
+                width: 44px;
+                padding: 10px 12px;
+                font-size: 16px;
+            }
+        }
+        
+        .back-button { display: none; }
+        
+        .users-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            background: rgba(30, 30, 35, 0.9);
+            text-align: center;
+        }
+        
+        .profile-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+        
+        .profile-pic-large {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #0a84ff;
+            cursor: pointer;
+        }
+        
+        .change-photo-btn, .gallery-btn {
+            background: rgba(42, 42, 50, 0.9);
+            padding: 6px 14px;
+            font-size: 12px;
+            border-radius: 30px;
+            color: #0a84ff;
+            border: 1px solid rgba(10,132,255,0.3);
+        }
+        
+        .gallery-btn {
+            width: 100%;
+            color: #fff;
+            margin-top: 10px;
+        }
+        
+        .users-header strong {
+            color: #ffffff;
+            display: block;
+            margin-top: 8px;
+        }
+        
+        .users-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+        }
+        
+        .chat-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            background: rgba(30, 30, 35, 0.9);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        
+        .chat-header-img {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #0a84ff;
+        }
+        
+        .chat-header-info {
+            flex: 1;
+        }
+        
+        .chat-header-info strong {
+            color: #ffffff;
+            font-size: 18px;
+            display: block;
+        }
+        
+        .chat-header-status {
+            color: #a0a0a0;
+            font-size: 12px;
+            display: block;
+            margin-top: 4px;
+        }
+        
+        .typing-indicator {
+            color: #0a84ff;
+            font-size: 12px;
+            display: inline-block;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            background: rgba(18, 18, 22, 0.6);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-input-area {
+            padding: 20px 24px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            background: rgba(30, 30, 35, 0.9);
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .chat-input-area input {
+            flex: 1;
+            padding: 14px 18px;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 40px;
+            background: rgba(42, 42, 50, 0.8);
+            color: #ffffff;
+        }
+        
+        button {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #0a84ff 0%, #0066cc 100%);
+            color: white;
+            border: none;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .icon-btn, .mic-btn, .location-btn {
+            background: rgba(42, 42, 50, 0.9);
+            padding: 12px 16px;
+            font-size: 18px;
+            width: 52px;
+        }
+        
+        .mic-btn.recording {
+            background: #ff3b30;
+            animation: pulse-red 0.5s infinite;
+            position: relative;
+        }
+        
+        .mic-btn.recording::after {
+            content: attr(data-time);
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #000;
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 10px;
+            white-space: nowrap;
+        }
+        
+        @keyframes pulse-red {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        
+        .toggle-btn {
+            background: transparent;
+            color: #0a84ff;
+            border: 1px solid rgba(10,132,255,0.5);
+            margin-top: 12px;
+        }
+        
+        .google-btn {
+            background: rgba(42, 42, 50, 0.9);
+            color: #ffffff;
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+        
+        .error {
+            background: rgba(255, 50, 50, 0.15);
+            color: #ff6b6b;
+            padding: 12px 16px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .success {
+            background: rgba(50, 255, 50, 0.1);
+            color: #6bff6b;
+            padding: 12px 16px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .hidden { display: none; }
+        hr { margin: 24px 0; border: none; border-top: 1px solid rgba(255,255,255,0.08); }
+        
+        .user-chat-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 20px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            background: rgba(30, 30, 35, 0.8);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .user-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        
+        .online-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #30d158;
+            box-shadow: 0 0 8px #30d158;
+        }
+        
+        .offline-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #5a5a5a;
+        }
+        
+        .message {
+            max-width: 75%;
+            margin-bottom: 16px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .message.sent { justify-content: flex-end; }
+        .message.received { justify-content: flex-start; }
+        
+        .message-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            align-self: flex-end;
+        }
+        
+        .message-content { max-width: calc(100% - 46px); }
+        
+        .message-bubble {
+            padding: 10px 18px;
+            border-radius: 24px;
+            font-size: 14px;
+            word-wrap: break-word;
+        }
+        
+        .message.sent .message-bubble {
+            background: linear-gradient(135deg, #0a84ff 0%, #0066cc 100%);
+            color: white;
+            border-bottom-right-radius: 6px;
+        }
+        
+        .message.received .message-bubble {
+            background: rgba(42, 42, 50, 0.9);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-bottom-left-radius: 6px;
+        }
+        
+        .message-time {
+            font-size: 10px;
+            opacity: 0.6;
+            margin-top: 5px;
+            text-align: right;
+        }
+        
+        .chat-image {
+            max-width: 220px;
+            max-height: 220px;
+            border-radius: 16px;
+            cursor: pointer;
+        }
+        
+        .audio-message {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 180px;
+        }
+        
+        .audio-play-btn {
+            background: none;
+            padding: 8px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 14px;
+        }
+        
+        .location-message {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        
+        .no-chat {
+            text-align: center;
+            padding: 60px;
+            color: #888;
+        }
+        
+        button.small {
+            width: auto;
+            padding: 8px 20px;
+            background: rgba(42, 42, 50, 0.9);
+            color: #fff;
+        }
+        
+        .form-group label {
+            color: #ccc;
+            margin-bottom: 8px;
+            display: block;
+        }
+        
+        .form-group input {
+            background: rgba(42, 42, 50, 0.8);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            color: #fff;
+            padding: 14px 16px;
+            width: 100%;
+        }
+        
+        .logo-title {
+            text-align: center;
+            font-size: 48px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #fff 0%, #0a84ff 40%, #5e5ce0 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes glow {
+            from { text-shadow: 0 0 20px rgba(10,132,255,0.2); }
+            to { text-shadow: 0 0 40px rgba(10,132,255,0.5); }
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #aaa !important;
+            margin-bottom: 32px;
+        }
+        
+        .audio-preview-modal {
+            display: none;
+            position: fixed;
+            bottom: 80px;
+            left: 20px;
+            right: 20px;
+            background: rgba(30, 30, 35, 0.98);
+            border-radius: 24px;
+            padding: 16px 20px;
+            z-index: 100;
+            border: 1px solid rgba(10,132,255,0.3);
+        }
+        
+        .audio-preview-modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        
+        .audio-preview-modal audio {
+            flex: 1;
+            height: 40px;
+        }
+        
+        .cancel-audio { background: #ff3b30; padding: 8px 16px; }
+        .send-audio { background: #0a84ff; padding: 8px 16px; }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal.active { display: flex; }
+        
+        .modal-content {
+            background: rgba(30, 30, 35, 0.98);
+            border-radius: 32px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 85vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h3 {
+            color: #fff;
+            font-size: 22px;
+            background: linear-gradient(135deg, #fff, #0a84ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .close-modal {
+            background: none;
+            font-size: 28px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            color: #fff;
+        }
+        
+        .gallery-grid {
+            padding: 24px;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 20px;
+            max-height: 55vh;
+        }
+        
+        .gallery-item {
+            position: relative;
+            cursor: pointer;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 2px solid transparent;
+        }
+        
+        .gallery-item.selected {
+            border-color: #0a84ff;
+            box-shadow: 0 0 20px rgba(10,132,255,0.4);
+        }
+        
+        .gallery-item img {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+        }
+        
+        .gallery-item-actions {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            padding: 8px;
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            opacity: 0;
+        }
+        
+        .gallery-item:hover .gallery-item-actions { opacity: 1; }
+        
+        .action-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            background: rgba(30,30,35,0.9);
+            border-radius: 20px;
+        }
+        
+        .action-btn.delete { background: rgba(255,50,50,0.9); }
+        .action-btn.replace { background: rgba(10,132,255,0.9); }
+        
+        .modal-footer {
+            padding: 20px 24px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            gap: 12px;
+        }
+        
+        .modal-footer button { flex: 1; }
+        .empty-gallery { text-align: center; padding: 60px; color: #888; grid-column: 1 / -1; }
+        
+        .notification-banner {
+            background: rgba(10,132,255,0.2);
+            border: 1px solid #0a84ff;
+            border-radius: 20px;
+            padding: 8px 16px;
+            margin: 10px 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #0a84ff;
+            cursor: pointer;
+        }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: rgba(10,132,255,0.5); border-radius: 10px; }
+    </style>
+</head>
+<body>
+    <div id="loginContainer" class="container">
+        <div class="logo-title">TECNI-YA</div>
+        <div class="subtitle">Conéctate con otros</div>
+        <div id="errorBox" class="error hidden"></div>
+        <div id="successBox" class="success hidden"></div>
+        <div class="form-group">
+            <label>📧 Correo electrónico</label>
+            <input type="email" id="email" placeholder="tu@email.com">
+        </div>
+        <div class="form-group">
+            <label>🔒 Contraseña</label>
+            <input type="password" id="password" placeholder="mínimo 6 caracteres">
+        </div>
+        <button id="loginBtn">Iniciar sesión</button>
+        <button id="registerBtn" class="toggle-btn">Crear cuenta nueva</button>
+        <hr>
+        <button id="googleBtn" class="google-btn">
+            <span>G</span> Continuar con Google
+        </button>
+    </div>
+    
+    <div id="mainContainer" class="main-container hidden">
+        <div class="users-panel" id="usersPanel">
+            <div class="users-header">
+                <div class="profile-header">
+                    <img id="profileImg" class="profile-pic-large" src="https://ui-avatars.com/api/?background=0a84ff&color=fff&bold=true" alt="Foto perfil">
+                    <button id="changePhotoBtn" class="change-photo-btn">📷 Cambiar foto</button>
+                    <button id="galleryBtn" class="gallery-btn">📸 Mi Galería</button>
+                </div>
+                <strong id="userNameDisplay">Usuario</strong>
+                <small id="userEmailDisplay" style="color:#999"></small>
+                <button id="logoutBtnMain" class="small" style="margin-top:12px;width:100%;">Cerrar sesión</button>
+            </div>
+            <div class="users-list" id="usersList">
+                <div style="text-align:center;padding:40px;color:#888;">Cargando usuarios...</div>
+            </div>
+        </div>
+        
+        <div class="chat-panel" id="chatPanel">
+            <div class="chat-header" id="chatHeader">
+                <button id="backButton" class="back-button" style="display:none;">←</button>
+                <img id="chatHeaderImg" class="chat-header-img" src="https://ui-avatars.com/api/?background=444&color=fff" alt="avatar">
+                <div class="chat-header-info">
+                    <strong id="chatWithName">Ningún chat seleccionado</strong>
+                    <span id="chatStatusText" class="chat-header-status"></span>
+                </div>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="no-chat">👈 Selecciona un usuario para empezar a chatear</div>
+            </div>
+            <div class="chat-input-area" id="chatInputArea" style="display:none;">
+                <button id="imageBtn" class="icon-btn">📷</button>
+                <button id="micBtn" class="mic-btn">🎤</button>
+                <button id="locationBtn" class="location-btn">📍</button>
+                <input type="text" id="messageInput" placeholder="Escribe un mensaje...">
+                <button id="sendBtn">Enviar</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="audioPreviewModal" class="audio-preview-modal">
+        <audio id="audioPreview" controls></audio>
+        <button id="cancelAudioBtn" class="cancel-audio">Cancelar</button>
+        <button id="sendAudioBtn" class="send-audio">Enviar</button>
+    </div>
+    
+    <div id="galleryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📸 Mi Galería</h3>
+                <button class="close-modal" id="closeModalBtn">&times;</button>
+            </div>
+            <div class="gallery-grid" id="galleryGrid">
+                <div class="empty-gallery">Cargando tus fotos...</div>
+            </div>
+            <div class="modal-footer">
+                <button id="uploadGalleryBtn" class="upload-gallery-btn">📷 Subir nueva foto</button>
+                <button id="setProfileFromGalleryBtn" style="background: #0a84ff;">👤 Establecer como foto de perfil</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // ⬇️⬇️⬇️ REEMPLAZA CON TUS DATOS DE FIREBASE ⬇️⬇️⬇️
+        const firebaseConfig = {
+  apiKey: "AIzaSyB4W_0bdRoL-VnN6FAiSWhnQWNO-fRairc",
+  authDomain: "proyecto-libertad-38c2a.firebaseapp.com",
+  projectId: "proyecto-libertad-38c2a",
+  storageBucket: "proyecto-libertad-38c2a.firebasestorage.app",
+  messagingSenderId: "115380076439",
+  appId: "1:115380076439:web:85383b2c32cdb40c798ed2"
+};
+        
+        // ⬇️⬇️⬇️ REEMPLAZA CON TU VAPID KEY (la de la captura) ⬇️⬇️⬇️
+        const VAPID_KEY = "BNZ2YWPDzdAkud-EAyky5TFRihAnYAQPgVliSRCvgRZiUuytEOpb-psX0O2UPFDqVNbWuFBH2cWqHXE539gr_1c";
+        
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, updateDoc, collection, query, onSnapshot, addDoc, orderBy, getDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL, listAll, deleteObject } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-storage.js";
+        import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-messaging.js";
+        
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+        const messaging = getMessaging(app);
+        const googleProvider = new GoogleAuthProvider();
+        
+        // Elementos DOM
+        const loginContainer = document.getElementById('loginContainer');
+        const mainContainer = document.getElementById('mainContainer');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const loginBtn = document.getElementById('loginBtn');
+        const registerBtn = document.getElementById('registerBtn');
+        const googleBtn = document.getElementById('googleBtn');
+        const logoutBtnMain = document.getElementById('logoutBtnMain');
+        const errorBox = document.getElementById('errorBox');
+        const successBox = document.getElementById('successBox');
+        const usersListDiv = document.getElementById('usersList');
+        const userNameDisplay = document.getElementById('userNameDisplay');
+        const userEmailDisplay = document.getElementById('userEmailDisplay');
+        const chatWithName = document.getElementById('chatWithName');
+        const chatStatusText = document.getElementById('chatStatusText');
+        const chatMessagesDiv = document.getElementById('chatMessages');
+        const chatInputArea = document.getElementById('chatInputArea');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const imageBtn = document.getElementById('imageBtn');
+        const micBtn = document.getElementById('micBtn');
+        const locationBtn = document.getElementById('locationBtn');
+        const profileImg = document.getElementById('profileImg');
+        const changePhotoBtn = document.getElementById('changePhotoBtn');
+        const chatHeaderImg = document.getElementById('chatHeaderImg');
+        const galleryBtn = document.getElementById('galleryBtn');
+        const galleryModal = document.getElementById('galleryModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const galleryGrid = document.getElementById('galleryGrid');
+        const uploadGalleryBtn = document.getElementById('uploadGalleryBtn');
+        const setProfileFromGalleryBtn = document.getElementById('setProfileFromGalleryBtn');
+        const usersPanel = document.getElementById('usersPanel');
+        const chatPanel = document.getElementById('chatPanel');
+        const backButton = document.getElementById('backButton');
+        const audioPreviewModal = document.getElementById('audioPreviewModal');
+        const audioPreview = document.getElementById('audioPreview');
+        const cancelAudioBtn = document.getElementById('cancelAudioBtn');
+        const sendAudioBtn = document.getElementById('sendAudioBtn');
+        
+        let currentUser = null;
+        let unsubscribeUsers = null;
+        let unsubscribeMessages = null;
+        let unsubscribeTyping = null;
+        let selectedUser = null;
+        let currentChatId = null;
+        let ultimoMensajeRecibidoId = null;
+        let misFotos = [];
+        let selectedFotoUrl = null;
+        let typingTimeout = null;
+        let isMobile = window.innerWidth <= 768;
+        
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let isRecording = false;
+        let recordingTimer = null;
+        let recordingSeconds = 0;
+        let recordedBlob = null;
+        let micStream = null;
+        
+        // ============================================================
+        // NOTIFICACIONES PUSH
+        // ============================================================
+        async function requestNotificationPermission() {
+            if (!currentUser) return;
+            
+            try {
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    console.log("Permiso de notificaciones concedido");
+                    
+                    const token = await getToken(messaging, { vapidKey: VAPID_KEY });
+                    console.log("Token FCM:", token);
+                    
+                    const userRef = doc(db, "usuarios", currentUser.uid);
+                    await updateDoc(userRef, {
+                        fcmTokens: arrayUnion(token)
+                    });
+                    
+                    showSuccess("Notificaciones activadas ✅");
+                } else {
+                    console.log("Permiso denegado");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+            }
+        }
+        
+        onMessage(messaging, (payload) => {
+            console.log("Mensaje en primer plano:", payload);
+            showSuccess(`📱 ${payload.notification?.title || 'Nuevo mensaje'}`);
+        });
+        
+        // ============================================================
+        // FUNCIONES PRINCIPALES
+        // ============================================================
+        async function setTypingStatus(isTyping) {
+            if (!currentUser || !selectedUser || !currentChatId) return;
+            const chatDocRef = doc(db, "chats", currentChatId);
+            const typingData = {};
+            typingData[`typing_${currentUser.uid}`] = isTyping ? new Date().toISOString() : null;
+            await setDoc(chatDocRef, typingData, { merge: true });
+        }
+        
+        function handleTypingStart() {
+            if (typingTimeout) clearTimeout(typingTimeout);
+            setTypingStatus(true);
+            typingTimeout = setTimeout(() => {
+                setTypingStatus(false);
+                typingTimeout = null;
+            }, 1500);
+        }
+        
+        function listenTypingStatus() {
+            if (!currentUser || !selectedUser || !currentChatId) return;
+            const chatDocRef = doc(db, "chats", currentChatId);
+            if (unsubscribeTyping) unsubscribeTyping();
+            unsubscribeTyping = onSnapshot(chatDocRef, (docSnap) => {
+                if (docSnap.exists() && selectedUser) {
+                    const data = docSnap.data();
+                    const typingField = `typing_${selectedUser.uid}`;
+                    const typingTime = data[typingField];
+                    if (typingTime) {
+                        const lastTyping = new Date(typingTime);
+                        const now = new Date();
+                        const diffMs = now - lastTyping;
+                        if (diffMs < 2000) {
+                            chatStatusText.innerHTML = '<span class="typing-indicator">✍️ Escribiendo...</span>';
+                        } else {
+                            chatStatusText.innerHTML = selectedUser.online ? '🟢 En línea' : '⚫ Desconectado';
+                        }
+                    } else {
+                        chatStatusText.innerHTML = selectedUser.online ? '🟢 En línea' : '⚫ Desconectado';
+                    }
+                }
+            });
+        }
+        
+        async function requestMicrophonePermission() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                micStream = stream;
+                return true;
+            } catch (error) {
+                showError("Permite el acceso al micrófono");
+                return false;
+            }
+        }
+        
+        async function startRecording() {
+            if (!currentUser || !selectedUser || !currentChatId) {
+                showError("Selecciona un chat primero");
+                return;
+            }
+            if (!micStream) {
+                const granted = await requestMicrophonePermission();
+                if (!granted) return;
+            }
+            try {
+                const stream = micStream || await navigator.mediaDevices.getUserMedia({ audio: true });
+                if (!micStream) micStream = stream;
+                mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+                audioChunks = [];
+                recordingSeconds = 0;
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) audioChunks.push(event.data);
+                };
+                mediaRecorder.onstop = async () => {
+                    if (audioChunks.length > 0) {
+                        recordedBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        const audioUrl = URL.createObjectURL(recordedBlob);
+                        audioPreview.src = audioUrl;
+                        audioPreviewModal.classList.add('active');
+                    } else {
+                        showError("No se grabó nada");
+                    }
+                    if (recordingTimer) clearInterval(recordingTimer);
+                    micBtn.classList.remove('recording');
+                    micBtn.removeAttribute('data-time');
+                    micBtn.textContent = '🎤';
+                    isRecording = false;
+                };
+                mediaRecorder.start(100);
+                isRecording = true;
+                micBtn.classList.add('recording');
+                micBtn.textContent = '🔴';
+                recordingTimer = setInterval(() => {
+                    if (isRecording) {
+                        recordingSeconds++;
+                        const minutes = Math.floor(recordingSeconds / 60);
+                        const seconds = recordingSeconds % 60;
+                        const timeStr = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                        micBtn.setAttribute('data-time', `🎙️ ${timeStr}`);
+                    }
+                }, 1000);
+                showSuccess("Grabando... Presiona el botón rojo para detener");
+            } catch (error) {
+                showError("No se pudo acceder al micrófono");
+            }
+        }
+        
+        function stopRecording() {
+            if (mediaRecorder && isRecording) mediaRecorder.stop();
+        }
+        
+        async function sendAudioMessage(audioBlob) {
+            if (!currentUser || !selectedUser || !currentChatId) return;
+            try {
+                const fileName = `audio_${currentUser.uid}_${Date.now()}.webm`;
+                const storageRef = ref(storage, `audios/${currentChatId}/${fileName}`);
+                showSuccess("Subiendo audio...");
+                await uploadBytes(storageRef, audioBlob);
+                const url = await getDownloadURL(storageRef);
+                const messagesRef = collection(db, "chats", currentChatId, "mensajes");
+                await addDoc(messagesRef, {
+                    de: currentUser.uid,
+                    para: selectedUser.uid,
+                    texto: "🎤 Mensaje de voz",
+                    tipo: "audio",
+                    url: url,
+                    timestamp: new Date()
+                });
+                showSuccess("Audio enviado ✅");
+                recordedBlob = null;
+                audioPreview.src = '';
+                audioPreviewModal.classList.remove('active');
+            } catch (error) {
+                showError("Error al enviar el audio");
+            }
+        }
+        
+        micBtn.addEventListener('click', () => {
+            if (isRecording) stopRecording();
+            else startRecording();
+        });
+        
+        cancelAudioBtn.addEventListener('click', () => {
+            recordedBlob = null;
+            audioPreview.src = '';
+            audioPreviewModal.classList.remove('active');
+        });
+        
+        sendAudioBtn.addEventListener('click', async () => {
+            if (recordedBlob) await sendAudioMessage(recordedBlob);
+        });
+        
+        function enviarUbicacion() {
+            if (!currentUser || !selectedUser || !currentChatId) {
+                showError("Selecciona un chat primero");
+                return;
+            }
+            if (!navigator.geolocation) {
+                showError("Tu navegador no soporta geolocalización");
+                return;
+            }
+            showSuccess("Obteniendo ubicación...");
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                try {
+                    const messagesRef = collection(db, "chats", currentChatId, "mensajes");
+                    await addDoc(messagesRef, {
+                        de: currentUser.uid,
+                        para: selectedUser.uid,
+                        texto: "📍 Ubicación compartida",
+                        tipo: "ubicacion",
+                        lat: lat,
+                        lng: lng,
+                        timestamp: new Date()
+                    });
+                    showSuccess("Ubicación enviada ✅");
+                } catch (error) {
+                    showError("Error al enviar ubicación");
+                }
+            }, (error) => {
+                if (error.code === 1) showError("Permite el acceso a tu ubicación");
+                else showError("No se pudo obtener tu ubicación");
+            });
+        }
+        
+        locationBtn.addEventListener('click', enviarUbicacion);
+        
+        function getChatId(uid1, uid2) {
+            return uid1 < uid2 ? `${uid1}_${uid2}` : `${uid2}_${uid1}`;
+        }
+        
+        function showError(message) {
+            errorBox.textContent = message;
+            errorBox.classList.remove('hidden');
+            successBox.classList.add('hidden');
+            setTimeout(() => errorBox.classList.add('hidden'), 4000);
+        }
+        
+        function showSuccess(message) {
+            successBox.textContent = message;
+            successBox.classList.remove('hidden');
+            errorBox.classList.add('hidden');
+            setTimeout(() => successBox.classList.add('hidden'), 3000);
+        }
+        
+        async function guardarUsuarioOnline(user, fotoURL = null) {
+            const userRef = doc(db, "usuarios", user.uid);
+            const nombre = user.displayName || user.email.split('@')[0];
+            const data = {
+                uid: user.uid,
+                email: user.email,
+                nombre: nombre,
+                online: true,
+                ultimaConexion: new Date().toISOString()
+            };
+            if (fotoURL) {
+                data.fotoURL = fotoURL;
+            } else {
+                const docSnap = await getDoc(userRef);
+                if (docSnap.exists() && docSnap.data().fotoURL) {
+                    data.fotoURL = docSnap.data().fotoURL;
+                } else {
+                    data.fotoURL = `https://ui-avatars.com/api/?background=0a84ff&color=fff&name=${encodeURIComponent(nombre)}`;
+                }
+            }
+            await setDoc(userRef, data, { merge: true });
+            return data.fotoURL;
+        }
+        
+        async function actualizarFotoPerfil(file) {
+            if (!currentUser) return;
+            try {
+                const fileName = `profile_${currentUser.uid}_${Date.now()}.jpg`;
+                const storageRef = ref(storage, `fotos_perfil/${fileName}`);
+                showSuccess("Subiendo foto...");
+                await uploadBytes(storageRef, file);
+                const url = await getDownloadURL(storageRef);
+                const userRef = doc(db, "usuarios", currentUser.uid);
+                await updateDoc(userRef, { fotoURL: url });
+                profileImg.src = url;
+                showSuccess("Foto de perfil actualizada ✅");
+            } catch (error) {
+                showError("Error al subir la foto");
+            }
+        }
+        
+        async function establecerFotoPerfilDesdeUrl(url) {
+            if (!currentUser) return;
+            try {
+                const userRef = doc(db, "usuarios", currentUser.uid);
+                await updateDoc(userRef, { fotoURL: url });
+                profileImg.src = url;
+                showSuccess("Foto de perfil actualizada desde galería ✅");
+            } catch (error) {
+                showError("Error al establecer foto de perfil");
+            }
+        }
+        
+        async function borrarFoto(url, path) {
+            if (!confirm("¿Seguro que quieres borrar esta foto?")) return;
+            try {
+                const imageRef = ref(storage, path);
+                await deleteObject(imageRef);
+                showSuccess("Foto borrada ✅");
+                await abrirGaleria();
+                const userRef = doc(db, "usuarios", currentUser.uid);
+                const userSnap = await getDoc(userRef);
+                if (userSnap.exists() && userSnap.data().fotoURL === url) {
+                    const nombre = currentUser.displayName || currentUser.email.split('@')[0];
+                    const defaultAvatar = `https://ui-avatars.com/api/?background=0a84ff&color=fff&name=${encodeURIComponent(nombre)}`;
+                    await updateDoc(userRef, { fotoURL: defaultAvatar });
+                    profileImg.src = defaultAvatar;
+                }
+            } catch (error) {
+                showError("Error al borrar la foto");
+            }
+        }
+        
+        async function reemplazarFoto(oldUrl, oldPath) {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (file && currentUser) {
+                    try {
+                        showSuccess("Reemplazando foto...");
+                        await deleteObject(ref(storage, oldPath));
+                        const newFileName = `replaced_${currentUser.uid}_${Date.now()}.jpg`;
+                        let newPath = oldPath.substring(0, oldPath.lastIndexOf('/') + 1) + newFileName;
+                        const storageRef = ref(storage, newPath);
+                        await uploadBytes(storageRef, file);
+                        const newUrl = await getDownloadURL(storageRef);
+                        const userRef = doc(db, "usuarios", currentUser.uid);
+                        const userSnap = await getDoc(userRef);
+                        if (userSnap.exists() && userSnap.data().fotoURL === oldUrl) {
+                            await updateDoc(userRef, { fotoURL: newUrl });
+                            profileImg.src = newUrl;
+                        }
+                        showSuccess("Foto reemplazada ✅");
+                        await abrirGaleria();
+                    } catch (error) {
+                        showError("Error al reemplazar la foto");
+                    }
+                }
+            };
+            input.click();
+        }
+        
+        async function cargarMisFotos() {
+            if (!currentUser) return [];
+            const fotos = [];
+            try {
+                const chatsRef = ref(storage, `mensajes`);
+                const result = await listAll(chatsRef);
+                for (const chatFolder of result.prefixes) {
+                    const imagesRef = ref(storage, `${chatFolder.fullPath}`);
+                    const images = await listAll(imagesRef);
+                    for (const imageRef of images.items) {
+                        const url = await getDownloadURL(imageRef);
+                        fotos.push({ url, path: imageRef.fullPath });
+                    }
+                }
+                const profilePhotosRef = ref(storage, `fotos_perfil`);
+                try {
+                    const profilePhotos = await listAll(profilePhotosRef);
+                    for (const photoRef of profilePhotos.items) {
+                        const url = await getDownloadURL(photoRef);
+                        fotos.push({ url, path: photoRef.fullPath });
+                    }
+                } catch(e) {}
+                return fotos;
+            } catch (error) {
+                return [];
+            }
+        }
+        
+        async function abrirGaleria() {
+            galleryModal.classList.add('active');
+            galleryGrid.innerHTML = '<div class="empty-gallery">Cargando tus fotos...</div>';
+            selectedFotoUrl = null;
+            misFotos = await cargarMisFotos();
+            if (misFotos.length === 0) {
+                galleryGrid.innerHTML = '<div class="empty-gallery">📭 No tienes fotos aún.</div>';
+                return;
+            }
+            galleryGrid.innerHTML = misFotos.map((foto, index) => `
+                <div class="gallery-item" data-url="${foto.url}" data-path="${foto.path}" data-index="${index}">
+                    <img src="${foto.url}" alt="Foto">
+                    <div class="gallery-item-actions">
+                        <button class="action-btn replace" data-index="${index}">🔄 Reemplazar</button>
+                        <button class="action-btn delete" data-index="${index}">🗑️ Borrar</button>
+                    </div>
+                </div>
+            `).join('');
+            document.querySelectorAll('.gallery-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    if (!e.target.classList.contains('action-btn')) {
+                        document.querySelectorAll('.gallery-item').forEach(i => i.classList.remove('selected'));
+                        item.classList.add('selected');
+                        selectedFotoUrl = item.dataset.url;
+                    }
+                });
+            });
+            document.querySelectorAll('.action-btn.delete').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const index = btn.dataset.index;
+                    const foto = misFotos[index];
+                    if (foto) borrarFoto(foto.url, foto.path);
+                });
+            });
+            document.querySelectorAll('.action-btn.replace').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const index = btn.dataset.index;
+                    const foto = misFotos[index];
+                    if (foto) reemplazarFoto(foto.url, foto.path);
+                });
+            });
+        }
+        
+        changePhotoBtn.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) actualizarFotoPerfil(file);
+            };
+            input.click();
+        });
+        
+        galleryBtn.addEventListener('click', abrirGaleria);
+        closeModalBtn.addEventListener('click', () => galleryModal.classList.remove('active'));
+        galleryModal.addEventListener('click', (e) => { if (e.target === galleryModal) galleryModal.classList.remove('active'); });
+        
+        uploadGalleryBtn.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (file && currentUser) {
+                    try {
+                        showSuccess("Subiendo foto a galería...");
+                        const fileName = `gallery_${currentUser.uid}_${Date.now()}.jpg`;
+                        const storageRef = ref(storage, `fotos_perfil/${fileName}`);
+                        await uploadBytes(storageRef, file);
+                        showSuccess("Foto subida a galería ✅");
+                        await abrirGaleria();
+                    } catch (error) {
+                        showError("Error al subir foto");
+                    }
+                }
+            };
+            input.click();
+        });
+        
+        setProfileFromGalleryBtn.addEventListener('click', async () => {
+            if (selectedFotoUrl) {
+                await establecerFotoPerfilDesdeUrl(selectedFotoUrl);
+                galleryModal.classList.remove('active');
+            } else {
+                showError("Selecciona una foto primero");
+            }
+        });
+        
+        async function marcarUsuarioOffline(uid) {
+            if (!uid) return;
+            const userRef = doc(db, "usuarios", uid);
+            await updateDoc(userRef, { online: false, ultimaConexion: new Date().toISOString() }).catch(() => {});
+        }
+        
+        function escucharUsuarios(uidActual) {
+            const q = query(collection(db, "usuarios"));
+            unsubscribeUsers = onSnapshot(q, (snapshot) => {
+                const usuarios = [];
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    if (data.uid !== uidActual) usuarios.push(data);
+                });
+                usuarios.sort((a, b) => {
+                    if (a.online && !b.online) return -1;
+                    if (!a.online && b.online) return 1;
+                    return 0;
+                });
+                mostrarListaUsuarios(usuarios);
+            });
+        }
+        
+        function mostrarListaUsuarios(usuarios) {
+            if (usuarios.length === 0) {
+                usersListDiv.innerHTML = '<div style="text-align:center;padding:40px;color:#888;">No hay otros usuarios</div>';
+                return;
+            }
+            usersListDiv.innerHTML = usuarios.map(usuario => `
+                <div class="user-chat-card" onclick="window.selectUser('${usuario.uid}', '${escapeHtml(usuario.nombre || usuario.email)}', ${usuario.online}, '${usuario.fotoURL || `https://ui-avatars.com/api/?background=444&color=fff&name=${encodeURIComponent(usuario.nombre || usuario.email)}`}')">
+                    <img class="user-avatar" src="${usuario.fotoURL || `https://ui-avatars.com/api/?background=444&color=fff&name=${encodeURIComponent(usuario.nombre || usuario.email)}`}" onerror="this.src='https://ui-avatars.com/api/?background=444&color=fff'">
+                    <div style="flex:1">
+                        <div style="font-weight:600;color:#fff;">${escapeHtml(usuario.nombre || usuario.email)}</div>
+                        <div style="font-size:11px;color:#888;">${usuario.online ? '🟢 En línea' : '⚫ Desconectado'}</div>
+                    </div>
+                    <div class="${usuario.online ? 'online-dot' : 'offline-dot'}"></div>
+                </div>
+            `).join('');
+        }
+        
+        window.selectUser = async function(uid, nombre, online, fotoURL) {
+            if (!currentUser) return;
+            if (unsubscribeTyping) unsubscribeTyping();
+            selectedUser = { uid, nombre, online, fotoURL };
+            chatWithName.textContent = nombre;
+            chatStatusText.innerHTML = online ? '🟢 En línea' : '⚫ Desconectado';
+            chatHeaderImg.src = fotoURL || `https://ui-avatars.com/api/?background=444&color=fff&name=${encodeURIComponent(nombre)}`;
+            currentChatId = getChatId(currentUser.uid, uid);
+            chatInputArea.style.display = 'flex';
+            chatMessagesDiv.innerHTML = '<div style="text-align:center;padding:40px;color:#888;">Cargando mensajes...</div>';
+            if (unsubscribeMessages) unsubscribeMessages();
+            const messagesRef = collection(db, "chats", currentChatId, "mensajes");
+            const q = query(messagesRef, orderBy("timestamp", "asc"));
+            unsubscribeMessages = onSnapshot(q, async (snapshot) => {
+                const mensajes = [];
+                for (const docSnap of snapshot.docs) {
+                    const msg = { id: docSnap.id, ...docSnap.data() };
+                    if (msg.de && msg.de !== currentUser.uid && !msg.fotoRemitente) {
+                        const userRef = doc(db, "usuarios", msg.de);
+                        const userSnap = await getDoc(userRef);
+                        if (userSnap.exists()) msg.fotoRemitente = userSnap.data().fotoURL;
+                    } else if (msg.de === currentUser.uid) {
+                        msg.fotoRemitente = profileImg.src;
+                    }
+                    mensajes.push(msg);
+                }
+                mostrarMensajes(mensajes, snapshot);
+            });
+            listenTypingStatus();
+            messageInput.removeEventListener('input', handleTypingStart);
+            messageInput.addEventListener('input', handleTypingStart);
+            if (isMobile) {
+                usersPanel.style.display = 'none';
+                chatPanel.classList.add('active-mobile');
+                backButton.style.display = 'flex';
+            }
+        };
+        
+        function playAudio(url) {
+            const audio = new Audio(url);
+            audio.play().catch(e => console.log("Error:", e));
+        }
+        
+        function abrirMapaGlobal(lat, lng) {
+            window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
+        }
+        
+        async function mostrarMensajes(mensajes, snapshot) {
+            if (!chatMessagesDiv) return;
+            if (snapshot && snapshot.docChanges) {
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === 'added') {
+                        const nuevoMensaje = change.doc.data();
+                        if (nuevoMensaje.de !== currentUser?.uid && nuevoMensaje.id !== ultimoMensajeRecibidoId) {
+                            ultimoMensajeRecibidoId = nuevoMensaje.id;
+                            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                            const osc = audioCtx.createOscillator();
+                            const gain = audioCtx.createGain();
+                            osc.connect(gain);
+                            gain.connect(audioCtx.destination);
+                            osc.frequency.value = 880;
+                            gain.gain.value = 0.3;
+                            osc.start();
+                            gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5);
+                            osc.stop(audioCtx.currentTime + 0.5);
+                            setTimeout(() => { if (audioCtx.state !== 'closed') audioCtx.close(); }, 600);
+                        }
+                    }
+                });
+            }
+            if (mensajes.length === 0) {
+                chatMessagesDiv.innerHTML = '<div style="text-align:center;padding:40px;color:#888;">No hay mensajes aún. ¡Envía el primero!</div>';
+                return;
+            }
+            const currentUserData = await getDoc(doc(db, "usuarios", currentUser.uid));
+            const miFoto = currentUserData.exists() ? currentUserData.data().fotoURL : null;
+            chatMessagesDiv.innerHTML = mensajes.map(msg => {
+                const esMio = msg.de === currentUser?.uid;
+                const fotoRemitente = esMio ? miFoto : (msg.fotoRemitente || `https://ui-avatars.com/api/?background=444&color=fff`);
+                if (msg.tipo === 'imagen') {
+                    return `<div class="message ${esMio ? 'sent' : 'received'}">
+                        <img class="message-avatar" src="${fotoRemitente}" onerror="this.src='https://ui-avatars.com/api/?background=444&color=fff'">
+                        <div class="message-content"><div class="message-bubble"><img src="${msg.url}" class="chat-image" onclick="window.open('${msg.url}', '_blank')"><div class="message-time">${new Date(msg.timestamp?.toDate()).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div></div></div>
+                    </div>`;
+                } else if (msg.tipo === 'audio') {
+                    return `<div class="message ${esMio ? 'sent' : 'received'}">
+                        <img class="message-avatar" src="${fotoRemitente}" onerror="this.src='https://ui-avatars.com/api/?background=444&color=fff'">
+                        <div class="message-content"><div class="message-bubble"><div class="audio-message"><button class="audio-play-btn" onclick="window.playAudio('${msg.url}')">▶️</button><span>🎤 Mensaje de voz</span></div><div class="message-time">${new Date(msg.timestamp?.toDate()).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div></div></div>
+                    </div>`;
+                } else if (msg.tipo === 'ubicacion') {
+                    return `<div class="message ${esMio ? 'sent' : 'received'}">
+                        <img class="message-avatar" src="${fotoRemitente}" onerror="this.src='https://ui-avatars.com/api/?background=444&color=fff'">
+                        <div class="message-content"><div class="message-bubble"><div class="location-message" onclick="window.abrirMapaGlobal(${msg.lat}, ${msg.lng})">📍 Ver ubicación en el mapa</div><div class="message-time">${new Date(msg.timestamp?.toDate()).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div></div></div>
+                    </div>`;
+                } else {
+                    return `<div class="message ${esMio ? 'sent' : 'received'}">
+                        <img class="message-avatar" src="${fotoRemitente}" onerror="this.src='https://ui-avatars.com/api/?background=444&color=fff'">
+                        <div class="message-content"><div class="message-bubble">${escapeHtml(msg.texto)}<div class="message-time">${new Date(msg.timestamp?.toDate()).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div></div></div>
+                    </div>`;
+                }
+            }).join('');
+            setTimeout(() => { chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight; }, 100);
+        }
+        
+        window.playAudio = playAudio;
+        window.abrirMapaGlobal = abrirMapaGlobal;
+        
+        window.enviarMensaje = async function() {
+            if (!currentUser || !selectedUser || !currentChatId) return;
+            const texto = messageInput.value.trim();
+            if (!texto) return;
+            setTypingStatus(false);
+            if (typingTimeout) { clearTimeout(typingTimeout); typingTimeout = null; }
+            try {
+                const messagesRef = collection(db, "chats", currentChatId, "mensajes");
+                await addDoc(messagesRef, { de: currentUser.uid, para: selectedUser.uid, texto: texto, timestamp: new Date() });
+                messageInput.value = '';
+                messageInput.focus();
+            } catch (error) { showError("No se pudo enviar el mensaje"); }
+        };
+        
+        async function subirImagen(file) {
+            if (!currentUser || !selectedUser || !currentChatId) return;
+            try {
+                const fileName = `${Date.now()}_${file.name}`;
+                const storageRef = ref(storage, `mensajes/${currentChatId}/${fileName}`);
+                showSuccess("Subiendo imagen...");
+                await uploadBytes(storageRef, file);
+                const url = await getDownloadURL(storageRef);
+                const messagesRef = collection(db, "chats", currentChatId, "mensajes");
+                await addDoc(messagesRef, { de: currentUser.uid, para: selectedUser.uid, texto: "📷 Imagen", tipo: "imagen", url: url, timestamp: new Date() });
+                showSuccess("Imagen enviada ✅");
+            } catch (error) { showError("Error al subir la imagen"); }
+        }
+        
+        imageBtn.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = (e) => { const file = e.target.files[0]; if (file) subirImagen(file); };
+            input.click();
+        });
+        
+        sendBtn.addEventListener('click', () => enviarMensaje());
+        messageInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') enviarMensaje(); });
+        
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, (m) => { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; });
+        }
+        
+        registerBtn.addEventListener('click', async () => {
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            if (!email || !password) { showError('Completa todos los campos'); return; }
+            if (password.length < 6) { showError('La contraseña debe tener al menos 6 caracteres'); return; }
+            try {
+                await createUserWithEmailAndPassword(auth, email, password);
+                showSuccess('✅ ¡Cuenta creada!');
+                emailInput.value = '';
+                passwordInput.value = '';
+                await requestNotificationPermission();
+            } catch (error) { showError(error.code === 'auth/email-already-in-use' ? 'Email ya registrado' : error.message); }
+        });
+        
+        loginBtn.addEventListener('click', async () => {
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            if (!email || !password) { showError('Completa todos los campos'); return; }
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                showSuccess('👋 ¡Bienvenido!');
+                emailInput.value = '';
+                passwordInput.value = '';
+                await requestNotificationPermission();
+            } catch (error) { showError('Email o contraseña incorrectos'); }
+        });
+        
+        googleBtn.addEventListener('click', async () => {
+            try {
+                await signInWithPopup(auth, googleProvider);
+                showSuccess('👋 Bienvenido');
+                await requestNotificationPermission();
+            } catch (error) { showError('Error con Google'); }
+        });
+        
+        logoutBtnMain.addEventListener('click', async () => {
+            if (currentUser) {
+                if (typingTimeout) clearTimeout(typingTimeout);
+                await setTypingStatus(false);
+                await marcarUsuarioOffline(currentUser.uid);
+            }
+            await signOut(auth);
+        });
+        
+        backButton.addEventListener('click', () => {
+            if (isMobile) {
+                usersPanel.style.display = 'flex';
+                chatPanel.classList.remove('active-mobile');
+                backButton.style.display = 'none';
+            }
+        });
+        
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                const fotoActual = await guardarUsuarioOnline(user);
+                loginContainer.classList.add('hidden');
+                mainContainer.classList.remove('hidden');
+                const nombreMostrar = user.displayName || user.email.split('@')[0];
+                userNameDisplay.textContent = nombreMostrar;
+                userEmailDisplay.textContent = user.email;
+                profileImg.src = fotoActual || `https://ui-avatars.com/api/?background=0a84ff&color=fff&name=${encodeURIComponent(nombreMostrar)}`;
+                escucharUsuarios(user.uid);
+            } else {
+                if (unsubscribeUsers) unsubscribeUsers();
+                if (unsubscribeMessages) unsubscribeMessages();
+                if (unsubscribeTyping) unsubscribeTyping();
+                currentUser = null;
+                selectedUser = null;
+                loginContainer.classList.remove('hidden');
+                mainContainer.classList.add('hidden');
+                chatInputArea.style.display = 'none';
+                chatMessagesDiv.innerHTML = '<div class="no-chat">👈 Selecciona un usuario para empezar a chatear</div>';
+                if (isMobile) { usersPanel.style.display = 'flex'; chatPanel.classList.remove('active-mobile'); }
+            }
+        });
+        
+        console.log("TECNI-YA con notificaciones push");
+    </script>
+</body>
+</html>
