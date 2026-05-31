@@ -74,7 +74,6 @@
             background: rgba(26, 26, 30, 0.8);
         }
         
-        /* MÓVIL - BOTONES MÁS PEQUEÑOS */
         @media (max-width: 768px) {
             .main-container {
                 flex-direction: column;
@@ -120,8 +119,7 @@
                 height: 50px;
             }
             
-            /* BOTONES MÁS PEQUEÑOS EN MÓVIL */
-            .icon-btn, .mic-btn, .location-btn, .proyectos-btn {
+            .icon-btn, .mic-btn, .location-btn, .proyectos-chat-btn {
                 width: 40px;
                 padding: 8px 10px;
                 font-size: 16px;
@@ -141,11 +139,33 @@
                 padding: 10px 12px;
                 font-size: 14px;
             }
+            
+            .proyectos-panel-btn {
+                width: 100%;
+                margin-top: 10px;
+            }
+            
+            /* Menú contextual móvil */
+            .context-menu {
+                position: fixed;
+                background: #2a2a2a;
+                border-radius: 12px;
+                padding: 8px;
+                z-index: 200;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+                border: 1px solid #444;
+            }
+            .context-menu button {
+                background: none;
+                color: #ff3b30;
+                padding: 10px 20px;
+                width: 100%;
+                text-align: left;
+            }
         }
         
-        /* Para pantallas muy pequeñas (menos de 400px) */
         @media (max-width: 400px) {
-            .icon-btn, .mic-btn, .location-btn, .proyectos-btn {
+            .icon-btn, .mic-btn, .location-btn, .proyectos-chat-btn {
                 width: 36px;
                 padding: 6px 8px;
                 font-size: 14px;
@@ -187,7 +207,7 @@
             cursor: pointer;
         }
         
-        .change-photo-btn, .gallery-btn {
+        .change-photo-btn, .gallery-btn, .proyectos-panel-btn {
             background: rgba(42, 42, 50, 0.9);
             padding: 6px 14px;
             font-size: 12px;
@@ -196,9 +216,13 @@
             border: 1px solid rgba(10,132,255,0.3);
         }
         
-        .gallery-btn {
+        .gallery-btn, .proyectos-panel-btn {
             width: 100%;
             color: #fff;
+            margin-top: 10px;
+        }
+        
+        .proyectos-panel-btn {
             margin-top: 10px;
         }
         
@@ -311,7 +335,7 @@
             cursor: pointer;
         }
         
-        .icon-btn, .mic-btn, .location-btn, .proyectos-btn {
+        .icon-btn, .mic-btn, .location-btn, .proyectos-chat-btn {
             background: rgba(42, 42, 50, 0.9);
             padding: 10px 12px;
             font-size: 16px;
@@ -425,6 +449,7 @@
             margin-bottom: 16px;
             display: flex;
             gap: 10px;
+            position: relative;
         }
         
         .message.sent { justify-content: flex-end; }
@@ -445,6 +470,11 @@
             border-radius: 24px;
             font-size: 14px;
             word-wrap: break-word;
+            transition: background 0.2s;
+        }
+        
+        .message-bubble:active {
+            background: rgba(255,255,255,0.1);
         }
         
         .message.sent .message-bubble {
@@ -576,6 +606,38 @@
         .cancel-audio { background: #ff3b30; padding: 8px 16px; }
         .send-audio { background: #0a84ff; padding: 8px 16px; }
         
+        /* Menú contextual para eliminar mensaje */
+        .context-menu {
+            position: fixed;
+            background: #1e1e1e;
+            border-radius: 12px;
+            padding: 8px;
+            z-index: 200;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            border: 1px solid #333;
+            display: none;
+        }
+        
+        .context-menu.active {
+            display: block;
+        }
+        
+        .context-menu button {
+            background: none;
+            border: none;
+            padding: 10px 20px;
+            width: 100%;
+            text-align: left;
+            color: #ff3b30;
+            font-size: 14px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        .context-menu button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        
         .modal {
             display: none;
             position: fixed;
@@ -704,7 +766,6 @@
             cursor: pointer;
         }
         
-        /* Estilos para la sección de proyectos */
         .proyectos-modal .modal-content {
             max-width: 500px;
         }
@@ -776,6 +837,7 @@
                     <img id="profileImg" class="profile-pic-large" src="https://ui-avatars.com/api/?background=0a84ff&color=fff&bold=true" alt="Foto perfil">
                     <button id="changePhotoBtn" class="change-photo-btn">📷 Cambiar foto</button>
                     <button id="galleryBtn" class="gallery-btn">📸 Mi Galería</button>
+                    <button id="proyectosPanelBtn" class="proyectos-panel-btn">🛠️ Proyectos</button>
                 </div>
                 <strong id="userNameDisplay">Usuario</strong>
                 <small id="userEmailDisplay" style="color:#999"></small>
@@ -802,23 +864,28 @@
                 <button id="imageBtn" class="icon-btn">📷</button>
                 <button id="micBtn" class="mic-btn">🎤</button>
                 <button id="locationBtn" class="location-btn">📍</button>
-                <button id="proyectosBtn" class="proyectos-btn">📁</button>
+                <button id="proyectosChatBtn" class="proyectos-chat-btn">📁</button>
                 <input type="text" id="messageInput" placeholder="Escribe un mensaje...">
                 <button id="sendBtn" class="send-btn">Enviar</button>
             </div>
         </div>
     </div>
     
-    <!-- Modal de Proyectos Técnicos -->
+    <!-- Menú contextual para eliminar mensaje -->
+    <div id="contextMenu" class="context-menu">
+        <button id="deleteMessageBtn">🗑️ Eliminar mensaje</button>
+    </div>
+    
+    <!-- Modal de Proyectos -->
     <div id="proyectosModal" class="modal">
         <div class="modal-content" style="max-width: 500px;">
             <div class="modal-header">
-                <h3>📁 Proyectos Técnicos</h3>
+                <h3>🛠️ Proyectos Técnicos</h3>
                 <button class="close-modal" id="closeProyectosBtn">&times;</button>
             </div>
             <div style="padding: 20px; overflow-y: auto; max-height: 60vh;">
                 <div id="proyectosList">
-                    <div class="proyecto-vacio">No hay proyectos aún. ¡Comparte el tuyo!</div>
+                    <div class="proyecto-vacio">No hay proyectos aún. ¡Agrega el tuyo!</div>
                 </div>
                 <div style="margin-top: 20px;">
                     <input type="text" id="nuevoProyectoTitulo" placeholder="Título del proyecto" style="width:100%; padding:10px; margin-bottom:10px; background:#2a2a2a; border:1px solid #444; border-radius:12px; color:#fff;">
@@ -855,19 +922,19 @@
     <script type="module">
         // Configuración de Firebase
         const firebaseConfig = {
-  apiKey: "AIzaSyB4W_0bdRoL-VnN6FAiSWhnQWNO-fRairc",
-  authDomain: "proyecto-libertad-38c2a.firebaseapp.com",
-  projectId: "proyecto-libertad-38c2a",
-  storageBucket: "proyecto-libertad-38c2a.firebasestorage.app",
-  messagingSenderId: "115380076439",
-  appId: "1:115380076439:web:85383b2c32cdb40c798ed2"
-};
+            apiKey: "AIzaSyB4W_0bdRoL-VnN6FAiSWhnQWNO-fRairc",
+            authDomain: "proyecto-libertad-38c2a.firebaseapp.com",
+            projectId: "proyecto-libertad-38c2a",
+            storageBucket: "proyecto-libertad-38c2a.firebasestorage.app",
+            messagingSenderId: "115380076439",
+            appId: "1:115380076439:web:85383b2c32cdb40c798ed2"
+        };
         
         const VAPID_KEY = "BNZ2YWPDzdAkud-EAyky5TFRihAnYAQPgVliSRCvgRZiUuytEOpb-psX0O2UPFDqVNbWuFBH2cWqHXE539gr_1c";
         
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, updateDoc, collection, query, onSnapshot, addDoc, orderBy, getDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, updateDoc, collection, query, onSnapshot, addDoc, orderBy, getDoc, arrayUnion, arrayRemove, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL, listAll, deleteObject } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-storage.js";
         import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-messaging.js";
         
@@ -901,7 +968,8 @@
         const imageBtn = document.getElementById('imageBtn');
         const micBtn = document.getElementById('micBtn');
         const locationBtn = document.getElementById('locationBtn');
-        const proyectosBtn = document.getElementById('proyectosBtn');
+        const proyectosChatBtn = document.getElementById('proyectosChatBtn');
+        const proyectosPanelBtn = document.getElementById('proyectosPanelBtn');
         const profileImg = document.getElementById('profileImg');
         const changePhotoBtn = document.getElementById('changePhotoBtn');
         const chatHeaderImg = document.getElementById('chatHeaderImg');
@@ -918,6 +986,12 @@
         const audioPreview = document.getElementById('audioPreview');
         const cancelAudioBtn = document.getElementById('cancelAudioBtn');
         const sendAudioBtn = document.getElementById('sendAudioBtn');
+        
+        // Elementos menú contextual
+        const contextMenu = document.getElementById('contextMenu');
+        const deleteMessageBtn = document.getElementById('deleteMessageBtn');
+        let selectedMessageId = null;
+        let selectedMessageChatId = null;
         
         // Elementos de proyectos
         const proyectosModal = document.getElementById('proyectosModal');
@@ -948,36 +1022,81 @@
         let recordedBlob = null;
         let micStream = null;
         
-        // Funciones para proyectos
+        // Función para eliminar mensaje
+        async function eliminarMensaje() {
+            if (!selectedMessageId || !selectedMessageChatId) return;
+            
+            if (confirm("¿Eliminar este mensaje?")) {
+                try {
+                    const messageRef = doc(db, "chats", selectedMessageChatId, "mensajes", selectedMessageId);
+                    await deleteDoc(messageRef);
+                    showSuccess("Mensaje eliminado ✅");
+                } catch (error) {
+                    console.error("Error al eliminar:", error);
+                    showError("No se pudo eliminar el mensaje");
+                }
+            }
+            contextMenu.classList.remove('active');
+            selectedMessageId = null;
+            selectedMessageChatId = null;
+        }
+        
+        deleteMessageBtn.addEventListener('click', eliminarMensaje);
+        
+        // Cerrar menú contextual al hacer clic fuera
+        document.addEventListener('click', () => {
+            contextMenu.classList.remove('active');
+        });
+        
+        // Función para abrir el modal de proyectos
         function abrirProyectos() {
             proyectosModal.classList.add('active');
             cargarProyectos();
         }
         
+        // Función para cargar proyectos desde Firestore
         async function cargarProyectos() {
             if (!currentUser) return;
-            const proyectosRef = collection(db, `usuarios/${currentUser.uid}/proyectos`);
-            const q = query(proyectosRef, orderBy("fecha", "desc"));
-            const snapshot = await getDocs(q);
-            
-            if (snapshot.empty) {
-                proyectosList.innerHTML = '<div class="proyecto-vacio">No hay proyectos aún. ¡Comparte el tuyo!</div>';
-                return;
+            try {
+                const proyectosRef = collection(db, `usuarios/${currentUser.uid}/proyectos`);
+                const q = query(proyectosRef, orderBy("fecha", "desc"));
+                const snapshot = await getDocsFromQuery(q);
+                
+                if (snapshot.length === 0) {
+                    proyectosList.innerHTML = '<div class="proyecto-vacio">No hay proyectos aún. ¡Agrega el tuyo!</div>';
+                    return;
+                }
+                
+                proyectosList.innerHTML = '';
+                snapshot.forEach(doc => {
+                    const proyecto = doc.data();
+                    proyectosList.innerHTML += `
+                        <div class="proyecto-card">
+                            <div class="proyecto-titulo">${escapeHtml(proyecto.titulo)}</div>
+                            <div class="proyecto-descripcion">${escapeHtml(proyecto.descripcion)}</div>
+                            ${proyecto.link ? `<a href="${proyecto.link}" target="_blank" class="proyecto-link">🔗 Ver proyecto →</a>` : ''}
+                        </div>
+                    `;
+                });
+            } catch (error) {
+                console.error("Error cargando proyectos:", error);
+                proyectosList.innerHTML = '<div class="proyecto-vacio">Error al cargar proyectos</div>';
             }
-            
-            proyectosList.innerHTML = '';
-            snapshot.forEach(doc => {
-                const proyecto = doc.data();
-                proyectosList.innerHTML += `
-                    <div class="proyecto-card">
-                        <div class="proyecto-titulo">${escapeHtml(proyecto.titulo)}</div>
-                        <div class="proyecto-descripcion">${escapeHtml(proyecto.descripcion)}</div>
-                        ${proyecto.link ? `<a href="${proyecto.link}" target="_blank" class="proyecto-link">🔗 Ver proyecto →</a>` : ''}
-                    </div>
-                `;
+        }
+        
+        // Función auxiliar para obtener datos de la consulta
+        async function getDocsFromQuery(query) {
+            return new Promise((resolve, reject) => {
+                const items = [];
+                const unsubscribe = onSnapshot(query, (snapshot) => {
+                    snapshot.forEach(doc => items.push(doc));
+                    resolve(items);
+                    unsubscribe();
+                }, reject);
             });
         }
         
+        // Función para agregar un proyecto
         async function agregarProyecto() {
             const titulo = nuevoProyectoTitulo.value.trim();
             const descripcion = nuevoProyectoDescripcion.value.trim();
@@ -1002,11 +1121,14 @@
                 showSuccess("Proyecto agregado ✅");
                 cargarProyectos();
             } catch (error) {
+                console.error("Error al agregar proyecto:", error);
                 showError("Error al agregar proyecto");
             }
         }
         
-        proyectosBtn.addEventListener('click', abrirProyectos);
+        // Eventos de proyectos
+        proyectosChatBtn.addEventListener('click', abrirProyectos);
+        proyectosPanelBtn.addEventListener('click', abrirProyectos);
         closeProyectosBtn.addEventListener('click', () => proyectosModal.classList.remove('active'));
         agregarProyectoBtn.addEventListener('click', agregarProyecto);
         
@@ -1015,18 +1137,7 @@
             if (e.target === proyectosModal) proyectosModal.classList.remove('active');
         });
         
-        // Función auxiliar para getDocs
-        async function getDocs(query) {
-            return new Promise((resolve, reject) => {
-                const items = [];
-                const unsubscribe = onSnapshot(query, (snapshot) => {
-                    resolve(snapshot);
-                    unsubscribe();
-                }, reject);
-            });
-        }
-        
-        // Resto de las funciones (setTypingStatus, handleTypingStart, listenTypingStatus, etc.)
+        // Resto de funciones
         async function setTypingStatus(isTyping) {
             if (!currentUser || !selectedUser || !currentChatId) return;
             const chatDocRef = doc(db, "chats", currentChatId);
@@ -1078,6 +1189,7 @@
                         const token = await getToken(messaging, { vapidKey: VAPID_KEY });
                         const userRef = doc(db, "usuarios", currentUser.uid);
                         await updateDoc(userRef, { fcmTokens: arrayUnion(token) });
+                        console.log("Token FCM:", token);
                     } catch(e) { console.log("Error FCM:", e); }
                 }
             } catch (error) { console.error(error); }
@@ -1561,6 +1673,48 @@
         
         async function mostrarMensajes(mensajes, snapshot) {
             if (!chatMessagesDiv) return;
+            
+            // Configurar evento de clic largo para eliminar mensajes
+            setTimeout(() => {
+                document.querySelectorAll('.message').forEach(msgDiv => {
+                    msgDiv.removeEventListener('contextmenu', (e) => e.preventDefault());
+                    msgDiv.addEventListener('contextmenu', (e) => {
+                        e.preventDefault();
+                        const messageId = msgDiv.dataset.messageId;
+                        const chatId = msgDiv.dataset.chatId;
+                        if (messageId && chatId) {
+                            selectedMessageId = messageId;
+                            selectedMessageChatId = chatId;
+                            contextMenu.style.left = `${e.pageX}px`;
+                            contextMenu.style.top = `${e.pageY}px`;
+                            contextMenu.classList.add('active');
+                        }
+                    });
+                    
+                    // Para móvil: clic largo (touchstart + touchend)
+                    let touchTimer;
+                    msgDiv.addEventListener('touchstart', (e) => {
+                        touchTimer = setTimeout(() => {
+                            const messageId = msgDiv.dataset.messageId;
+                            const chatId = msgDiv.dataset.chatId;
+                            if (messageId && chatId) {
+                                selectedMessageId = messageId;
+                                selectedMessageChatId = chatId;
+                                contextMenu.style.left = `${e.touches[0].pageX}px`;
+                                contextMenu.style.top = `${e.touches[0].pageY}px`;
+                                contextMenu.classList.add('active');
+                            }
+                        }, 500);
+                    });
+                    msgDiv.addEventListener('touchend', () => {
+                        clearTimeout(touchTimer);
+                    });
+                    msgDiv.addEventListener('touchmove', () => {
+                        clearTimeout(touchTimer);
+                    });
+                });
+            }, 100);
+            
             if (snapshot && snapshot.docChanges) {
                 snapshot.docChanges().forEach(change => {
                     if (change.type === 'added') {
@@ -1592,22 +1746,22 @@
                 const esMio = msg.de === currentUser?.uid;
                 const fotoRemitente = esMio ? miFoto : (msg.fotoRemitente || `https://ui-avatars.com/api/?background=444&color=fff`);
                 if (msg.tipo === 'imagen') {
-                    return `<div class="message ${esMio ? 'sent' : 'received'}">
+                    return `<div class="message ${esMio ? 'sent' : 'received'}" data-message-id="${msg.id}" data-chat-id="${currentChatId}">
                         <img class="message-avatar" src="${fotoRemitente}" onerror="this.src='https://ui-avatars.com/api/?background=444&color=fff'">
                         <div class="message-content"><div class="message-bubble"><img src="${msg.url}" class="chat-image" onclick="window.open('${msg.url}', '_blank')"><div class="message-time">${new Date(msg.timestamp?.toDate()).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div></div></div>
                     </div>`;
                 } else if (msg.tipo === 'audio') {
-                    return `<div class="message ${esMio ? 'sent' : 'received'}">
+                    return `<div class="message ${esMio ? 'sent' : 'received'}" data-message-id="${msg.id}" data-chat-id="${currentChatId}">
                         <img class="message-avatar" src="${fotoRemitente}" onerror="this.src='https://ui-avatars.com/api/?background=444&color=fff'">
                         <div class="message-content"><div class="message-bubble"><div class="audio-message"><button class="audio-play-btn" onclick="window.playAudio('${msg.url}')">▶️</button><span>🎤 Mensaje de voz</span></div><div class="message-time">${new Date(msg.timestamp?.toDate()).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div></div></div>
                     </div>`;
                 } else if (msg.tipo === 'ubicacion') {
-                    return `<div class="message ${esMio ? 'sent' : 'received'}">
+                    return `<div class="message ${esMio ? 'sent' : 'received'}" data-message-id="${msg.id}" data-chat-id="${currentChatId}">
                         <img class="message-avatar" src="${fotoRemitente}" onerror="this.src='https://ui-avatars.com/api/?background=444&color=fff'">
                         <div class="message-content"><div class="message-bubble"><div class="location-message" onclick="window.abrirMapaGlobal(${msg.lat}, ${msg.lng})">📍 Ver ubicación en el mapa</div><div class="message-time">${new Date(msg.timestamp?.toDate()).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div></div></div>
                     </div>`;
                 } else {
-                    return `<div class="message ${esMio ? 'sent' : 'received'}">
+                    return `<div class="message ${esMio ? 'sent' : 'received'}" data-message-id="${msg.id}" data-chat-id="${currentChatId}">
                         <img class="message-avatar" src="${fotoRemitente}" onerror="this.src='https://ui-avatars.com/api/?background=444&color=fff'">
                         <div class="message-content"><div class="message-bubble">${escapeHtml(msg.texto)}<div class="message-time">${new Date(msg.timestamp?.toDate()).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div></div></div>
                     </div>`;
@@ -1740,7 +1894,7 @@
             }
         });
         
-        console.log("TECNI-YA con botones optimizados y proyectos técnicos");
+        console.log("TECNI-YA con eliminación de mensajes y botón Proyectos con martillo");
     </script>
 </body>
 </html>
