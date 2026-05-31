@@ -144,24 +144,6 @@
                 width: 100%;
                 margin-top: 10px;
             }
-            
-            /* Menú contextual móvil */
-            .context-menu {
-                position: fixed;
-                background: #2a2a2a;
-                border-radius: 12px;
-                padding: 8px;
-                z-index: 200;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-                border: 1px solid #444;
-            }
-            .context-menu button {
-                background: none;
-                color: #ff3b30;
-                padding: 10px 20px;
-                width: 100%;
-                text-align: left;
-            }
         }
         
         @media (max-width: 400px) {
@@ -606,6 +588,65 @@
         .cancel-audio { background: #ff3b30; padding: 8px 16px; }
         .send-audio { background: #0a84ff; padding: 8px 16px; }
         
+        /* Modal de Proyectos (pantalla completa) */
+        .proyectos-full-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a0a0a;
+            z-index: 2000;
+            flex-direction: column;
+        }
+        
+        .proyectos-full-modal.active {
+            display: flex;
+        }
+        
+        .proyectos-full-modal .modal-header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            background: #1e1e1e;
+            border-bottom: 1px solid #333;
+        }
+        
+        .proyectos-full-modal .modal-header-bar h3 {
+            color: #fff;
+            margin: 0;
+            font-size: 1.2rem;
+        }
+        
+        .proyectos-full-modal .close-modal-btn {
+            background: #ff3b30;
+            border: none;
+            color: white;
+            font-size: 20px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .proyectos-full-modal .modal-iframe-container {
+            flex: 1;
+            width: 100%;
+            background: #000;
+        }
+        
+        .proyectos-full-modal iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #000;
+        }
+        
         /* Menú contextual para eliminar mensaje */
         .context-menu {
             position: fixed;
@@ -632,10 +673,6 @@
             font-size: 14px;
             border-radius: 8px;
             cursor: pointer;
-        }
-        
-        .context-menu button:hover {
-            background: rgba(255,255,255,0.1);
         }
         
         .modal {
@@ -754,55 +791,6 @@
         .modal-footer button { flex: 1; }
         .empty-gallery { text-align: center; padding: 60px; color: #888; grid-column: 1 / -1; }
         
-        .notification-banner {
-            background: rgba(10,132,255,0.2);
-            border: 1px solid #0a84ff;
-            border-radius: 20px;
-            padding: 8px 16px;
-            margin: 10px 20px;
-            text-align: center;
-            font-size: 12px;
-            color: #0a84ff;
-            cursor: pointer;
-        }
-        
-        .proyectos-modal .modal-content {
-            max-width: 500px;
-        }
-        
-        .proyecto-card {
-            background: rgba(42, 42, 50, 0.8);
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 16px;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        .proyecto-titulo {
-            color: #0a84ff;
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-        
-        .proyecto-descripcion {
-            color: #ccc;
-            font-size: 14px;
-            margin-bottom: 12px;
-        }
-        
-        .proyecto-link {
-            color: #0a84ff;
-            text-decoration: none;
-            font-size: 12px;
-        }
-        
-        .proyecto-vacio {
-            text-align: center;
-            padding: 40px;
-            color: #888;
-        }
-        
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 10px; }
         ::-webkit-scrollbar-thumb { background: rgba(10,132,255,0.5); border-radius: 10px; }
@@ -871,29 +859,14 @@
         </div>
     </div>
     
-    <!-- Menú contextual para eliminar mensaje -->
-    <div id="contextMenu" class="context-menu">
-        <button id="deleteMessageBtn">🗑️ Eliminar mensaje</button>
-    </div>
-    
-    <!-- Modal de Proyectos -->
-    <div id="proyectosModal" class="modal">
-        <div class="modal-content" style="max-width: 500px;">
-            <div class="modal-header">
-                <h3>🛠️ Proyectos Técnicos</h3>
-                <button class="close-modal" id="closeProyectosBtn">&times;</button>
-            </div>
-            <div style="padding: 20px; overflow-y: auto; max-height: 60vh;">
-                <div id="proyectosList">
-                    <div class="proyecto-vacio">No hay proyectos aún. ¡Agrega el tuyo!</div>
-                </div>
-                <div style="margin-top: 20px;">
-                    <input type="text" id="nuevoProyectoTitulo" placeholder="Título del proyecto" style="width:100%; padding:10px; margin-bottom:10px; background:#2a2a2a; border:1px solid #444; border-radius:12px; color:#fff;">
-                    <textarea id="nuevoProyectoDescripcion" placeholder="Descripción del proyecto" rows="3" style="width:100%; padding:10px; margin-bottom:10px; background:#2a2a2a; border:1px solid #444; border-radius:12px; color:#fff;"></textarea>
-                    <input type="text" id="nuevoProyectoLink" placeholder="Enlace (opcional)" style="width:100%; padding:10px; margin-bottom:10px; background:#2a2a2a; border:1px solid #444; border-radius:12px; color:#fff;">
-                    <button id="agregarProyectoBtn" style="width:100%;">+ Agregar Proyecto</button>
-                </div>
-            </div>
+    <!-- Modal de Proyectos (pantalla completa con iframe) -->
+    <div id="proyectosModal" class="proyectos-full-modal">
+        <div class="modal-header-bar">
+            <h3>🛠️ Optimizador Pro</h3>
+            <button id="closeProyectosModalBtn" class="close-modal-btn">✕</button>
+        </div>
+        <div class="modal-iframe-container">
+            <iframe id="proyectosIframe" src="dashboard-proyectos.html"></iframe>
         </div>
     </div>
     
@@ -917,6 +890,11 @@
                 <button id="setProfileFromGalleryBtn" style="background: #0a84ff;">👤 Establecer como foto de perfil</button>
             </div>
         </div>
+    </div>
+
+    <!-- Menú contextual para eliminar mensaje -->
+    <div id="contextMenu" class="context-menu">
+        <button id="deleteMessageBtn">🗑️ Eliminar mensaje</button>
     </div>
 
     <script type="module">
@@ -987,20 +965,30 @@
         const cancelAudioBtn = document.getElementById('cancelAudioBtn');
         const sendAudioBtn = document.getElementById('sendAudioBtn');
         
-        // Elementos menú contextual
-        const contextMenu = document.getElementById('contextMenu');
-        const deleteMessageBtn = document.getElementById('deleteMessageBtn');
-        let selectedMessageId = null;
-        let selectedMessageChatId = null;
-        
-        // Elementos de proyectos
+        // Elementos del modal de proyectos
         const proyectosModal = document.getElementById('proyectosModal');
-        const closeProyectosBtn = document.getElementById('closeProyectosBtn');
-        const proyectosList = document.getElementById('proyectosList');
-        const agregarProyectoBtn = document.getElementById('agregarProyectoBtn');
-        const nuevoProyectoTitulo = document.getElementById('nuevoProyectoTitulo');
-        const nuevoProyectoDescripcion = document.getElementById('nuevoProyectoDescripcion');
-        const nuevoProyectoLink = document.getElementById('nuevoProyectoLink');
+        const closeProyectosModalBtn = document.getElementById('closeProyectosModalBtn');
+        const proyectosIframe = document.getElementById('proyectosIframe');
+        
+        // Funciones para abrir/cerrar el modal de proyectos
+        function abrirProyectos() {
+            proyectosModal.classList.add('active');
+            // Recargar el iframe para asegurar que está actualizado
+            proyectosIframe.src = proyectosIframe.src;
+        }
+        
+        function cerrarProyectos() {
+            proyectosModal.classList.remove('active');
+        }
+        
+        proyectosPanelBtn.addEventListener('click', abrirProyectos);
+        proyectosChatBtn.addEventListener('click', abrirProyectos);
+        closeProyectosModalBtn.addEventListener('click', cerrarProyectos);
+        
+        // Cerrar modal al hacer clic fuera del contenido
+        proyectosModal.addEventListener('click', (e) => {
+            if (e.target === proyectosModal) cerrarProyectos();
+        });
         
         let currentUser = null;
         let unsubscribeUsers = null;
@@ -1024,120 +1012,34 @@
         
         // Función para eliminar mensaje
         async function eliminarMensaje() {
-            if (!selectedMessageId || !selectedMessageChatId) return;
+            if (!window.selectedMessageId || !window.selectedMessageChatId) return;
             
-            if (confirm("¿Eliminar este mensaje?")) {
-                try {
-                    const messageRef = doc(db, "chats", selectedMessageChatId, "mensajes", selectedMessageId);
-                    await deleteDoc(messageRef);
-                    showSuccess("Mensaje eliminado ✅");
-                } catch (error) {
-                    console.error("Error al eliminar:", error);
-                    showError("No se pudo eliminar el mensaje");
-                }
+            if (!confirm("¿Eliminar este mensaje?")) return;
+            try {
+                const messageRef = doc(db, "chats", window.selectedMessageChatId, "mensajes", window.selectedMessageId);
+                await deleteDoc(messageRef);
+                showSuccess("Mensaje eliminado ✅");
+            } catch (error) {
+                console.error("Error al eliminar:", error);
+                showError("No se pudo eliminar el mensaje");
             }
             contextMenu.classList.remove('active');
-            selectedMessageId = null;
-            selectedMessageChatId = null;
+            window.selectedMessageId = null;
+            window.selectedMessageChatId = null;
         }
         
-        deleteMessageBtn.addEventListener('click', eliminarMensaje);
+        // Menú contextual
+        const contextMenu = document.getElementById('contextMenu');
+        const deleteMessageBtn = document.getElementById('deleteMessageBtn');
         
-        // Cerrar menú contextual al hacer clic fuera
+        if (deleteMessageBtn) {
+            deleteMessageBtn.addEventListener('click', eliminarMensaje);
+        }
+        
         document.addEventListener('click', () => {
-            contextMenu.classList.remove('active');
+            if (contextMenu) contextMenu.classList.remove('active');
         });
         
-        // Función para abrir el modal de proyectos
-        function abrirProyectos() {
-            proyectosModal.classList.add('active');
-            cargarProyectos();
-        }
-        
-        // Función para cargar proyectos desde Firestore
-        async function cargarProyectos() {
-            if (!currentUser) return;
-            try {
-                const proyectosRef = collection(db, `usuarios/${currentUser.uid}/proyectos`);
-                const q = query(proyectosRef, orderBy("fecha", "desc"));
-                const snapshot = await getDocsFromQuery(q);
-                
-                if (snapshot.length === 0) {
-                    proyectosList.innerHTML = '<div class="proyecto-vacio">No hay proyectos aún. ¡Agrega el tuyo!</div>';
-                    return;
-                }
-                
-                proyectosList.innerHTML = '';
-                snapshot.forEach(doc => {
-                    const proyecto = doc.data();
-                    proyectosList.innerHTML += `
-                        <div class="proyecto-card">
-                            <div class="proyecto-titulo">${escapeHtml(proyecto.titulo)}</div>
-                            <div class="proyecto-descripcion">${escapeHtml(proyecto.descripcion)}</div>
-                            ${proyecto.link ? `<a href="${proyecto.link}" target="_blank" class="proyecto-link">🔗 Ver proyecto →</a>` : ''}
-                        </div>
-                    `;
-                });
-            } catch (error) {
-                console.error("Error cargando proyectos:", error);
-                proyectosList.innerHTML = '<div class="proyecto-vacio">Error al cargar proyectos</div>';
-            }
-        }
-        
-        // Función auxiliar para obtener datos de la consulta
-        async function getDocsFromQuery(query) {
-            return new Promise((resolve, reject) => {
-                const items = [];
-                const unsubscribe = onSnapshot(query, (snapshot) => {
-                    snapshot.forEach(doc => items.push(doc));
-                    resolve(items);
-                    unsubscribe();
-                }, reject);
-            });
-        }
-        
-        // Función para agregar un proyecto
-        async function agregarProyecto() {
-            const titulo = nuevoProyectoTitulo.value.trim();
-            const descripcion = nuevoProyectoDescripcion.value.trim();
-            const link = nuevoProyectoLink.value.trim();
-            
-            if (!titulo || !descripcion) {
-                showError("Completa título y descripción");
-                return;
-            }
-            
-            try {
-                const proyectosRef = collection(db, `usuarios/${currentUser.uid}/proyectos`);
-                await addDoc(proyectosRef, {
-                    titulo: titulo,
-                    descripcion: descripcion,
-                    link: link || null,
-                    fecha: new Date()
-                });
-                nuevoProyectoTitulo.value = '';
-                nuevoProyectoDescripcion.value = '';
-                nuevoProyectoLink.value = '';
-                showSuccess("Proyecto agregado ✅");
-                cargarProyectos();
-            } catch (error) {
-                console.error("Error al agregar proyecto:", error);
-                showError("Error al agregar proyecto");
-            }
-        }
-        
-        // Eventos de proyectos
-        proyectosChatBtn.addEventListener('click', abrirProyectos);
-        proyectosPanelBtn.addEventListener('click', abrirProyectos);
-        closeProyectosBtn.addEventListener('click', () => proyectosModal.classList.remove('active'));
-        agregarProyectoBtn.addEventListener('click', agregarProyecto);
-        
-        // Cerrar modal al hacer clic fuera
-        proyectosModal.addEventListener('click', (e) => {
-            if (e.target === proyectosModal) proyectosModal.classList.remove('active');
-        });
-        
-        // Resto de funciones
         async function setTypingStatus(isTyping) {
             if (!currentUser || !selectedUser || !currentChatId) return;
             const chatDocRef = doc(db, "chats", currentChatId);
@@ -1677,41 +1579,34 @@
             // Configurar evento de clic largo para eliminar mensajes
             setTimeout(() => {
                 document.querySelectorAll('.message').forEach(msgDiv => {
-                    msgDiv.removeEventListener('contextmenu', (e) => e.preventDefault());
+                    const messageId = msgDiv.dataset.messageId;
+                    const chatId = msgDiv.dataset.chatId;
+                    
                     msgDiv.addEventListener('contextmenu', (e) => {
                         e.preventDefault();
-                        const messageId = msgDiv.dataset.messageId;
-                        const chatId = msgDiv.dataset.chatId;
                         if (messageId && chatId) {
-                            selectedMessageId = messageId;
-                            selectedMessageChatId = chatId;
+                            window.selectedMessageId = messageId;
+                            window.selectedMessageChatId = chatId;
                             contextMenu.style.left = `${e.pageX}px`;
                             contextMenu.style.top = `${e.pageY}px`;
                             contextMenu.classList.add('active');
                         }
                     });
                     
-                    // Para móvil: clic largo (touchstart + touchend)
                     let touchTimer;
                     msgDiv.addEventListener('touchstart', (e) => {
                         touchTimer = setTimeout(() => {
-                            const messageId = msgDiv.dataset.messageId;
-                            const chatId = msgDiv.dataset.chatId;
                             if (messageId && chatId) {
-                                selectedMessageId = messageId;
-                                selectedMessageChatId = chatId;
+                                window.selectedMessageId = messageId;
+                                window.selectedMessageChatId = chatId;
                                 contextMenu.style.left = `${e.touches[0].pageX}px`;
                                 contextMenu.style.top = `${e.touches[0].pageY}px`;
                                 contextMenu.classList.add('active');
                             }
                         }, 500);
                     });
-                    msgDiv.addEventListener('touchend', () => {
-                        clearTimeout(touchTimer);
-                    });
-                    msgDiv.addEventListener('touchmove', () => {
-                        clearTimeout(touchTimer);
-                    });
+                    msgDiv.addEventListener('touchend', () => clearTimeout(touchTimer));
+                    msgDiv.addEventListener('touchmove', () => clearTimeout(touchTimer));
                 });
             }, 100);
             
@@ -1894,7 +1789,7 @@
             }
         });
         
-        console.log("TECNI-YA con eliminación de mensajes y botón Proyectos con martillo");
+        console.log("TECNI-YA con integración de Proyectos (Optimizador Pro)");
     </script>
 </body>
 </html>

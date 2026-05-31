@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Optimizador Pro</title>
+    <link rel="stylesheet" href="optimizadorcortes.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Optimizador de Cortes</h1>
+        <div class="mb-3">
+    <a href="index.html" class="btn btn-secondary" style="background:#444; color:white; padding:8px 16px; border-radius:8px; text-decoration:none;">← Volver al Dashboard</a>
+</div>
+
+        <section class="panel">
+            <h2 class="section-title">Datos del Trabajo</h2>
+            <div class="input-group" style="margin-bottom: 10px;">
+                <label>Cliente</label>
+                <input type="text" id="clientName" class="input-field text-input" placeholder="Nombre del cliente">
+            </div>
+            <div class="input-group" style="margin-bottom: 10px;">
+                <label>Tipo de Vidrio</label>
+                <input type="text" id="glassType" class="input-field text-input" placeholder="Ej: Crudo 4mm, Laminado...">
+            </div>
+            
+            <h2 class="section-title" style="margin-top: 15px;">Tamaño de Plancha</h2>
+            <div class="row-flex">
+                <div class="input-group">
+                    <label>Ancho (cm)</label>
+                    <input type="number" id="sheetWidth" class="input-field" readonly value="330">
+                </div>
+                <div class="input-group">
+                    <label>Altura (cm)</label>
+                    <input type="number" id="sheetHeight" class="input-field" readonly value="214">
+                </div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+    <h2 class="section-title" style="margin-bottom: 0;">Piezas</h2>
+    <button id="toggleTableHeight" class="toggle-btn">▼ Expandir</button>
+</div>
+            <div class="table-wrapper">
+                <table id="piecesTable">
+                    <thead>
+                        <tr>
+                            <th>Uso</th>
+                            <th>Ancho</th>
+                            <th>Altura</th>
+                            <th>Cant</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="btn-row">
+                <button id="addPiece" class="btn-add">+ Pieza</button>
+                <button id="optimize" class="optimizeBtn">OPTIMIZAR</button>
+                <button id="downloadBtn" class="sol-btn" style="background:var(--accent-blue)">Descargar Imagen</button>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2 class="section-title">Resultados</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span>Planchas totales: <b id="sheetsNeeded">0</b></span>
+            </div>
+            <div style="display: flex; justify-content: center; align-items: center; gap: 10px; border-top: 1px solid #333; padding-top: 10px;">
+                <button id="prevSolution" class="sol-btn">◀ Solución</button>
+                <span id="solutionIndex">1</span> / 8
+                <button id="nextSolution" class="sol-btn">Solución ▶</button>
+            </div>
+        </section>
+
+        <div id="sheetsContainer" style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px; margin-bottom: 30px;"></div>
+
+        <canvas id="canvas" style="display:none;"></canvas>
+    </div>
+
+    <!-- TECLADO FLOTANTE -->
+    <div id="floatingNumpad" class="floating-numpad">
+        <button id="closeNumpad" class="close-btn">✕</button>
+        <div class="numpad">
+            <button class="num" data-num="7">7</button>
+            <button class="num" data-num="8">8</button>
+            <button class="num" data-num="9">9</button>
+            <button class="num" data-num="4">4</button>
+            <button class="num" data-num="5">5</button>
+            <button class="num" data-num="6">6</button>
+            <button class="num" data-num="1">1</button>
+            <button class="num" data-num="2">2</button>
+            <button class="num" data-num="3">3</button>
+            <button class="num" data-num="delete">⌫</button>
+            <button class="num" data-num="0">0</button>
+            <button class="num" data-num=".">.</button>
+            <button class="nav-btn btn-blue" data-nav="prev">◀</button>
+            <div class="vertical-nav">
+                <button class="nav-btn btn-red-half" data-nav="up">▲</button>
+                <button class="nav-btn btn-red-half" data-nav="down">▼</button>
+            </div>
+            <button class="nav-btn btn-green" data-nav="next">▶</button>
+        </div>
+    </div>
+
+    <script src="optimizadorcortes.js"></script>
+</body>
+</html>

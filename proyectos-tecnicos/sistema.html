@@ -1,0 +1,269 @@
+<div id="seccion-sistema">
+    <div class="row mb-3">
+        <!-- 1. Sección Pedido (oculta porque ya está en index.html) -->
+        <!-- Nombre/Ambiente (oculto porque ya está en index.html) -->
+        <!-- Cantidad y Color (ocultos porque ya están en index.html) -->
+    </div>
+
+    <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" id="switch_materiales" onchange="gestionarMateriales()">
+        <label class="form-check-label texto-resaltado" for="switch_materiales">COSTOS DE ALUMINIOS (S/. ML)</label>
+    </div>
+    <div id="seccion_materiales" class="seccion-oculta mb-4">
+        <div class="contenedor-materiales text-center">
+            <div class="d-flex gap-3 mb-3 justify-content-center">
+                <div class="form-check radio-materiales">
+                    <input class="form-check-input" type="radio" name="opt_alum" id="alum_estandar" value="estandar" checked onchange="gestionarMateriales()">
+                    <label class="form-check-label text-white" for="alum_estandar">Aluminio Estandar</label>
+                </div>
+                <div class="form-check radio-materiales">
+                    <input class="form-check-input" type="radio" name="opt_alum" id="alum_pesados" value="pesados" onchange="gestionarMateriales()">
+                    <label class="form-check-label text-white" for="alum_pesados">Aluminio Pesado</label>
+                </div>
+            </div>
+            <ul class="list-group list-group-flush" id="tabla_precios_body"></ul>
+        </div>
+    </div>
+
+    <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" id="switch_accesorios" onchange="gestionarAccesorios()">
+        <label class="form-check-label texto-resaltado" for="switch_accesorios">COSTO DE ACCESORIOS (S/. UND)</label>
+    </div>
+    <div id="seccion_accesorios" class="seccion-oculta mb-4">
+        <div class="contenedor-materiales">
+            <ul class="list-group list-group-flush" id="tabla_accesorios_body"></ul>
+        </div>
+    </div>
+
+    <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" id="switch_tiras" onchange="gestionarTiras()">
+        <label class="form-check-label texto-resaltado" for="switch_tiras">COSTO DE TIRAS (S/. ML)</label>
+    </div>
+    <div id="seccion_tiras" class="seccion-oculta mb-4">
+        <div class="contenedor-materiales">
+            <ul class="list-group list-group-flush" id="tabla_tiras_body"></ul>
+        </div>
+    </div>
+
+    <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" id="switch_vidrios" onchange="gestionarVidriosUI()">
+        <label class="form-check-label texto-resaltado" for="switch_vidrios">COSTO DE VIDRIOS (S/. P2)</label>
+    </div>
+    <div id="seccion_vidrios" class="seccion-oculta mb-4">
+        <div class="contenedor-materiales">
+            <p class="text-center small text-muted">Seleccione el vidrio para el cálculo automático</p>
+            <ul class="list-group list-group-flush" id="tabla_vidrios_body"></ul>
+        </div>
+    </div>
+
+    <div class="row g-2 mb-3">
+        <div class="col-6">
+            <label class="form-label">Ancho Inf. (cm):</label>
+            <input type="number" step="0.1" class="form-control" id="ancho_inf" value="0" onfocus="this.select()" oninput="validarInputs(this); autoHojas(); actualizarAnchoSuperior()">
+        </div>
+        <div class="col-6">
+            <label class="form-label">Ancho Sup. (cm):</label>
+            <input type="number" step="0.1" class="form-control" id="ancho_sup" value="0" onfocus="this.select()" oninput="validarInputs(this); actualizarAnchoSuperior()">
+        </div>
+        <div class="col-6">
+            <label class="form-label">Altura Izq. (cm):</label>
+            <input type="number" step="0.1" class="form-control" id="alt_izq" value="0" onfocus="this.select()" oninput="validarInputs(this); calcularTodo()">
+        </div>
+        <div class="col-6">
+            <label class="form-label">Altura Der. (cm):</label>
+            <input type="number" step="0.1" class="form-control" id="alt_der" value="0" onfocus="this.select()" oninput="validarInputs(this); calcularTodo()">
+        </div>
+    </div>
+
+    <div class="row g-2 mb-3 text-center">
+        <div class="col-4">
+            <label class="form-label">Hojas:</label>
+            <input type="number" class="form-control" id="cant_hojas" value="2" min="1" onfocus="this.select()" oninput="validarHojas(this); calcularFijas()">
+        </div>
+        <div class="col-4">
+            <label class="form-label">Fijas:</label>
+            <input type="number" class="form-control" id="cant_fijas" value="1" onfocus="this.select()" oninput="calcularTodo()">
+        </div>
+        <div class="col-4">
+            <label class="form-label">Corr.:</label>
+            <input type="text" class="form-control bg-black text-success fw-bold" id="cant_corr" readonly>
+        </div>
+    </div>
+
+    <hr style="border-color: #444;">
+
+    <div class="d-flex align-items-center mb-3">
+        <button type="button" class="btn-config-puente me-3" id="btn_toggle_vista" onclick="toggleVistaPuente()">CONFIGURAR PUENTE</button>
+        <span class="texto-resaltado me-2">INCLUIR PUENTE</span>
+        <div class="form-check form-switch mt-1">
+            <input class="form-check-input" type="checkbox" id="incluir_en_calculos" onchange="calcularTodo(); activarSugerenciaPuente()">
+        </div>
+    </div>
+
+    <div id="seccion_puente_master" class="seccion-oculta border border-secondary p-3 rounded mb-4">
+        <div class="row g-2 mb-3">
+            <div class="col-4">
+                <label class="form-label small text-warning fw-bold">ALT. PUENTE (cm):</label>
+                <input type="number" step="0.1" class="form-control border-warning" id="alt_puente" onfocus="this.select()" oninput="validarAlturaPuente(this)">
+            </div>
+            <div class="col-4">
+                <label class="form-label small text-info fw-bold">📐 ancho sobre p.</label>
+                <input type="text" class="form-control bg-readonly text-info fw-bold" id="ancho_sup_auto" readonly>
+                <small class="text-muted" style="font-size: 0.65rem;">Valor automático según ancho superior</small>
+            </div>
+            <div class="col-4">
+                <label class="form-label small">ESPESOR RIEL (cm):</label>
+                <input type="number" step="0.1" class="form-control" id="espesor" value="1.6" onfocus="this.select()" oninput="validarInputs(this)">
+            </div>
+        </div>
+
+        <div class="row g-2 mb-3">
+            <div class="col-6">
+                <label class="form-label small text-info fw-bold">S.P. Izq (Rest.):</label>
+                <input type="text" class="form-control form-control-sm bg-black text-info fw-bold" id="sp_izq" readonly>
+            </div>
+            <div class="col-6">
+                <label class="form-label small text-info fw-bold">S.P. Der (Rest.):</label>
+                <input type="text" class="form-control form-control-sm bg-black text-info fw-bold" id="sp_der" readonly>
+            </div>
+        </div>
+
+        <div class="d-flex gap-4 mb-3 justify-content-center">
+            <div class="form-check radio-materiales">
+                <input class="form-check-input" type="radio" name="opt_puente" id="radio_fijos" value="fijos" checked onchange="gestionarSecciones()">
+                <label class="form-check-label text-white" for="radio_fijos">🧱 Solo Fijos</label>
+            </div>
+            <div class="form-check radio-materiales">
+                <input class="form-check-input" type="radio" name="opt_puente" id="radio_corr" value="corredizos" onchange="gestionarSecciones()">
+                <label class="form-check-label text-white" for="radio_corr">🔄 Corredizos + Fijos</label>
+            </div>
+        </div>
+
+        <div id="config_corredizos_puente" class="mb-3">
+            <div class="row g-2 text-center">
+                <div class="col-4">
+                    <label class="form-label small">Hojas P.:</label>
+                    <input type="number" class="form-control form-control-sm" id="hojas_puente" value="2" 
+                           onfocus="this.select()" onclick="this.select()"
+                           oninput="validarHojasPuenteInput(this)"
+                           onchange="validarHojasPuenteChange(this)">
+                </div>
+                <div class="col-4">
+                    <label class="form-label small">Fijos P.:</label>
+                    <input type="number" class="form-control form-control-sm" id="fijos_puente" value="1" 
+                           onfocus="this.select(); this.dataset.editando = 'true'"
+                           onclick="this.select()"
+                           oninput="validarFijosPuenteInput(this)"
+                           onchange="validarFijosPuenteChange(this)">
+                </div>
+                <div class="col-4">
+                    <label class="form-label small">Corr. P.:</label>
+                    <input type="text" class="form-control form-control-sm bg-black text-success fw-bold" id="corredizos_puente" readonly>
+                </div>
+            </div>
+            <div class="small text-muted text-center mt-2">📌 Mínimo: 2 hojas | Fijos: 0 a (Hojas-1)</div>
+        </div>
+
+        <div id="config_fijos_puente" class="mb-3 seccion-oculta">
+            <div class="row g-2 text-center">
+                <div class="col-12">
+                    <label class="form-label small text-info fw-bold">📐 Cantidad de Paneles Fijos en Sobre Ventana:</label>
+                    <div class="d-flex align-items-center justify-content-center gap-3 flex-wrap">
+                        <input type="number" class="form-control form-control-sm text-center" 
+                               style="width: 100px;" id="fijos_solo_puente" value="1" min="1" 
+                               oninput="validarFijosPuente(this)" onchange="calcularTodo()" onfocus="this.select()">
+                        <button type="button" class="btn btn-sm btn-outline-info" onclick="sugerirCantidadFijasPuente()" 
+                                style="font-size: 0.7rem;">🔄 Sugerir automático</button>
+                    </div>
+                    <div class="small text-muted mt-2">
+                        📏 Ancho Sobre Ventana: <strong id="ancho_actual_sugerencia" class="text-warning">0</strong> cm<br>
+                        🧮 Sugerencia actual: <strong id="sugerencia_fijos_texto" class="text-success">---</strong>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-12">
+                    <label class="form-label small">🧷 Espesor Soportes (cm):</label>
+                    <input type="number" step="0.1" class="form-control form-control-sm" id="esp_soportes" value="0.0" onfocus="this.select()" oninput="calcularTodo()">
+                    <small class="text-muted">Para cálculo de perfiles en sobreventana de solo fijos</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" id="switch_cortes" onchange="gestionarCortes()">
+        <label class="form-check-label texto-resaltado" for="switch_cortes">MEDIDAS GENERALES</label>
+    </div>
+    <div id="resultados_cortes" class="seccion-oculta mb-4 contenedor-materiales">
+        <ul class="list-group list-group-flush" id="lista_cortes_detallada"></ul>
+    </div>
+
+    <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" id="switch_req" onchange="gestionarRequeridos()">
+        <label class="form-check-label texto-resaltado" for="switch_req">ALUMINIOS REQUERIDOS</label>
+    </div>
+    <div id="resultados_requeridos" class="seccion-oculta mb-4 contenedor-materiales">
+        <div class="d-flex justify-content-center gap-2 mb-3">
+            <button type="button" id="btn_req_estandar" class="btn btn-sm btn-outline-primary active" onclick="setMaterialReq('estandar')">Estándar</button>
+            <button type="button" id="btn_req_pesado" class="btn btn-sm btn-outline-warning" onclick="setMaterialReq('pesados')">Pesado</button>
+        </div>
+        <ul class="list-group list-group-flush" id="lista_requeridos_body"></ul>
+    </div>
+
+    <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" id="switch_vidrios_req" onchange="gestionarVidriosReq()">
+        <label class="form-check-label texto-resaltado" for="switch_vidrios_req">VIDRIOS REQUERIDOS</label>
+    </div>
+    <div id="resultados_vidrios_req" class="seccion-oculta mb-4 contenedor-materiales">
+        <div class="row text-muted small mb-2 px-3">
+            <div class="col-4">DESCRIPCIÓN</div>
+            <div class="col-4 text-center">MEDIDA (CANT)</div>
+            <div class="col-4 text-end">TOTAL</div>
+        </div>
+        <ul class="list-group list-group-flush" id="lista_vidrios_req_body"></ul>
+    </div>
+
+    <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" id="switch_accesorios_req" onchange="gestionarAccesoriosReq()">
+        <label class="form-check-label texto-resaltado" for="switch_accesorios_req">ACCESORIOS REQUERIDOS</label>
+    </div>
+    <div id="resultados_accesorios_req" class="seccion-oculta mb-4 contenedor-materiales">
+        <div class="row text-muted small mb-2 px-3">
+            <div class="col-5">DESCRIPCIÓN</div>
+            <div class="col-3 text-center">CÓDIGO</div>
+            <div class="col-2 text-center">CANTIDAD</div>
+            <div class="col-2 text-end">TOTAL</div>
+        </div>
+        <ul class="list-group list-group-flush" id="lista_accesorios_req_body"></ul>
+    </div>
+
+        <!-- TIRAS REQUERIDAS -->
+    <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" id="switch_tiras_req" onchange="gestionarTirasReq()">
+        <label class="form-check-label texto-resaltado" for="switch_tiras_req">TIRAS REQUERIDAS</label>
+    </div>
+    <div id="resultados_tiras_req" class="seccion-oculta mb-4 contenedor-materiales">
+        <div class="row text-muted small mb-2 px-3">
+            <div class="col-5">DESCRIPCIÓN</div>
+            <div class="col-3 text-center">CÓDIGO</div>
+            <div class="col-2 text-center">METROS</div>
+            <div class="col-2 text-end">TOTAL</div>
+        </div>
+        <ul class="list-group list-group-flush" id="lista_tiras_req_body"></ul>
+    </div>
+
+    <!-- SECCIÓN DE RESUMEN DE PRODUCCIÓN -->
+<div class="form-check form-switch mb-3">
+    <input class="form-check-input" type="checkbox" id="switch_resumen" onchange="gestionarResumen()">
+    <label class="form-check-label texto-resaltado" for="switch_resumen">📋 RESUMEN DE PRODUCCIÓN</label>
+</div>
+<div id="resultados_resumen" class="seccion-oculta mb-4 contenedor-materiales">
+    <div class="text-end mb-2">
+        <button type="button" class="btn btn-sm btn-outline-info" onclick="refrescarResumenCompleto()">🔄 Refrescar</button>
+        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="imprimirResumen()">🖨️ Imprimir</button>
+    </div>
+    <pre id="contenedor_resumen" style="font-family: monospace; font-size: 0.85rem; white-space: pre-wrap; margin: 0;"></pre>
+</div>
+
+</div>  <!-- Cierra el div principal --> 

@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Optimizador Pro - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .dashboard {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* ========== CABECERA ========== */
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, #bb86fc, #03dac6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        /* ========== BOTONES SUPERIORES ========== */
+        .botones-superiores {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            background: #2c2c3e;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            cursor: pointer;
+            color: #fff;
+            transition: 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            transform: scale(1.02);
+            filter: brightness(1.1);
+        }
+
+        .btn-whatsapp { background: #25D366; }
+        .btn-telegram { background: #0088cc; }
+        .btn-exportar { background: #bb86fc; color: #000; }
+        .btn-importar { background: #03dac6; color: #000; }
+        .btn-soporte { background: #ff9800; }
+
+        /* ========== TARJETA DE SERIE ========== */
+        .serie-card {
+            background: rgba(0,0,0,0.4);
+            border-radius: 12px;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .serie-label {
+            font-size: 0.7rem;
+            color: #888;
+        }
+
+        .serie-valor {
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: #00ff88;
+            letter-spacing: 1px;
+        }
+
+        /* ========== BANNER SUPERIOR ========== */
+        .banner {
+            background: linear-gradient(90deg, #1a1a2e, #16213e, #1a1a2e);
+            border-radius: 16px;
+            padding: 12px;
+            text-align: center;
+            margin-bottom: 25px;
+            border: 1px solid #bb86fc;
+            min-height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .banner img {
+            max-height: 50px;
+            width: auto;
+            border-radius: 8px;
+        }
+
+        /* ========== GRILLA DE PUBLICIDAD (2x2) ========== */
+        .publicidad-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .pub-item {
+            background: rgba(25, 25, 35, 0.7);
+            border-radius: 16px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid #333;
+            aspect-ratio: 1 / 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pub-titulo {
+            font-size: 0.7rem;
+            color: #bb86fc;
+            margin-bottom: 8px;
+        }
+
+        .pub-contenido {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            color: #aaa;
+        }
+
+        .pub-contenido img {
+            max-width: 90%;
+            max-height: 80px;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+
+        .btn-pub {
+            background: #333;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.6rem;
+            cursor: pointer;
+            color: #fff;
+            margin-top: 10px;
+            width: fit-content;
+            align-self: center;
+        }
+
+        /* ========== BOTONES DE MÓDULOS ========== */
+        .modulos {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn-modulo {
+            background: #2c2c3e;
+            border: none;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            color: #fff;
+            text-align: center;
+            text-decoration: none;
+            transition: 0.2s;
+        }
+
+        .btn-modulo:hover {
+            background: #3c3c4e;
+            transform: scale(1.01);
+        }
+
+        /* ========== FOOTER ========== */
+        .footer {
+            text-align: center;
+            font-size: 0.6rem;
+            color: #555;
+            margin-top: 20px;
+        }
+
+        /* ========== MODAL ========== */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: #1e1e2e;
+            border-radius: 20px;
+            padding: 20px;
+            max-width: 90%;
+            width: 350px;
+            border: 1px solid #bb86fc;
+        }
+        .modal-content textarea {
+            width: 100%;
+            height: 120px;
+            background: #2c2c3e;
+            border: 1px solid #444;
+            border-radius: 12px;
+            color: #fff;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            z-index: 1100;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- CABECERA -->
+        <div class="header">
+            <h1>⚙️ OPTIMIZADOR PRO</h1>
+        </div>
+
+        <!-- BOTONES SUPERIORES -->
+        <div class="botones-superiores" id="botonesContainer"></div>
+
+        <!-- TARJETA DE SERIE -->
+        <div class="serie-card">
+            <span class="serie-label">🔢 NÚMERO DE SERIE</span>
+            <span class="serie-valor" id="numeroSerie">Cargando...</span>
+            <button class="btn" onclick="copiarNumeroSerie()" style="background:#444; padding: 4px 12px;">📋 Copiar</button>
+        </div>
+
+        <!-- BANNER SUPERIOR -->
+        <div class="banner" id="bannerContainer">
+            <div id="bannerContent">📢 BANNER SUPERIOR</div>
+        </div>
+
+        <!-- PUBLICIDAD GRILLA 2x2 -->
+        <div class="publicidad-grid">
+            <div class="pub-item">
+                <div class="pub-titulo">📢 ESPACIO 1</div>
+                <div class="pub-contenido" id="pub1Content">🖼️</div>
+                <button class="btn-pub" onclick="cambiarPublicidad(1)">Cambiar</button>
+            </div>
+            <div class="pub-item">
+                <div class="pub-titulo">📢 ESPACIO 2</div>
+                <div class="pub-contenido" id="pub2Content">🎥</div>
+                <button class="btn-pub" onclick="cambiarPublicidad(2)">Cambiar</button>
+            </div>
+            <div class="pub-item">
+                <div class="pub-titulo">📢 ESPACIO 3</div>
+                <div class="pub-contenido" id="pub3Content">⭐</div>
+                <button class="btn-pub" onclick="cambiarPublicidad(3)">Cambiar</button>
+            </div>
+            <div class="pub-item">
+                <div class="pub-titulo">📢 ESPACIO 4</div>
+                <div class="pub-contenido" id="pub4Content">🏆</div>
+                <button class="btn-pub" onclick="cambiarPublicidad(4)">Cambiar</button>
+            </div>
+        </div>
+
+        <!-- BOTONES DE MÓDULOS -->
+        <div class="modulos">
+            <a href="obras.html" class="btn-modulo">🏗️ Obras</a>
+            <a href="optimizadorcortes.html" class="btn-modulo">✂️ Optimizador de Corte</a>
+            <a href="optimizadorvarillas.html" class="btn-modulo">📐 Optimizador de Varillas</a>
+            <div class="btn-modulo" onclick="mostrarProximamente()" style="cursor: pointer;">🔧 Calculadora Técnica</div>
+            <div class="btn-modulo" onclick="mostrarProximamente()" style="cursor: pointer;">📝 Notas Técnicas</div>
+        </div>
+
+        <div class="footer">
+            Optimizador Pro v1.0 | Industrial Full
+        </div>
+    </div>
+
+    <!-- MODAL SOPORTE -->
+    <div id="modalSoporte" class="modal">
+        <div class="modal-content">
+            <h3>💬 Mensaje a Soporte</h3>
+            <textarea id="mensajeSoporte" placeholder="Escribe tu mensaje..."></textarea>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button class="btn" onclick="cerrarModal()" style="background:#444">Cancelar</button>
+                <button class="btn" onclick="enviarMensajeSoporte()" style="background:#25D366">Enviar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">✅ Copiado</div>
+    <input type="file" id="importFile" style="display:none" accept=".json">
+
+    <script>
+        // Botones superiores
+        function generarBotones() {
+            document.getElementById('botonesContainer').innerHTML = `
+                <button class="btn btn-whatsapp" onclick="abrirWhatsApp()">WhatsApp</button>
+                <button class="btn btn-telegram" onclick="abrirTelegram()">Telegram</button>
+                <button class="btn btn-exportar" onclick="exportarConfiguracion()">Exportar</button>
+                <button class="btn btn-importar" onclick="document.getElementById('importFile').click()">Importar</button>
+                <button class="btn btn-soporte" onclick="mostrarModalSoporte()">Soporte</button>
+            `;
+        }
+
+        // Número de serie
+        function generarNumeroSerie() {
+            let stored = localStorage.getItem('app_serial');
+            if (stored) return stored;
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789';
+            let serial = '';
+            for (let i = 0; i < 10; i++) {
+                if (i === 3 || i === 6) serial += '-';
+                serial += chars[Math.floor(Math.random() * chars.length)];
+            }
+            localStorage.setItem('app_serial', serial);
+            return serial;
+        }
+
+        function mostrarNumeroSerie() {
+            document.getElementById('numeroSerie').innerText = generarNumeroSerie();
+        }
+
+        function copiarNumeroSerie() {
+            navigator.clipboard.writeText(document.getElementById('numeroSerie').innerText);
+            mostrarToast('📋 Serie copiada');
+        }
+
+        function mostrarToast(mensaje) {
+            const toast = document.getElementById('toast');
+            toast.innerText = mensaje;
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 2000);
+        }
+
+        // WhatsApp y Telegram
+        function abrirWhatsApp() {
+            const serial = generarNumeroSerie();
+            window.open(`https://wa.me/51999999999?text=${encodeURIComponent(`Hola, vengo de Optimizador Pro (Serie: ${serial})`)}`, '_blank');
+        }
+
+        function abrirTelegram() {
+            const serial = generarNumeroSerie();
+            window.open(`https://t.me/tu_usuario?text=${encodeURIComponent(`Hola, vengo de Optimizador Pro (Serie: ${serial})`)}`, '_blank');
+        }
+
+        // Exportar / Importar
+        function exportarConfiguracion() {
+            const data = {
+                version: "1.0",
+                fecha: new Date().toISOString(),
+                serial: generarNumeroSerie(),
+                banner: localStorage.getItem('banner_img'),
+                publicidades: {
+                    1: localStorage.getItem('pub_img_1'),
+                    2: localStorage.getItem('pub_img_2'),
+                    3: localStorage.getItem('pub_img_3'),
+                    4: localStorage.getItem('pub_img_4')
+                }
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `optimizador_backup_${data.serial}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            mostrarToast('📤 Exportado');
+        }
+
+        function importarConfiguracion(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.banner) localStorage.setItem('banner_img', data.banner);
+                    if (data.publicidades) {
+                        for (let i = 1; i <= 4; i++) {
+                            if (data.publicidades[i]) localStorage.setItem(`pub_img_${i}`, data.publicidades[i]);
+                        }
+                    }
+                    cargarPublicidades();
+                    mostrarToast('📥 Importado');
+                } catch (err) { alert('Archivo inválido'); }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        // Publicidad
+        function cambiarPublicidad(num) {
+            const url = prompt(`Pega la URL de la imagen para el espacio ${num}:`);
+            if (url) {
+                localStorage.setItem(`pub_img_${num}`, url);
+                cargarPublicidades();
+            }
+        }
+
+        function cambiarBanner() {
+            const url = prompt('Pega la URL de la imagen para el banner superior:');
+            if (url) {
+                localStorage.setItem('banner_img', url);
+                cargarPublicidades();
+            }
+        }
+
+        function cargarPublicidades() {
+            // Banner
+            const bannerUrl = localStorage.getItem('banner_img');
+            const bannerDiv = document.getElementById('bannerContent');
+            if (bannerUrl && bannerDiv) {
+                bannerDiv.innerHTML = `<img src="${bannerUrl}" alt="Banner" style="max-height:50px;"><button class="btn-pub" onclick="cambiarBanner()" style="margin-left: 10px;">Cambiar</button>`;
+            } else if (bannerDiv) {
+                bannerDiv.innerHTML = `📢 BANNER SUPERIOR <button class="btn-pub" onclick="cambiarBanner()" style="margin-left: 10px;">Agregar</button>`;
+            }
+
+            // Espacios 1-4
+            for (let i = 1; i <= 4; i++) {
+                const url = localStorage.getItem(`pub_img_${i}`);
+                const container = document.getElementById(`pub${i}Content`);
+                if (url && container) {
+                    container.innerHTML = `<img src="${url}" alt="Pub ${i}">`;
+                } else if (container) {
+                    const iconos = ['🖼️', '🎥', '⭐', '🏆'];
+                    container.innerHTML = iconos[i-1];
+                }
+            }
+        }
+
+        // Modal soporte
+        function mostrarModalSoporte() {
+            document.getElementById('modalSoporte').style.display = 'flex';
+        }
+        function cerrarModal() {
+            document.getElementById('modalSoporte').style.display = 'none';
+        }
+        function enviarMensajeSoporte() {
+            const mensaje = document.getElementById('mensajeSoporte').value;
+            if (!mensaje.trim()) { alert('Escribe un mensaje'); return; }
+            const serial = generarNumeroSerie();
+            window.open(`https://wa.me/51999999999?text=${encodeURIComponent(`[Optimizador Pro - Serie: ${serial}]\n\n${mensaje}`)}`, '_blank');
+            cerrarModal();
+            document.getElementById('mensajeSoporte').value = '';
+        }
+
+        function mostrarProximamente() {
+            mostrarToast('⏳ Módulo en desarrollo... próximamente');
+        }
+
+        // Inicializar
+        function inicializar() {
+            generarBotones();
+            mostrarNumeroSerie();
+            cargarPublicidades();
+        }
+
+        document.getElementById('importFile')?.addEventListener('change', importarConfiguracion);
+        inicializar();
+    </script>
+</body>
+</html>

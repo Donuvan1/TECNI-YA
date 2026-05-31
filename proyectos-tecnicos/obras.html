@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotizador Pro - Industrial Full</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #121212; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; }
+        .card { background-color: #1e1e1e; border: none; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); position: relative; }
+        .form-label { font-weight: 500; color: #bb86fc; }
+        .form-control, .form-select { background-color: #2c2c2c; border: 1px solid #444; color: white; }
+        .form-control:focus { background-color: #333; color: white; border-color: #bb86fc; box-shadow: none; }
+        .subtitulo { border-bottom: 2px solid #bb86fc; padding-bottom: 5px; margin-bottom: 20px; text-transform: uppercase; font-size: 1.2rem; }
+        .texto-resaltado { color: #ffffff; font-weight: bold; }
+        .seccion-oculta { display: none; }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+        .contenedor-materiales { background-color: #252525; border: 1px solid #444; border-radius: 10px; padding: 15px; }
+        .radio-materiales { color: #ffffff !important; background-color: #333; padding: 8px 12px; border-radius: 8px; border: 1px solid #555; display: inline-block; cursor: pointer; }
+        .caja-dato { width: 70px; height: 28px; font-size: 0.85rem; text-align: center; background-color: #121212 !important; border: 1px solid #555 !important; color: #00ff00 !important; border-radius: 5px; display: inline-flex; align-items: center; justify-content: center; }
+        .list-group-item { border-color: #444 !important; background: transparent !important; color: #e0e0e0 !important; font-size: 0.9rem; }
+        .codigo-resaltado { color: #f1f508; font-weight: bold; font-family: monospace; font-size: 1rem; }
+        .corte-medida { color: #00ff00; font-weight: bold; }
+        .btn-reinicio { position: absolute; top: 15px; right: 15px; padding: 2px 10px; font-size: 0.75rem; z-index: 10; }
+        .bg-readonly { background-color: #1a1a1a !important; color: #888 !important; }
+        .num-fila { color: #bb86fc; font-weight: bold; width: 35px; display: inline-block; text-align: left; margin-right: 5px; }
+        .btn-config-puente { background-color: #fd7e14; color: white; font-weight: bold; border: none; padding: 5px 15px; border-radius: 5px; transition: 0.3s; }
+        .btn-config-puente:hover { background-color: #e66a00; color: white; }
+        hr { border-color: #444; }
+        .bg-black { background-color: #000 !important; }
+        .text-success { color: #00ff00 !important; }
+        .fw-bold { font-weight: bold; }
+        /* Estilos para el resumen de producción */
+        #contenedor_resumen {
+    color: #e0e0e0 !important;
+}
+
+/* Estilos para vista previa de hojas */
+.vista-previa-container {
+    background-color: #1a1a1a;
+    border-radius: 10px;
+    padding: 15px;
+    min-height: 200px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 20px;
+}
+.hoja-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+.hoja-altura {
+    position: absolute;
+    left: -25px;
+    top: 50%;
+    transform: translateY(-50%);
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    font-size: 0.7rem;
+    font-weight: bold;
+    color: #bb86fc;
+    white-space: nowrap;
+}
+.hoja-rectangulo {
+    width: 80px;
+    background-color: #2c2c2c;
+    border: 2px solid #bb86fc;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+.hoja-rectangulo.fija {
+    border-color: #4caf50;
+}
+.hoja-rectangulo.corrediza {
+    border-color: #ff9800;
+}
+.hoja-tipo {
+    font-size: 0.7rem;
+    font-weight: bold;
+    margin-top: 5px;
+}
+.hoja-ancho {
+    margin-top: 8px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: #00ff00;
+    text-align: center;
+}
+.hoja-ancho-arriba {
+    position: absolute;
+    top: -20px;
+    font-size: 0.7rem;
+    color: #ff9800;
+}
+.hoja-ancho-abajo {
+    margin-top: 8px;
+    font-size: 0.75rem;
+    color: #00ff00;
+}
+
+#contenedor_resumen table {
+    color: #e0e0e0 !important;
+}
+
+#contenedor_resumen th {
+    color: #bb86fc !important;
+}
+
+#contenedor_resumen td {
+    color: #e0e0e0 !important;
+}
+
+#contenedor_resumen h5 {
+    color: #bb86fc !important;
+}
+
+#contenedor_resumen h4 {
+    color: #bb86fc !important;
+}
+.hoja-altura-dentro {
+    font-size: 0.7rem;
+    font-weight: bold;
+    color: #bb86fc;
+    text-align: center;
+    background-color: rgba(187, 134, 252, 0.2);
+    border-radius: 4px;
+    padding: 2px 6px;
+    margin-top: 4px;
+}
+/* Estilos para aluminios requeridos */
+#lista_requeridos_body_s80 .list-group-item {
+    background-color: #1e1e1e !important;
+    border-color: #444 !important;
+    color: #e0e0e0 !important;
+}
+
+#lista_requeridos_body_s80 .num-fila {
+    color: #bb86fc !important;
+}
+
+#lista_requeridos_body_s80 .codigo-resaltado {
+    color: #f1f508 !important;
+    font-weight: bold;
+}
+
+#lista_requeridos_body_s80 .corte-medida {
+    color: #00ff00 !important;
+    font-weight: bold;
+}
+
+#lista_requeridos_body_s80 strong {
+    color: #ffffff !important;
+}
+
+#lista_requeridos_body_s80 .small {
+    color: #aaaaaa !important;
+}
+
+#lista_requeridos_body_s80 .small strong {
+    color: #bb86fc !important;
+}
+    </style>
+</head>
+<body>
+
+<div class="container py-4">
+    <div class="mb-3">
+    <a href="index.html" class="btn btn-secondary">← Volver al Dashboard</a>
+</div>
+    <div class="card p-4">
+        <button type="button" class="btn btn-outline-danger btn-reinicio" onclick="reiniciarTodo()">Reiniciar</button>
+        <button type="button" class="btn btn-outline-warning btn-reinicio" style="right: 100px;" onclick="abrirPanelAdmin()">🔧 Admin</button>
+        <h2 class="subtitulo">Ingresar Datos</h2>
+        
+        <div class="row mb-3">
+            <div class="col-12 mb-3">
+                <label class="form-label">Pedido:</label>
+                <select class="form-select" id="pedido" onchange="cambiarTipoPedido()">
+                    <option value="" selected disabled>-- Seleccione un pedido --</option>
+                    <option value="sistema">Ventanas Sistema (S/. 9.00)</option>
+                    <option value="serie80">Serie 80 (S/. 35.00)</option>
+                    <option value="serie25">Serie 25 CC (S/. 25.00)</option>
+                </select>
+            </div>
+            <div class="col-12 mb-3">
+                <label class="form-label">Nombre / Ambiente:</label>
+                <input type="text" class="form-control" id="nombre_ventana" value="1">
+            </div>
+            <div class="col-6">
+                <label class="form-label">Cantidad:</label>
+                <input type="number" class="form-control" id="cantidad" value="1" oninput="if(window.calcularTodo) calcularTodo()" onfocus="this.select()">
+            </div>
+            <div class="col-6">
+                <label class="form-label">Color:</label>
+                <select class="form-select" id="color_aluminio">
+                    <option value="blanco">Blanco</option>
+                    <option value="negro">Negro</option>
+                    <option value="natural">Natural</option>
+                    <option value="madera">Madera</option>
+                </select>
+            </div>
+        </div>
+        <!-- Modal Administrador -->
+<div class="modal fade" id="modalAdmin" tabindex="-1" aria-hidden="true" style="display: none;">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content bg-dark text-white">
+            <div class="modal-header">
+                <h5 class="modal-title">🔧 Panel de Administración - Materiales</h5>
+                <button type="button" class="btn-close btn-close-white" onclick="cerrarModalAdmin()"></button>
+            </div>
+            <div class="modal-body">
+                <ul class="nav nav-tabs" id="adminTabs">
+                    <li class="nav-item"><button class="nav-link active" onclick="cambiarTabAdmin('perfiles')">📐 Perfiles</button></li>
+                    <li class="nav-item"><button class="nav-link" onclick="cambiarTabAdmin('accesorios')">🔧 Accesorios</button></li>
+                    <li class="nav-item"><button class="nav-link" onclick="cambiarTabAdmin('tiras')">📏 Tiras</button></li>
+                    <li class="nav-item"><button class="nav-link" onclick="cambiarTabAdmin('vidrios')">🪟 Vidrios</button></li>
+                </ul>
+                <div id="contenidoAdmin" class="mt-3" style="max-height: 400px; overflow-y: auto;">
+                    <!-- Aquí se cargan los datos -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-success" onclick="guardarCambiosAdmin()">💾 Guardar Cambios</button>
+                <button class="btn btn-secondary" onclick="cerrarModalAdmin()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+        <hr>
+
+        <div id="contenedor-seccion"></div>
+    </div>
+</div>
+
+<script>
+    let configuracionCompleta = null;
+    let tipoPedidoActual = '';
+
+    
+
+    async function cambiarTipoPedido() {
+        const selector = document.getElementById('pedido');
+        tipoPedidoActual = selector.value;
+        
+        if (!tipoPedidoActual) {
+            document.getElementById('contenedor-seccion').innerHTML = '';
+            return;
+        }
+        
+        const contenedor = document.getElementById('contenedor-seccion');
+        
+        let archivoHtml = '';
+        let archivoJs = '';
+        
+        if (tipoPedidoActual === 'sistema') {
+            archivoHtml = 'sistema.html';
+            archivoJs = 'sistema.js';
+        } else if (tipoPedidoActual === 'serie80') {
+            archivoHtml = 'serie80.html';
+            archivoJs = 'serie80.js';
+        } else {
+            archivoHtml = 'sistema.html';
+            archivoJs = 'sistema.js';
+        }
+        
+        try {
+            const response = await fetch(archivoHtml);
+            const html = await response.text();
+            contenedor.innerHTML = html;
+            
+            const scriptAnterior = document.getElementById('script-seccion');
+            if (scriptAnterior) scriptAnterior.remove();
+            
+            const script = document.createElement('script');
+            script.id = 'script-seccion';
+            script.src = archivoJs;
+            document.body.appendChild(script);
+            
+            script.onload = function() {
+                if (tipoPedidoActual === 'sistema' && typeof inicializarSistema === 'function') {
+                    inicializarSistema(configuracionCompleta);
+                } else if (tipoPedidoActual === 'serie80' && typeof inicializarSerie80 === 'function') {
+                    inicializarSerie80(configuracionCompleta);
+                }
+            };
+        } catch (error) {
+            console.error('Error cargando sección:', error);
+            contenedor.innerHTML = '<div class="alert alert-danger">Error cargando la sección. Verifica que los archivos existen.</div>';
+        }
+    }
+
+    function reiniciarTodo() {
+        if (confirm('¿Reiniciar todo?')) {
+            location.reload();
+        }
+    }
+
+
+    // ========== PANEL DE ADMINISTRACIÓN ==========
+let datosOriginales = null;
+let tabActual = 'perfiles';
+
+function abrirPanelAdmin() {
+    if (!configuracionCompleta) {
+        alert('Espera a que cargue la configuración...');
+        return;
+    }
+    
+    // Guardar copia original para poder cancelar
+    datosOriginales = JSON.parse(JSON.stringify(configuracionCompleta));
+    
+    // Mostrar modal
+    document.getElementById('modalAdmin').style.display = 'block';
+    document.getElementById('modalAdmin').classList.add('show');
+    document.body.style.overflow = 'hidden';
+    
+    // Cargar primera pestaña
+    cargarTabAdmin('perfiles');
+}
+
+function cerrarModalAdmin() {
+    document.getElementById('modalAdmin').style.display = 'none';
+    document.getElementById('modalAdmin').classList.remove('show');
+    document.body.style.overflow = '';
+}
+
+function cambiarTabAdmin(tab) {
+    tabActual = tab;
+    cargarTabAdmin(tab);
+    
+    // Actualizar estilos de pestañas
+    document.querySelectorAll('#adminTabs .nav-link').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+}
+
+function cargarTabAdmin(tipo) {
+    const contenedor = document.getElementById('contenidoAdmin');
+    if (!contenedor) return;
+    
+    let html = '';
+    
+    if (tipo === 'perfiles') {
+        html = generarTablaPerfiles();
+    } else if (tipo === 'accesorios') {
+        html = generarTablaAccesorios();
+    } else if (tipo === 'tiras') {
+        html = generarTablaTiras();
+    } else if (tipo === 'vidrios') {
+        html = generarTablaVidrios();
+    }
+    
+    contenedor.innerHTML = html;
+}
+
+function generarTablaPerfiles() {
+    const sistema = configuracionCompleta.sistema.perfiles;
+    const serie80 = configuracionCompleta.serie80.perfiles;
+    
+    return `
+        <h6 class="text-info">Ventanas Sistema</h6>
+        <table class="table table-sm table-dark">
+            <thead><tr><th>Estándar (S/.)</th><th>Pesado (S/.)</th></tr></thead>
+            <tbody>
+                ${sistema.estandar.map((p, i) => `
+                    <tr>
+                        <td><input type="text" class="form-control form-control-sm" value="${p.p}" data-tipo="perfil" data-sistema="sistema" data-categoria="estandar" data-indice="${i}" data-nombre="${p.n}" data-codigo="${p.c}" style="width: 100px;"></td>
+                        <td><input type="text" class="form-control form-control-sm" value="${sistema.pesados[i]?.p || ''}" data-tipo="perfil" data-sistema="sistema" data-categoria="pesados" data-indice="${i}" data-nombre="${p.n}" data-codigo="${p.c}" style="width: 100px;"></td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+        
+        <h6 class="text-info mt-3">Serie 80</h6>
+        <table class="table table-sm table-dark">
+            <thead><tr><th>Estándar (S/.)</th><th>Pesado (S/.)</th></tr></thead>
+            <tbody>
+                ${serie80.estandar.map((p, i) => `
+                    <tr>
+                        <td><input type="text" class="form-control form-control-sm" value="${p.p}" data-tipo="perfil" data-sistema="serie80" data-categoria="estandar" data-indice="${i}" data-nombre="${p.n}" data-codigo="${p.c}" style="width: 100px;"></td>
+                        <td><input type="text" class="form-control form-control-sm" value="${serie80.pesados[i]?.p || ''}" data-tipo="perfil" data-sistema="serie80" data-categoria="pesados" data-indice="${i}" data-nombre="${p.n}" data-codigo="${p.c}" style="width: 100px;"></td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+}
+
+function generarTablaAccesorios() {
+    const sistema = configuracionCompleta.sistema.accesorios;
+    const serie80 = configuracionCompleta.serie80.accesorios;
+    
+    return `
+        <h6 class="text-info">Ventanas Sistema</h6>
+        ${generarTablaItems(sistema.estandar, sistema.pesados, 'sistema', 'accesorio')}
+        
+        <h6 class="text-info mt-3">Serie 80</h6>
+        ${generarTablaItems(serie80.estandar, serie80.pesados, 'serie80', 'accesorio')}
+    `;
+}
+
+function generarTablaTiras() {
+    const sistema = configuracionCompleta.sistema.tiras;
+    const serie80 = configuracionCompleta.serie80.tiras;
+    
+    return `
+        <h6 class="text-info">Ventanas Sistema</h6>
+        ${generarTablaItems(sistema.estandar, sistema.pesados, 'sistema', 'tira')}
+        
+        <h6 class="text-info mt-3">Serie 80</h6>
+        ${generarTablaItems(serie80.estandar, serie80.pesados, 'serie80', 'tira')}
+    `;
+}
+
+function generarTablaVidrios() {
+    const sistema = configuracionCompleta.sistema.vidrios;
+    const serie80 = configuracionCompleta.serie80.vidrios;
+    
+    return `
+        <h6 class="text-info">Ventanas Sistema</h6>
+        ${sistema.map((v, i) => `
+            <div class="row mb-2">
+                <div class="col-4">${v.n}</div>
+                <div class="col-4"><input type="text" class="form-control form-control-sm" value="${v.p}" data-tipo="vidrio" data-sistema="sistema" data-indice="${i}" style="width: 100px;"></div>
+            </div>
+        `).join('')}
+        
+        <h6 class="text-info mt-3">Serie 80</h6>
+        ${serie80.map((v, i) => `
+            <div class="row mb-2">
+                <div class="col-4">${v.n}</div>
+                <div class="col-4"><input type="text" class="form-control form-control-sm" value="${v.p}" data-tipo="vidrio" data-sistema="serie80" data-indice="${i}" style="width: 100px;"></div>
+            </div>
+        `).join('')}
+    `;
+}
+
+function generarTablaItems(estandar, pesados, sistema, tipo) {
+    return `
+        <table class="table table-sm table-dark">
+            <thead><tr><th>Nombre</th><th>Estándar (S/.)</th><th>Pesado (S/.)</th></tr></thead>
+            <tbody>
+                ${estandar.map((item, i) => `
+                    <tr>
+                        <td>${item.n}</td>
+                        <td><input type="text" class="form-control form-control-sm" value="${item.p}" data-tipo="${tipo}" data-sistema="${sistema}" data-categoria="estandar" data-indice="${i}" style="width: 100px;"></td>
+                        <td><input type="text" class="form-control form-control-sm" value="${pesados[i]?.p || ''}" data-tipo="${tipo}" data-sistema="${sistema}" data-categoria="pesados" data-indice="${i}" style="width: 100px;"></td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+}
+
+function guardarCambiosAdmin() {
+    // Recorrer todos los inputs y actualizar configuracionCompleta
+    document.querySelectorAll('#contenidoAdmin input').forEach(input => {
+        const tipo = input.dataset.tipo;
+        const sistema = input.dataset.sistema;
+        const categoria = input.dataset.categoria;
+        const indice = parseInt(input.dataset.indice);
+        const nuevoValor = parseFloat(input.value);
+        
+        if (isNaN(nuevoValor)) return;
+        
+        if (tipo === 'vidrio') {
+            configuracionCompleta[sistema].vidrios[indice].p = nuevoValor;
+        } else if (tipo === 'perfil') {
+            configuracionCompleta[sistema].perfiles[categoria][indice].p = nuevoValor;
+        } else if (tipo === 'accesorio') {
+            configuracionCompleta[sistema].accesorios[categoria][indice].p = nuevoValor;
+        } else if (tipo === 'tira') {
+            configuracionCompleta[sistema].tiras[categoria][indice].p = nuevoValor;
+        }
+    });
+    
+    // Guardar en localStorage o descargar JSON
+    localStorage.setItem('materiales_personalizados', JSON.stringify(configuracionCompleta));
+    
+    alert('✅ Cambios guardados localmente. Recarga la página para aplicar los nuevos precios.');
+    
+    cerrarModalAdmin();
+}
+
+// Cargar materiales personalizados si existen
+// Cargar materiales personalizados si existen
+async function cargarConfiguracion() {
+    try {
+        const personalizados = localStorage.getItem('materiales_personalizados');
+        if (personalizados) {
+            configuracionCompleta = JSON.parse(personalizados);
+            console.log('Configuración cargada desde localStorage');
+        } else {
+            const response = await fetch('materiales.json');
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            configuracionCompleta = await response.json();
+            console.log('Configuración cargada desde JSON');
+        }
+    } catch (error) {
+        console.error('Error cargando configuración:', error);
+        alert('Error cargando materiales.json');
+    }
+}
+
+// ========== INICIALIZAR ==========
+cargarConfiguracion();
+</script>
+</body>
+</html>

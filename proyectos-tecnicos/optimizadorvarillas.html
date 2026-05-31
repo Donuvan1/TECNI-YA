@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Optimizador de Varillas Pro</title>
+    <link rel="stylesheet" href="optimizadorvarillas.css">
+</head>
+<body>
+    <div class="container">
+        <div class="mb-3 no-print">
+            <a href="index.html" class="btn-volver">← Volver al Dashboard</a>
+        </div>
+
+        <h1 class="no-print">Optimizador de Varillas</h1>
+
+        <section class="panel no-print">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h2 class="section-title" style="margin:0;">Varillas Base (Stock)</h2>
+                <div style="display: flex; align-items: center; gap: 8px; background: #252525; padding: 4px 10px; border-radius: 8px; border: 1px solid #444;">
+                    <small style="color: #888; font-size: 0.7rem;">DISCO:</small>
+                    <button class="sol-btn" onclick="adjustKerf(-0.1)" style="padding: 2px 8px; min-width: 25px;">-</button>
+                    <span id="kerfValue" style="font-weight: bold; color: var(--accent-yellow); min-width: 25px; text-align: center;">0.3</span>
+                    <button class="sol-btn" onclick="adjustKerf(0.1)" style="padding: 2px 8px; min-width: 25px;">+</button>
+                </div>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h2 class="section-title" style="margin:0;">&nbsp;</h2>
+                <button id="toggleStockTable" class="toggle-btn">▼ Expandir</button>
+            </div>
+            <div class="table-wrapper stock-wrapper">
+                <table id="stockTable">
+                    <thead>
+                        <tr>
+                            <th colspan="4" style="text-align:left;">
+                                Color:
+                                <input type="text" id="globalColor" placeholder="Ej: Negro, Blanco..." 
+                                style="margin-left:10px; padding:4px; border-radius:5px; border:1px solid #444;">
+                            </th>
+                        </tr>
+                        <tr>
+                            <th style="width: 40%;">Cód / Mat</th>
+                            <th style="width: 25%;">Largo</th>
+                            <th style="width: 25%;">Cant</th>
+                            <th style="width: 10%;"></th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <button id="addStock" class="btn-add" style="padding: 8px; margin-top: 5px; background: #34495e; font-size: 0.8rem;">+ Material Base</button>
+        </section>
+
+        <section class="panel no-print">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h2 class="section-title" style="margin:0;">Piezas a Cortar</h2>
+                <button id="togglePiecesTable" class="toggle-btn">▼ Expandir</button>
+            </div>
+            <div class="table-wrapper pieces-wrapper">
+                <table id="piecesTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 10%;">Uso</th>
+                            <th style="width: 40%;">Cód / Nombre</th>
+                            <th style="width: 25%;">Medida</th>
+                            <th style="width: 15%;">Cant</th>
+                            <th style="width: 10%;"></th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="btn-row">
+                <button id="addPiece" class="btn-add">+ Pieza</button>
+                <button id="optimize" class="optimizeBtn">OPTIMIZAR</button>
+            </div>
+        </section>
+
+        <!-- TECLADO FLOTANTE -->
+        <div id="floatingNumpad" class="floating-numpad">
+            <button id="closeNumpad" class="close-btn">✕</button>
+            <div class="numpad">
+                <button class="num" data-num="7">7</button>
+                <button class="num" data-num="8">8</button>
+                <button class="num" data-num="9">9</button>
+                <button class="num" data-num="4">4</button>
+                <button class="num" data-num="5">5</button>
+                <button class="num" data-num="6">6</button>
+                <button class="num" data-num="1">1</button>
+                <button class="num" data-num="2">2</button>
+                <button class="num" data-num="3">3</button>
+                <button class="num" data-num="delete">⌫</button>
+                <button class="num" data-num="0">0</button>
+                <button class="num" data-num=".">.</button>
+                <button class="nav-btn btn-blue" data-nav="prev">◀</button>
+                <div class="vertical-nav">
+                    <button class="nav-btn btn-red-half" data-nav="up">▲</button>
+                    <button class="nav-btn btn-red-half" data-nav="down">▼</button>
+                </div>
+                <button class="nav-btn btn-green" data-nav="next">▶</button>
+            </div>
+        </div>
+
+        <section class="panel" id="resultPanel" style="display: none;">
+            <div class="no-print" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2 class="section-title" style="margin:0;">Reporte de Corte</h2>
+                <button onclick="window.print()" class="sol-btn" style="background: var(--accent-blue);">IMPRIMIR / PDF</button>
+            </div>
+            
+            <div id="printArea">
+                <div style="margin-bottom: 20px; border-bottom: 2px solid var(--accent-yellow); padding-bottom: 15px;">
+                    <h3 style="font-size: 0.9rem; color: var(--accent-yellow); margin-bottom: 10px; text-transform: uppercase;">Resumen de Piezas Ingresadas</h3>
+                    <div id="summaryList" style="color: #eee; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;"></div>
+                    
+                    <div style="font-size: 1rem; margin-top: 15px; border-top: 1px solid #444; padding-top: 10px;">
+                        <p style="margin-bottom: 5px; font-weight: bold; color: var(--accent-yellow);">VARILLAS BASE POR CÓDIGO:</p>
+                        <div id="rodsPerCode" style="font-size: 0.9rem; color: #fff;"></div>
+                    </div>
+                </div>
+                <div id="sheetsContainer"></div>
+            </div>
+        </section>
+    </div>
+    <script src="optimizadorvarillas.js"></script>
+</body>
+</html>
