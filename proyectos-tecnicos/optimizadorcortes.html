@@ -10,8 +10,8 @@
     <div class="container">
         <h1>Optimizador de Cortes</h1>
         <div class="mb-3">
-    <a href="dashboard-proyectos.html" class="btn btn-secondary" style="background:#444; color:white; padding:8px 16px; border-radius:8px; text-decoration:none;">← Volver al Dashboard</a>
-</div>
+            <a href="dashboard-proyectos.html" class="btn btn-secondary" style="background:#444; color:white; padding:8px 16px; border-radius:8px; text-decoration:none;">← Volver al Dashboard</a>
+        </div>
 
         <section class="panel">
             <h2 class="section-title">Datos del Trabajo</h2>
@@ -28,20 +28,20 @@
             <div class="row-flex">
                 <div class="input-group">
                     <label>Ancho (cm)</label>
-                    <input type="number" id="sheetWidth" class="input-field" readonly value="330">
+                    <input type="text" inputmode="numeric" id="sheetWidth" class="input-field" readonly value="330">
                 </div>
                 <div class="input-group">
                     <label>Altura (cm)</label>
-                    <input type="number" id="sheetHeight" class="input-field" readonly value="214">
+                    <input type="text" inputmode="numeric" id="sheetHeight" class="input-field" readonly value="214">
                 </div>
             </div>
         </section>
 
         <section class="panel">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-    <h2 class="section-title" style="margin-bottom: 0;">Piezas</h2>
-    <button id="toggleTableHeight" class="toggle-btn">▼ Expandir</button>
-</div>
+                <h2 class="section-title" style="margin-bottom: 0;">Piezas</h2>
+                <button id="toggleTableHeight" class="toggle-btn">▼ Expandir</button>
+            </div>
             <div class="table-wrapper">
                 <table id="piecesTable">
                     <thead>

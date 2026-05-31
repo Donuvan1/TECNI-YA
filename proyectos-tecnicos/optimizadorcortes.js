@@ -59,9 +59,57 @@ function hideNumpad() {
 }
 
 function pressNum(n) {
-    if (currentFocus) {
-        if (isNewInput) { currentFocus.value = n; isNewInput = false; }
-        else { currentFocus.value += n; }
+    if (!currentFocus) return;
+    
+    let currentValue = currentFocus.value;
+    
+    // Verificar si es campo de cantidad (qty)
+    const isQtyField = currentFocus.classList && currentFocus.classList.contains('qty');
+    
+    // Si es un número (0-9)
+    if (n >= '0' && n <= '9') {
+        if (isNewInput || currentValue === '0') {
+            currentFocus.value = n;
+            isNewInput = false;
+        } else {
+            // Para campos que no son cantidad, verificar decimales
+            if (!isQtyField && currentValue.includes('.')) {
+                let partes = currentValue.split('.');
+                if (partes.length === 2 && partes[1].length >= 1) {
+                    return;
+                }
+            }
+            currentFocus.value += n;
+        }
+    }
+    // Si es punto decimal
+    else if (n === '.') {
+        // Si es campo de cantidad, NO permitir punto
+        if (isQtyField) {
+            return;
+        }
+        if (currentValue.includes('.')) return;
+        if (isNewInput || currentValue === '' || currentValue === '0') {
+            currentFocus.value = '0.';
+        } else {
+            currentFocus.value += '.';
+        }
+        isNewInput = false;
+    }
+    // Si es delete (borrar)
+    else if (n === 'delete') {
+        if (currentValue.length > 0) {
+            currentFocus.value = currentValue.slice(0, -1);
+            if (currentFocus.value === '') isNewInput = true;
+        }
+    }
+    
+    // Guardar en localStorage si existe la función
+    if (typeof saveToLocal === 'function') saveToLocal();
+    
+    // Solo para optimizadorvarillas.js (guarda el código de la pieza)
+    if (currentFocus.classList && currentFocus.classList.contains("p-name")) {
+        lastPieceCode = currentFocus.value.trim().toUpperCase();
     }
 }
 
@@ -143,7 +191,7 @@ document.addEventListener('click', (e) => {
 
 document.getElementById("addPiece").onclick = () => {
     let row = document.createElement("tr");
-    row.innerHTML = `<td><input type="checkbox" class="use-check" checked></td><td><input type="number" class="input-field width" readonly></td><td><input type="number" class="input-field height" readonly></td><td><input type="number" class="input-field qty" readonly></td><td><button class="remove" onclick="this.parentElement.parentElement.remove()">×</button></td>`;
+    row.innerHTML = `<td><input type="checkbox" class="use-check" checked></td><td><input type="text" inputmode="numeric" class="input-field width" readonly></td><td><input type="text" inputmode="numeric" class="input-field height" readonly></td><td><input type="text" inputmode="numeric" class="input-field qty" readonly></td><td><button class="remove" onclick="this.parentElement.parentElement.remove()">×</button></td>`;
     tableBody.appendChild(row);
     saveToLocal();
     showNumpad();
@@ -486,13 +534,13 @@ window.addEventListener('load', () => {
         document.getElementById("sheetHeight").value = saved.sh || 214;
         
         if(saved.pieces && saved.pieces.length > 0) {
-            tableBody.innerHTML = "";
-            saved.pieces.forEach(p => {
-                let row = document.createElement("tr");
-                row.innerHTML = `<td><input type="checkbox" class="use-check" checked></td><td><input type="number" class="input-field width" value="${p.w}" readonly></td><td><input type="number" class="input-field height" value="${p.h}" readonly></td><td><input type="number" class="input-field qty" value="${p.q}" readonly></td><td><button class="remove" onclick="this.parentElement.parentElement.remove()">×</button></td>`;
-                tableBody.appendChild(row);
-            });
-        }
+    tableBody.innerHTML = "";
+    saved.pieces.forEach(p => {
+        let row = document.createElement("tr");
+        row.innerHTML = `<td><input type="checkbox" class="use-check" checked></td><td><input type="text" inputmode="numeric" class="input-field width" value="${p.w}" readonly></td><td><input type="text" inputmode="numeric" class="input-field height" value="${p.h}" readonly></td><td><input type="text" inputmode="numeric" class="input-field qty" value="${p.q}" readonly></td><td><button class="remove" onclick="this.parentElement.parentElement.remove()">×</button></td>`;
+        tableBody.appendChild(row);
+    });
+}
     }
     
     if (tableBody.children.length === 0) {

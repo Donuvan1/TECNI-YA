@@ -52,17 +52,57 @@ function adjustKerf(val) {
 }
 
 function pressNum(n) {
-    if (currentFocus) {
-        if (isNewInput) { 
-            currentFocus.value = n; 
-            isNewInput = false; 
-        } else { 
-            currentFocus.value += n; 
+    if (!currentFocus) return;
+    
+    let currentValue = currentFocus.value;
+    
+    // Verificar si es campo de cantidad (s-qty o p-qty)
+    const isQtyField = currentFocus.classList && (currentFocus.classList.contains('s-qty') || currentFocus.classList.contains('p-qty'));
+    
+    // Si es un número (0-9)
+    if (n >= '0' && n <= '9') {
+        if (isNewInput || currentValue === '0') {
+            currentFocus.value = n;
+            isNewInput = false;
+        } else {
+            // Para campos que no son cantidad, verificar decimales
+            if (!isQtyField && currentValue.includes('.')) {
+                let partes = currentValue.split('.');
+                if (partes.length === 2 && partes[1].length >= 1) {
+                    return;
+                }
+            }
+            currentFocus.value += n;
         }
-        if (currentFocus.classList.contains("p-name")) {
-            lastPieceCode = currentFocus.value.trim().toUpperCase();
+    }
+    // Si es punto decimal
+    else if (n === '.') {
+        // Si es campo de cantidad, NO permitir punto
+        if (isQtyField) {
+            return;
         }
-        saveToLocal();
+        if (currentValue.includes('.')) return;
+        if (isNewInput || currentValue === '' || currentValue === '0') {
+            currentFocus.value = '0.';
+        } else {
+            currentFocus.value += '.';
+        }
+        isNewInput = false;
+    }
+    // Si es delete (borrar)
+    else if (n === 'delete') {
+        if (currentValue.length > 0) {
+            currentFocus.value = currentValue.slice(0, -1);
+            if (currentFocus.value === '') isNewInput = true;
+        }
+    }
+    
+    // Guardar en localStorage
+    if (typeof saveToLocal === 'function') saveToLocal();
+    
+    // Guardar el código de la pieza
+    if (currentFocus.classList && currentFocus.classList.contains("p-name")) {
+        lastPieceCode = currentFocus.value.trim().toUpperCase();
     }
 }
 
@@ -108,8 +148,8 @@ function addStockRow() {
     let row = document.createElement("tr");
     row.innerHTML = `
         <td><input type="text" class="input-field text-input s-name" maxlength="15" placeholder="Cód/Mat" oninput="saveToLocal()"></td>
-        <td><input type="number" class="input-field s-len" value="595" readonly></td>
-        <td><input type="number" class="input-field s-qty" value="999" readonly></td>
+        <td><input type="text" inputmode="numeric" class="input-field s-len" value="595" readonly></td>
+        <td><input type="text" inputmode="numeric" class="input-field s-qty" value="999" readonly></td>
         <td><button class="remove" onclick="this.parentElement.parentElement.remove(); saveToLocal();">×</button></td>
     `;
     stockTableBody.appendChild(row);
@@ -121,8 +161,8 @@ function addPieceRow() {
     row.innerHTML = `
         <td><input type="checkbox" class="use-check" checked onchange="saveToLocal()"></td>
         <td><input type="text" class="input-field text-input p-name" maxlength="15" placeholder="Cód/Nom" oninput="updateLastCode(this)"></td>
-        <td><input type="number" class="input-field p-len" placeholder="0" readonly></td>
-        <td><input type="number" class="input-field p-qty" placeholder="0" readonly></td>
+        <td><input type="text" inputmode="numeric" class="input-field p-len" placeholder="0" readonly></td>
+        <td><input type="text" inputmode="numeric" class="input-field p-qty" placeholder="0" readonly></td>
         <td><button class="remove" onclick="this.parentElement.parentElement.remove(); saveToLocal();">×</button></td>
     `;
     piecesTableBody.appendChild(row);
@@ -131,7 +171,6 @@ function addPieceRow() {
     }
     showNumpad();
     
-    // Enfocar y hacer scroll al nuevo campo
     setTimeout(() => {
         const nuevoCampo = row.querySelector('.p-name');
         if (nuevoCampo) {
