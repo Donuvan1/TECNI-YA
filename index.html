@@ -74,6 +74,7 @@
             background: rgba(26, 26, 30, 0.8);
         }
         
+        /* MÓVIL - BOTONES MÁS PEQUEÑOS */
         @media (max-width: 768px) {
             .main-container {
                 flex-direction: column;
@@ -118,10 +119,45 @@
                 width: 50px;
                 height: 50px;
             }
-            .icon-btn, .mic-btn, .location-btn {
-                width: 44px;
-                padding: 10px 12px;
+            
+            /* BOTONES MÁS PEQUEÑOS EN MÓVIL */
+            .icon-btn, .mic-btn, .location-btn, .proyectos-btn {
+                width: 40px;
+                padding: 8px 10px;
                 font-size: 16px;
+            }
+            
+            .send-btn {
+                padding: 8px 16px;
+                font-size: 13px;
+            }
+            
+            .chat-input-area {
+                padding: 10px 12px;
+                gap: 6px;
+            }
+            
+            .chat-input-area input {
+                padding: 10px 12px;
+                font-size: 14px;
+            }
+        }
+        
+        /* Para pantallas muy pequeñas (menos de 400px) */
+        @media (max-width: 400px) {
+            .icon-btn, .mic-btn, .location-btn, .proyectos-btn {
+                width: 36px;
+                padding: 6px 8px;
+                font-size: 14px;
+            }
+            
+            .send-btn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+            
+            .chat-input-area {
+                gap: 4px;
             }
         }
         
@@ -238,21 +274,34 @@
             border-top: 1px solid rgba(255,255,255,0.08);
             background: rgba(30, 30, 35, 0.9);
             display: flex;
-            gap: 8px;
+            gap: 10px;
             align-items: center;
+            flex-wrap: nowrap;
+            overflow-x: auto;
         }
         
         .chat-input-area input {
             flex: 1;
-            padding: 14px 18px;
+            padding: 12px 16px;
             border: 1px solid rgba(255,255,255,0.1);
             border-radius: 40px;
             background: rgba(42, 42, 50, 0.8);
             color: #ffffff;
+            min-width: 120px;
+        }
+        
+        .chat-input-area input:focus {
+            outline: none;
+            border-color: #0a84ff;
+            box-shadow: 0 0 0 3px rgba(10,132,255,0.2);
+        }
+        
+        .chat-input-area input::placeholder {
+            color: #777;
         }
         
         button {
-            padding: 12px 20px;
+            padding: 10px 20px;
             background: linear-gradient(135deg, #0a84ff 0%, #0066cc 100%);
             color: white;
             border: none;
@@ -262,11 +311,16 @@
             cursor: pointer;
         }
         
-        .icon-btn, .mic-btn, .location-btn {
+        .icon-btn, .mic-btn, .location-btn, .proyectos-btn {
             background: rgba(42, 42, 50, 0.9);
-            padding: 12px 16px;
-            font-size: 18px;
-            width: 52px;
+            padding: 10px 12px;
+            font-size: 16px;
+            width: 48px;
+        }
+        
+        .send-btn {
+            background: linear-gradient(135deg, #0a84ff 0%, #0066cc 100%);
+            padding: 10px 20px;
         }
         
         .mic-btn.recording {
@@ -650,6 +704,44 @@
             cursor: pointer;
         }
         
+        /* Estilos para la sección de proyectos */
+        .proyectos-modal .modal-content {
+            max-width: 500px;
+        }
+        
+        .proyecto-card {
+            background: rgba(42, 42, 50, 0.8);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .proyecto-titulo {
+            color: #0a84ff;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .proyecto-descripcion {
+            color: #ccc;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+        
+        .proyecto-link {
+            color: #0a84ff;
+            text-decoration: none;
+            font-size: 12px;
+        }
+        
+        .proyecto-vacio {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+        
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 10px; }
         ::-webkit-scrollbar-thumb { background: rgba(10,132,255,0.5); border-radius: 10px; }
@@ -710,8 +802,30 @@
                 <button id="imageBtn" class="icon-btn">📷</button>
                 <button id="micBtn" class="mic-btn">🎤</button>
                 <button id="locationBtn" class="location-btn">📍</button>
+                <button id="proyectosBtn" class="proyectos-btn">📁</button>
                 <input type="text" id="messageInput" placeholder="Escribe un mensaje...">
-                <button id="sendBtn">Enviar</button>
+                <button id="sendBtn" class="send-btn">Enviar</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de Proyectos Técnicos -->
+    <div id="proyectosModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>📁 Proyectos Técnicos</h3>
+                <button class="close-modal" id="closeProyectosBtn">&times;</button>
+            </div>
+            <div style="padding: 20px; overflow-y: auto; max-height: 60vh;">
+                <div id="proyectosList">
+                    <div class="proyecto-vacio">No hay proyectos aún. ¡Comparte el tuyo!</div>
+                </div>
+                <div style="margin-top: 20px;">
+                    <input type="text" id="nuevoProyectoTitulo" placeholder="Título del proyecto" style="width:100%; padding:10px; margin-bottom:10px; background:#2a2a2a; border:1px solid #444; border-radius:12px; color:#fff;">
+                    <textarea id="nuevoProyectoDescripcion" placeholder="Descripción del proyecto" rows="3" style="width:100%; padding:10px; margin-bottom:10px; background:#2a2a2a; border:1px solid #444; border-radius:12px; color:#fff;"></textarea>
+                    <input type="text" id="nuevoProyectoLink" placeholder="Enlace (opcional)" style="width:100%; padding:10px; margin-bottom:10px; background:#2a2a2a; border:1px solid #444; border-radius:12px; color:#fff;">
+                    <button id="agregarProyectoBtn" style="width:100%;">+ Agregar Proyecto</button>
+                </div>
             </div>
         </div>
     </div>
@@ -739,7 +853,7 @@
     </div>
 
     <script type="module">
-        // ⬇️⬇️⬇️ REEMPLAZA CON TUS DATOS DE FIREBASE ⬇️⬇️⬇️
+        // Configuración de Firebase
         const firebaseConfig = {
   apiKey: "AIzaSyB4W_0bdRoL-VnN6FAiSWhnQWNO-fRairc",
   authDomain: "proyecto-libertad-38c2a.firebaseapp.com",
@@ -749,7 +863,6 @@
   appId: "1:115380076439:web:85383b2c32cdb40c798ed2"
 };
         
-        // ⬇️⬇️⬇️ REEMPLAZA CON TU VAPID KEY (la de la captura) ⬇️⬇️⬇️
         const VAPID_KEY = "BNZ2YWPDzdAkud-EAyky5TFRihAnYAQPgVliSRCvgRZiUuytEOpb-psX0O2UPFDqVNbWuFBH2cWqHXE539gr_1c";
         
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
@@ -788,6 +901,7 @@
         const imageBtn = document.getElementById('imageBtn');
         const micBtn = document.getElementById('micBtn');
         const locationBtn = document.getElementById('locationBtn');
+        const proyectosBtn = document.getElementById('proyectosBtn');
         const profileImg = document.getElementById('profileImg');
         const changePhotoBtn = document.getElementById('changePhotoBtn');
         const chatHeaderImg = document.getElementById('chatHeaderImg');
@@ -804,6 +918,15 @@
         const audioPreview = document.getElementById('audioPreview');
         const cancelAudioBtn = document.getElementById('cancelAudioBtn');
         const sendAudioBtn = document.getElementById('sendAudioBtn');
+        
+        // Elementos de proyectos
+        const proyectosModal = document.getElementById('proyectosModal');
+        const closeProyectosBtn = document.getElementById('closeProyectosBtn');
+        const proyectosList = document.getElementById('proyectosList');
+        const agregarProyectoBtn = document.getElementById('agregarProyectoBtn');
+        const nuevoProyectoTitulo = document.getElementById('nuevoProyectoTitulo');
+        const nuevoProyectoDescripcion = document.getElementById('nuevoProyectoDescripcion');
+        const nuevoProyectoLink = document.getElementById('nuevoProyectoLink');
         
         let currentUser = null;
         let unsubscribeUsers = null;
@@ -825,42 +948,85 @@
         let recordedBlob = null;
         let micStream = null;
         
-        // ============================================================
-        // NOTIFICACIONES PUSH
-        // ============================================================
-        async function requestNotificationPermission() {
+        // Funciones para proyectos
+        function abrirProyectos() {
+            proyectosModal.classList.add('active');
+            cargarProyectos();
+        }
+        
+        async function cargarProyectos() {
             if (!currentUser) return;
+            const proyectosRef = collection(db, `usuarios/${currentUser.uid}/proyectos`);
+            const q = query(proyectosRef, orderBy("fecha", "desc"));
+            const snapshot = await getDocs(q);
+            
+            if (snapshot.empty) {
+                proyectosList.innerHTML = '<div class="proyecto-vacio">No hay proyectos aún. ¡Comparte el tuyo!</div>';
+                return;
+            }
+            
+            proyectosList.innerHTML = '';
+            snapshot.forEach(doc => {
+                const proyecto = doc.data();
+                proyectosList.innerHTML += `
+                    <div class="proyecto-card">
+                        <div class="proyecto-titulo">${escapeHtml(proyecto.titulo)}</div>
+                        <div class="proyecto-descripcion">${escapeHtml(proyecto.descripcion)}</div>
+                        ${proyecto.link ? `<a href="${proyecto.link}" target="_blank" class="proyecto-link">🔗 Ver proyecto →</a>` : ''}
+                    </div>
+                `;
+            });
+        }
+        
+        async function agregarProyecto() {
+            const titulo = nuevoProyectoTitulo.value.trim();
+            const descripcion = nuevoProyectoDescripcion.value.trim();
+            const link = nuevoProyectoLink.value.trim();
+            
+            if (!titulo || !descripcion) {
+                showError("Completa título y descripción");
+                return;
+            }
             
             try {
-                const permission = await Notification.requestPermission();
-                if (permission === 'granted') {
-                    console.log("Permiso de notificaciones concedido");
-                    
-                    const token = await getToken(messaging, { vapidKey: VAPID_KEY });
-                    console.log("Token FCM:", token);
-                    
-                    const userRef = doc(db, "usuarios", currentUser.uid);
-                    await updateDoc(userRef, {
-                        fcmTokens: arrayUnion(token)
-                    });
-                    
-                    showSuccess("Notificaciones activadas ✅");
-                } else {
-                    console.log("Permiso denegado");
-                }
+                const proyectosRef = collection(db, `usuarios/${currentUser.uid}/proyectos`);
+                await addDoc(proyectosRef, {
+                    titulo: titulo,
+                    descripcion: descripcion,
+                    link: link || null,
+                    fecha: new Date()
+                });
+                nuevoProyectoTitulo.value = '';
+                nuevoProyectoDescripcion.value = '';
+                nuevoProyectoLink.value = '';
+                showSuccess("Proyecto agregado ✅");
+                cargarProyectos();
             } catch (error) {
-                console.error("Error:", error);
+                showError("Error al agregar proyecto");
             }
         }
         
-        onMessage(messaging, (payload) => {
-            console.log("Mensaje en primer plano:", payload);
-            showSuccess(`📱 ${payload.notification?.title || 'Nuevo mensaje'}`);
+        proyectosBtn.addEventListener('click', abrirProyectos);
+        closeProyectosBtn.addEventListener('click', () => proyectosModal.classList.remove('active'));
+        agregarProyectoBtn.addEventListener('click', agregarProyecto);
+        
+        // Cerrar modal al hacer clic fuera
+        proyectosModal.addEventListener('click', (e) => {
+            if (e.target === proyectosModal) proyectosModal.classList.remove('active');
         });
         
-        // ============================================================
-        // FUNCIONES PRINCIPALES
-        // ============================================================
+        // Función auxiliar para getDocs
+        async function getDocs(query) {
+            return new Promise((resolve, reject) => {
+                const items = [];
+                const unsubscribe = onSnapshot(query, (snapshot) => {
+                    resolve(snapshot);
+                    unsubscribe();
+                }, reject);
+            });
+        }
+        
+        // Resto de las funciones (setTypingStatus, handleTypingStart, listenTypingStatus, etc.)
         async function setTypingStatus(isTyping) {
             if (!currentUser || !selectedUser || !currentChatId) return;
             const chatDocRef = doc(db, "chats", currentChatId);
@@ -902,6 +1068,24 @@
                 }
             });
         }
+        
+        async function requestNotificationPermission() {
+            if (!currentUser) return;
+            try {
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    try {
+                        const token = await getToken(messaging, { vapidKey: VAPID_KEY });
+                        const userRef = doc(db, "usuarios", currentUser.uid);
+                        await updateDoc(userRef, { fcmTokens: arrayUnion(token) });
+                    } catch(e) { console.log("Error FCM:", e); }
+                }
+            } catch (error) { console.error(error); }
+        }
+        
+        onMessage(messaging, (payload) => {
+            showSuccess(`📱 ${payload.notification?.title || 'Nuevo mensaje'}`);
+        });
         
         async function requestMicrophonePermission() {
             try {
@@ -1556,7 +1740,7 @@
             }
         });
         
-        console.log("TECNI-YA con notificaciones push");
+        console.log("TECNI-YA con botones optimizados y proyectos técnicos");
     </script>
 </body>
 </html>
