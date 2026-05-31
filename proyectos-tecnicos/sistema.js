@@ -1433,9 +1433,7 @@ function renderResumen() {
     else if (corredizas > 0) modelo = `${corredizas}C`;
     else modelo = `${hojas}H`;
     
-    texto += '='.repeat(50) + '\n';
-    texto += '              RESUMEN DE PRODUCCIÓN\n';
-    texto += '='.repeat(50) + '\n\n';
+    texto += 'RESUMEN DE PRODUCCIÓN\n\n';
     
     texto += `Cliente/Nombre: ${nombre}\n`;
     texto += `Color: ${color}\n`;
@@ -1480,7 +1478,8 @@ function renderResumen() {
             }
             
             if (perfil && subtotal > 0) {
-                const linea = `${perfil.padEnd(22)} ${codigo.padEnd(8)} ${medida.padEnd(8)} x${cantidad.padEnd(4)} S/. ${subtotal.toFixed(2)}`;
+                const medidaSinCm = medida.replace(' cm', '');
+                const linea = `${codigo.padEnd(8)} ${medidaSinCm.padEnd(8)} =${cantidad.padEnd(4)} S/. ${subtotal.toFixed(2)}`;
                 
                 if (esSobreventana) {
                     totalPuente += subtotal;
@@ -1534,7 +1533,16 @@ function renderResumen() {
             
             if (subtotal > 0) {
                 totalVidrios += subtotal;
-                const linea = `${vidrio.padEnd(20)} ${tipo.padEnd(14)} ${medida.padEnd(15)} x${cantidad.padEnd(4)} S/. ${subtotal.toFixed(2)}`;
+                // Convertir tipo a abreviatura
+let tipoAbrev = tipo;
+if (tipo === 'Fija') tipoAbrev = 'F';
+else if (tipo === 'Corrediza') tipoAbrev = 'C';
+else if (tipo === 'Fija Puente') tipoAbrev = 'F/SP';
+else if (tipo === 'Corrediza Puente') tipoAbrev = 'C/SP';
+else if (tipo === 'Fija SP') tipoAbrev = 'F/SP';
+
+const tipoMedida = `${tipoAbrev}- ${medida} =${cantidad}`;
+const linea = `${vidrio.padEnd(20)} ${tipoMedida.padEnd(20)} S/. ${subtotal.toFixed(2)}`;
                 vidriosTexto += linea + '\n';
             }
         });
@@ -1572,7 +1580,7 @@ function renderResumen() {
             
             if (nombre && subtotal > 0) {
                 totalAccesorios += subtotal;
-                const linea = `${nombre.padEnd(18)} ${codigo.padEnd(8)} x${cantidad.padEnd(6)} S/. ${subtotal.toFixed(2)}`;
+                const linea = `${nombre.padEnd(18)} =${cantidad.padEnd(6)} S/. ${subtotal.toFixed(2)}`;
                 accesoriosTexto += linea + '\n';
             }
         });
@@ -1610,7 +1618,7 @@ function renderResumen() {
             
             if (nombre && subtotal > 0) {
                 totalTiras += subtotal;
-                const linea = `${nombre.padEnd(18)} ${codigo.padEnd(8)} ${metros.padEnd(8)} m  S/. ${subtotal.toFixed(2)}`;
+                const linea = `${nombre.padEnd(18)} ${metros.padEnd(8)} m  S/. ${subtotal.toFixed(2)}`;
                 tirasTexto += linea + '\n';
             }
         });
