@@ -728,8 +728,11 @@ if (esModoSoloFijos && num === 12) {
     esSobreventana = true;
 }
 
+const claseSP = esSobreventana ? 'fila-sp' : '';
+const claseMedida = esSobreventana ? 'medida-destacada' : 'text-info';
+
 htmlFinal += `
-<li class="list-group-item d-flex align-items-center py-2">
+<li class="list-group-item d-flex align-items-center py-2 ${claseSP}">
     <div class="col-5">
         <span class="badge bg-primary me-2" style="font-size: 0.65rem;">#${num}</span>
         <div class="text-uppercase fw-bold ${esSobreventana ? 'text-info' : 'text-white'} small d-inline" style="font-size: 0.7rem;">
@@ -739,7 +742,7 @@ htmlFinal += `
             <span class="badge bg-secondary" style="font-family: monospace; font-size: 0.7rem;">Código: ${pData.c}</span>
         </div>
     </div>
-    <div class="col-2 text-center text-info fw-bold">${med} cm</div>
+    <div class="col-2 text-center fw-bold ${claseMedida}">${med} cm</div>
     <div class="col-2 text-center"><span class="badge bg-warning text-dark">x ${cant}</span></div>
     <div class="col-3 text-end text-success fw-bold">S/. ${costo.toFixed(2)}</div>
 </li>`;
@@ -1442,66 +1445,66 @@ function renderResumen() {
     texto += `Cantidad: ${cantidadVentanas} und\n\n`;
     
     // ========== ALUMINIOS ==========
-    const listaAluminios = document.getElementById('lista_requeridos_body');
-    if (listaAluminios) {
-        let aluminiosPrincipal = '';
-        let aluminiosPuente = '';
-        let totalPrincipal = 0;
-        let totalPuente = 0;
+const listaAluminios = document.getElementById('lista_requeridos_body');
+if (listaAluminios) {
+    let aluminiosPrincipal = '';
+    let aluminiosPuente = '';
+    let totalPrincipal = 0;
+    let totalPuente = 0;
+    
+    listaAluminios.querySelectorAll('li').forEach(item => {
+        // Saltar el total general y bordes
+        if (item.classList.contains('border-top')) return;
+        if (item.innerText.includes('TOTAL ALUMINIOS')) return;
         
-        listaAluminios.querySelectorAll('li').forEach(item => {
-            if (item.classList.contains('border-top')) return;
-            
-            // Extraer datos del DOM
-            const badgeNum = item.querySelector('.badge.bg-primary');
-            const num = badgeNum ? badgeNum.innerText.replace('#', '').trim() : '';
-            
-            const nombreDiv = item.querySelector('.text-uppercase.fw-bold');
-            let perfil = nombreDiv ? nombreDiv.innerText.trim() : '';
-            const esSobreventana = perfil.includes('↳') || perfil.includes('(S.P.)');
-            // Limpiar el símbolo ↳ del nombre
-            perfil = perfil.replace('↳', '').trim();
-            
-            const codigoSpan = item.querySelector('.badge.bg-secondary');
-            let codigo = codigoSpan ? codigoSpan.innerText.replace('Código:', '').trim() : '';
-            
-            const medidaSpan = item.querySelector('.text-info.fw-bold');
-            let medida = medidaSpan ? medidaSpan.innerText.trim() : '';
-            
-            const cantSpan = item.querySelector('.badge.bg-warning');
-            let cantidad = cantSpan ? cantSpan.innerText.replace('x', '').trim() : '1';
-            
-            const totalSpan = item.querySelector('.text-success.fw-bold');
-            let subtotal = 0;
-            if (totalSpan) {
-                subtotal = parseFloat(totalSpan.innerText.replace('S/.', '').trim());
-            }
-            
-            if (perfil && subtotal > 0) {
-                const medidaSinCm = medida.replace(' cm', '');
-                const linea = `${codigo.padEnd(8)} ${medidaSinCm.padEnd(8)} =${cantidad.padEnd(4)} S/. ${subtotal.toFixed(2)}`;
-                
-                if (esSobreventana) {
-                    totalPuente += subtotal;
-                    aluminiosPuente += linea + '\n';
-                } else {
-                    totalPrincipal += subtotal;
-                    aluminiosPrincipal += linea + '\n';
-                }
-                totalGeneral += subtotal;
-            }
-        });
+        // Detectar si es sobreventana por la clase CSS
+        const esSobreventana = item.classList.contains('fila-sp');
         
-        if (aluminiosPrincipal) {
-            texto += '--- ALUMINIOS (VENTANA PRINCIPAL) ---\n';
-            texto += aluminiosPrincipal + '\n';
+        // Extraer código (badge bg-secondary)
+        const codigoSpan = item.querySelector('.badge.bg-secondary');
+        let codigo = codigoSpan ? codigoSpan.innerText.replace('Código:', '').trim() : '';
+        
+        // Extraer medida (está en la clase medida-destacada o text-info)
+        let medidaSpan = item.querySelector('.medida-destacada');
+        if (!medidaSpan) medidaSpan = item.querySelector('.text-info.fw-bold');
+        let medida = medidaSpan ? medidaSpan.innerText.trim() : '';
+        const medidaSinCm = medida.replace(' cm', '');
+        
+        // Extraer cantidad
+        const cantSpan = item.querySelector('.badge.bg-warning');
+        let cantidad = cantSpan ? cantSpan.innerText.replace('x', '').trim() : '1';
+        
+        // Extraer subtotal
+        const totalSpan = item.querySelector('.text-success.fw-bold');
+        let subtotal = 0;
+        if (totalSpan) {
+            subtotal = parseFloat(totalSpan.innerText.replace('S/.', '').trim());
         }
         
-        if (aluminiosPuente) {
-            texto += '--- ALUMINIOS (SOBREVENTANA) ---\n';
-            texto += aluminiosPuente + '\n';
+        if (codigo && subtotal > 0 && medidaSinCm && medidaSinCm !== '0') {
+            const linea = `${codigo.padEnd(8)} ${medidaSinCm.padEnd(8)} =${cantidad.padEnd(4)} S/. ${subtotal.toFixed(2)}`;
+            
+            if (esSobreventana) {
+                totalPuente += subtotal;
+                aluminiosPuente += linea + '\n';
+            } else {
+                totalPrincipal += subtotal;
+                aluminiosPrincipal += linea + '\n';
+            }
+            totalGeneral += subtotal;
         }
+    });
+    
+    if (aluminiosPrincipal) {
+        texto += '--- ALUMINIOS (VENTANA PRINCIPAL) ---\n';
+        texto += aluminiosPrincipal + '\n';
     }
+    
+    if (aluminiosPuente) {
+        texto += '--- ALUMINIOS (SOBREVENTANA) ---\n';
+        texto += aluminiosPuente + '\n';
+    }
+}
     
     // ========== VIDRIOS ==========
     const listaVidrios = document.getElementById('lista_vidrios_req_body');
@@ -1631,9 +1634,7 @@ const linea = `${vidrio.padEnd(20)} ${tipoMedida.padEnd(20)} S/. ${subtotal.toFi
     }
     
     // ========== TOTAL GENERAL ==========
-    texto += '\n' + '='.repeat(50) + '\n';
-    texto += `TOTAL GENERAL: S/. ${totalGeneral.toFixed(2)}\n`;
-    texto += '='.repeat(50);
+texto += `\nTOTAL GENERAL: S/. ${totalGeneral.toFixed(2)}\n`;
     
     contenedor.innerHTML = texto;
 }

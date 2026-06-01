@@ -31,3 +31,14 @@ hr { border-color: #444; }
     background-color: #0d6efd !important;
     opacity: 0.9;
 }
+/* Fondo para filas de sobreventana */
+.fila-sobreventana {
+    background-color: #1a3a4a !important;  /* Azul oscuro */
+    border-left: 4px solid #00d4ff;        /* Borde izquierdo celeste */
+}
+
+/* Medidas de sobreventana en color diferente */
+.fila-sobreventana .medida-sp {
+    color: #00d4ff !important;             /* Celeste brillante */
+    font-weight: bold;
+}
