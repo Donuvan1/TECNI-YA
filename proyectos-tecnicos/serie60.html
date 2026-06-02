@@ -1,0 +1,281 @@
+<div id="seccion-serie60">
+    <!-- Secciones de costos (para mostrar los precios) -->
+    <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" id="switch_materiales_s60">
+        <label class="form-check-label texto-resaltado" for="switch_materiales_s60">COSTOS DE ALUMINIOS (S/. ML)</label>
+    </div>
+    <div id="seccion_materiales_s60" class="seccion-oculta mb-4">
+        <div class="contenedor-materiales text-center">
+            <div class="d-flex gap-3 mb-3 justify-content-center">
+                <div class="form-check radio-materiales">
+                    <input class="form-check-input" type="radio" name="opt_alum_s60" id="alum_estandar_s60" value="estandar" checked>
+                    <label class="form-check-label text-white" for="alum_estandar_s60">Aluminio Estandar</label>
+                </div>
+                <div class="form-check radio-materiales">
+                    <input class="form-check-input" type="radio" name="opt_alum_s60" id="alum_pesados_s60" value="pesados">
+                    <label class="form-check-label text-white" for="alum_pesados_s60">Aluminio Pesado</label>
+                </div>
+            </div>
+            <ul class="list-group list-group-flush" id="tabla_precios_body_s60"></ul>
+        </div>
+    </div>
+
+    <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" id="switch_accesorios_s60">
+        <label class="form-check-label texto-resaltado" for="switch_accesorios_s60">COSTO DE ACCESORIOS (S/. UND)</label>
+    </div>
+    <div id="seccion_accesorios_s60" class="seccion-oculta mb-4">
+        <div class="contenedor-materiales">
+            <ul class="list-group list-group-flush" id="tabla_accesorios_body_s60"></ul>
+        </div>
+    </div>
+
+    <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" id="switch_tiras_s60">
+        <label class="form-check-label texto-resaltado" for="switch_tiras_s60">COSTO DE TIRAS (S/. ML)</label>
+    </div>
+    <div id="seccion_tiras_s60" class="seccion-oculta mb-4">
+        <div class="contenedor-materiales">
+            <ul class="list-group list-group-flush" id="tabla_tiras_body_s60"></ul>
+        </div>
+    </div>
+
+        <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" id="switch_vidrios_s60">
+        <label class="form-check-label texto-resaltado" for="switch_vidrios_s60">COSTO DE VIDRIOS (S/. P2)</label>
+    </div>
+    <div id="seccion_vidrios_s60" class="seccion-oculta mb-4">
+        <div class="contenedor-materiales">
+            <p class="text-center small text-muted">Seleccione el vidrio para el cálculo automático</p>
+            <!-- Selector con búsqueda -->
+            <div class="mb-3">
+                <input type="text" id="buscador_vidrio_s60" class="form-control" placeholder="🔍 Buscar vidrio... (ej: bronce, incoloro, reflejante)" autocomplete="off" onfocus="this.select()">
+                <div id="lista_vidrios_s60" class="list-group mt-2" style="max-height: 200px; overflow-y: auto; display: none;">
+                    <!-- Aquí se cargarán los vidrios dinámicamente -->
+                </div>
+            </div>
+            <ul class="list-group list-group-flush" id="tabla_vidrios_body_s60"></ul>
+        </div>
+    </div>
+    <!-- Panel de medidas -->
+    <div class="row g-2 mb-3">
+        <div class="col-6">
+            <label class="form-label">Ancho Inf. (cm):</label>
+            <input type="number" step="0.1" class="form-control" id="ancho_inf_s60" value="0" onfocus="this.select()">
+            <small class="text-muted" style="font-size: 0.65rem;">Mínimo 40 cm</small>
+        </div>
+        <div class="col-6">
+            <label class="form-label">Ancho Sup. (cm):</label>
+            <input type="number" step="0.1" class="form-control" id="ancho_sup_s60" value="0" onfocus="this.select()">
+            <small class="text-muted" style="font-size: 0.65rem;">Mínimo 40 cm</small>
+        </div>
+        <div class="col-6">
+            <label class="form-label">Altura Izq. (cm):</label>
+            <input type="number" step="0.1" class="form-control" id="alt_izq_s60" value="0" onfocus="this.select()">
+            <small class="text-muted" style="font-size: 0.65rem;">Mínimo 30 cm</small>
+        </div>
+        <div class="col-6">
+            <label class="form-label">Altura Der. (cm):</label>
+            <input type="number" step="0.1" class="form-control" id="alt_der_s60" value="0" onfocus="this.select()">
+            <small class="text-muted" style="font-size: 0.65rem;">Mínimo 30 cm | Diferencia ≤ 1 cm</small>
+        </div>
+    </div>
+
+    <!-- Configuración de Hojas / Fijas / Corredizas -->
+    <div class="row g-2 mb-3 text-center">
+        <div class="col-4">
+            <label class="form-label">Hojas:</label>
+            <input type="number" class="form-control" id="cant_hojas_s60" value="2" min="2" step="2" onfocus="this.select()">
+            <small class="text-muted" style="font-size: 0.65rem;">Solo: 2, 4, 6, 8</small>
+        </div>
+        <div class="col-4">
+            <label class="form-label">Fijas:</label>
+            <input type="number" class="form-control" id="cant_fijas_s60" value="0" min="0" onfocus="this.select()">
+        </div>
+        <div class="col-4">
+            <label class="form-label">Corr.:</label>
+            <input type="text" class="form-control bg-black text-success fw-bold" id="cant_corr_s60" readonly>
+        </div>
+    </div>
+    <div class="mb-4">
+        <label class="form-label">📐 Vista previa de hojas:</label>
+        <div id="vista_previa_hojas_s60" class="vista-previa-container">
+            <!-- Aquí se generan los rectángulos dinámicamente -->
+        </div>
+    </div>
+    <hr style="border-color: #444;">
+
+
+    
+    <!-- Incluir Puente -->
+    <div class="d-flex align-items-center mb-3">
+        <button type="button" class="btn-config-puente me-3" id="btn_toggle_vista_s60" onclick="alert('🚧 En desarrollo. Próximamente disponible.')" style="opacity: 0.6; cursor: not-allowed;">CONFIGURAR PUENTE</button>
+        <span class="texto-resaltado me-2">INCLUIR PUENTE</span>
+        <div class="form-check form-switch mt-1">
+    <input class="form-check-input" type="checkbox" id="incluir_en_calculos_s60" disabled>
+    <small class="text-muted" style="font-size: 0.7rem;">(En desarrollo)</small>
+</div>
+    </div>
+
+    <!-- Panel de Puente -->
+    <div id="seccion_puente_master_s60" class="seccion-oculta border border-secondary p-3 rounded mb-4">
+        <div class="row g-2 mb-3">
+            <div class="col-4">
+                <label class="form-label small text-warning fw-bold">ALT. PUENTE (cm):</label>
+                <input type="number" step="0.1" class="form-control border-warning" id="alt_puente_s60" value="0" onfocus="this.select()">
+            </div>
+            <div class="col-4">
+                <label class="form-label small text-info fw-bold">📐 ancho sobre p.</label>
+                <input type="text" class="form-control bg-readonly text-info fw-bold" id="ancho_sup_auto_s60" readonly>
+                <small class="text-muted" style="font-size: 0.65rem;">Valor automático según ancho superior</small>
+            </div>
+            <div class="col-4">
+                <label class="form-label small">ESPESOR RIEL (cm):</label>
+                <input type="number" step="0.1" class="form-control" id="espesor_s60" value="1.6" onfocus="this.select()">
+            </div>
+        </div>
+
+        <div class="row g-2 mb-3">
+            <div class="col-6">
+                <label class="form-label small text-info fw-bold">S.P. Izq (Rest.):</label>
+                <input type="text" class="form-control form-control-sm bg-black text-info fw-bold" id="sp_izq_s60" readonly>
+            </div>
+            <div class="col-6">
+                <label class="form-label small text-info fw-bold">S.P. Der (Rest.):</label>
+                <input type="text" class="form-control form-control-sm bg-black text-info fw-bold" id="sp_der_s60" readonly>
+            </div>
+        </div>
+
+        <!-- Modos de Puente -->
+        <div class="d-flex gap-4 mb-3 justify-content-center">
+            <div class="form-check radio-materiales">
+                <input class="form-check-input" type="radio" name="opt_puente_s60" id="radio_fijos_s60" value="fijos" checked>
+                <label class="form-check-label text-white" for="radio_fijos_s60">🧱 Solo Fijos</label>
+            </div>
+            <div class="form-check radio-materiales">
+                <input class="form-check-input" type="radio" name="opt_puente_s60" id="radio_corr_s60" value="corredizos">
+                <label class="form-check-label text-white" for="radio_corr_s60">🔄 Corredizos + Fijos</label>
+            </div>
+        </div>
+
+        <!-- Modo Corredizos + Fijos -->
+        <div id="config_corredizos_puente_s60" class="mb-3">
+            <div class="row g-2 text-center">
+                <div class="col-4">
+                    <label class="form-label small">Hojas P.:</label>
+                    <input type="number" class="form-control form-control-sm" id="hojas_puente_s60" value="2" step="2" onfocus="this.select()">
+                </div>
+                <div class="col-4">
+                    <label class="form-label small">Fijos P.:</label>
+                    <input type="number" class="form-control form-control-sm" id="fijos_puente_s60" value="0" onfocus="this.select()">
+                </div>
+                <div class="col-4">
+                    <label class="form-label small">Corr. P.:</label>
+                    <input type="text" class="form-control form-control-sm bg-black text-success fw-bold" id="corredizos_puente_s60" readonly>
+                </div>
+            </div>
+            <div class="small text-muted text-center mt-2">📌 Solo: 2, 4, 6, 8 hojas</div>
+        </div>
+
+        <!-- Modo Solo Fijos -->
+        <div id="config_fijos_puente_s60" class="mb-3 seccion-oculta">
+            <div class="row g-2 text-center">
+                <div class="col-12">
+                    <label class="form-label small text-info fw-bold">📐 Cantidad de Paneles Fijos en Sobre Ventana:</label>
+                    <div class="d-flex align-items-center justify-content-center gap-3 flex-wrap">
+                        <input type="number" class="form-control form-control-sm text-center" 
+                               style="width: 100px;" id="fijos_solo_puente_s60" value="1" min="1" onfocus="this.select()">
+                        <button type="button" class="btn btn-sm btn-outline-info" id="btn_sugerir_fijos_s60" style="font-size: 0.7rem;">🔄 Sugerir automático</button>
+                    </div>
+                    <div class="small text-muted mt-2">
+                        📏 Ancho Sobre Ventana: <strong id="ancho_actual_sugerencia_s60" class="text-warning">0</strong> cm<br>
+                        🧮 Sugerencia actual: <strong id="sugerencia_fijos_texto_s60" class="text-success">---</strong>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-12">
+                    <label class="form-label small">🧷 Espesor Soportes (cm):</label>
+                    <input type="number" step="0.1" class="form-control form-control-sm" id="esp_soportes_s60" value="0.0" onfocus="this.select()">
+                    <small class="text-muted">Para cálculo de perfiles en sobreventana de solo fijos</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Resultados (vacíos por ahora) -->
+    <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" id="switch_cortes_s60">
+        <label class="form-check-label texto-resaltado" for="switch_cortes_s60">MEDIDAS GENERALES</label>
+    </div>
+    <div id="resultados_cortes_s60" class="seccion-oculta mb-4 contenedor-materiales">
+        <ul class="list-group list-group-flush" id="lista_cortes_detallada_s60"></ul>
+    </div>
+
+    <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" id="switch_req_s60">
+        <label class="form-check-label texto-resaltado" for="switch_req_s60">ALUMINIOS REQUERIDOS</label>
+    </div>
+    <div id="resultados_requeridos_s60" class="seccion-oculta mb-4 contenedor-materiales">
+        <div class="d-flex justify-content-center gap-2 mb-3">
+            <button type="button" id="btn_req_estandar_s60" class="btn btn-sm btn-outline-primary active" onclick="setMaterialReqS60('estandar')">Estándar</button>
+<button type="button" id="btn_req_pesado_s60" class="btn btn-sm btn-outline-warning" onclick="setMaterialReqS60('pesado')">Pesado</button>
+        </div>
+        <ul class="list-group list-group-flush" id="lista_requeridos_body_s60"></ul>
+    </div>
+
+    <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" id="switch_vidrios_req_s60">
+        <label class="form-check-label texto-resaltado" for="switch_vidrios_req_s60">VIDRIOS REQUERIDOS</label>
+    </div>
+    <div id="resultados_vidrios_req_s60" class="seccion-oculta mb-4 contenedor-materiales">
+        <div class="row text-muted small mb-2 px-3">
+            <div class="col-4">DESCRIPCIÓN</div>
+            <div class="col-4 text-center">MEDIDA (CANT)</div>
+            <div class="col-4 text-end">TOTAL</div>
+        </div>
+        <ul class="list-group list-group-flush" id="lista_vidrios_req_body_s60"></ul>
+    </div>
+
+    <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" id="switch_accesorios_req_s60">
+        <label class="form-check-label texto-resaltado" for="switch_accesorios_req_s60">ACCESORIOS REQUERIDOS</label>
+    </div>
+    <div id="resultados_accesorios_req_s60" class="seccion-oculta mb-4 contenedor-materiales">
+        <div class="row text-muted small mb-2 px-3">
+            <div class="col-5">DESCRIPCIÓN</div>
+            <div class="col-3 text-center">CÓDIGO</div>
+            <div class="col-2 text-center">CANTIDAD</div>
+            <div class="col-2 text-end">TOTAL</div>
+        </div>
+        <ul class="list-group list-group-flush" id="lista_accesorios_req_body_s60"></ul>
+    </div>
+
+    <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" id="switch_tiras_req_s60">
+        <label class="form-check-label texto-resaltado" for="switch_tiras_req_s60">TIRAS REQUERIDAS</label>
+    </div>
+    <div id="resultados_tiras_req_s60" class="seccion-oculta mb-4 contenedor-materiales">
+        <div class="row text-muted small mb-2 px-3">
+            <div class="col-5">DESCRIPCIÓN</div>
+            <div class="col-3 text-center">CÓDIGO</div>
+            <div class="col-2 text-center">METROS</div>
+            <div class="col-2 text-end">TOTAL</div>
+        </div>
+        <ul class="list-group list-group-flush" id="lista_tiras_req_body_s60"></ul>
+    </div>
+
+    <!-- Resumen de Producción -->
+    <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" id="switch_resumen_s60">
+        <label class="form-check-label texto-resaltado" for="switch_resumen_s60">📋 RESUMEN DE PRODUCCIÓN</label>
+    </div>
+    <div id="resultados_resumen_s60" class="seccion-oculta mb-4 contenedor-materiales">
+        <div class="text-end mb-2">
+            <button type="button" class="btn btn-sm btn-outline-info">🔄 Refrescar</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary">🖨️ Imprimir</button>
+        </div>
+        <pre id="contenedor_resumen_s60" style="font-family: monospace; font-size: 0.85rem; white-space: pre-wrap; margin: 0; color: #e0e0e0; background-color: #1e1e1e; padding: 10px; border-radius: 5px;"></pre>
+    </div>
+</div>

@@ -124,5 +124,67 @@
             {"n": "Incoloro 6 mm", "p": 5.00},
             {"n": "Reflejante 6 mm", "p": 9.00}
         ]
+    },
+    "serie60": {
+        "nombre": "Serie 60",
+        "perfiles": {
+            "estandar": [
+                {"n": "Marco doble", "c": "6001", "p": 40.00},
+                {"n": "Marco triple", "c": "6002", "p": 55.00},
+                {"n": "Marco de hoja", "c": "6005", "p": 45.00},
+                {"n": "Marco de insulado", "c": "6006", "p": 48.00},
+                {"n": "Traslape", "c": "6003", "p": 15.00},
+                {"n": "Adaptador de hoja", "c": "6004", "p": 10.00}
+            ],
+            "pesados": [
+                {"n": "Marco doble", "c": "6001", "p": 60.00},
+                {"n": "Marco triple", "c": "6002", "p": 75.00},
+                {"n": "Marco de hoja", "c": "6005", "p": 65.00},
+                {"n": "Marco de insulado", "c": "6006", "p": 68.00},
+                {"n": "Traslape", "c": "6003", "p": 25.00},
+                {"n": "Adaptador de hoja", "c": "6004", "p": 18.00}
+            ]
+        },
+        "accesorios": {
+            "estandar": [
+                {"n": "GARRUCHA SERIE 60", "c": "GAR.SIM 60", "p": 6.30},
+                {"n": "CIERRE MULTIPUNTO", "c": "CIE.MUL 60", "p": 87.15},
+                {"n": "ESCUADRA DE PRECISION", "c": "ESC.PRE", "p": 6.20},
+                {"n": "ESCUADRA DE ENSAMBLE", "c": "ESC.ENS", "p": 4.10},
+                {"n": "ESCUADRA DE ALINIAMIENTO", "c": "ESC.ALI", "p": 0.53},
+                {"n": "CORTAVIENTO SERIE 60", "c": "COR.VIE.60", "p": 1.58},
+                {"n": "GUIA PLASTICA SERIE 60", "c": "GUI.PLA 60", "p": 1.05},
+                {"n": "CIERRE AUTOMATICO S-60", "c": "CIE.AUT60", "p": 21.00},
+                {"n": "MANIJA ADICIONAL", "c": "MAN.ADIC", "p": 15.00}
+            ],
+            "pesados": [
+                {"n": "GARRUCHA SERIE 60", "c": "GAR.SIM 60", "p": 6.30},
+                {"n": "CIERRE MULTIPUNTO", "c": "CIE.MUL 60", "p": 87.15},
+                {"n": "ESCUADRA DE PRECISION", "c": "ESC.PRE", "p": 6.20},
+                {"n": "ESCUADRA DE ENSAMBLE", "c": "ESC.ENS", "p": 4.10},
+                {"n": "ESCUADRA DE ALINIAMIENTO", "c": "ESC.ALI", "p": 0.53},
+                {"n": "CORTAVIENTO SERIE 60", "c": "COR.VIE.60", "p": 1.58},
+                {"n": "GUIA PLASTICA SERIE 60", "c": "GUI.PLA 60", "p": 1.05},
+                {"n": "CIERRE AUTOMATICO S-60", "c": "CIE.AUT60", "p": 21.00},
+                {"n": "MANIJA ADICIONAL", "c": "MAN.ADIC", "p": 15.00}
+            ]
+        },
+        "tiras": {
+            "estandar": [
+                {"n": "felpa hermetik", "c": "F-HER", "p": 0.50},
+                {"n": "burlete cuña S-60", "c": "bu-3mm", "p": 1.60}
+            ],
+            "pesados": [
+                {"n": "felpa hermetik", "c": "F-HER", "p": 0.50},
+                {"n": "burlete cuña S-60", "c": "bu-3mm", "p": 1.60}
+            ]
+        },
+        "vidrios": [
+            {"n": "Incoloro 4 mm", "p": 3.00},
+            {"n": "Incoloro 6 mm", "p": 5.00},
+            {"n": "Reflejante 6 mm", "p": 9.00}
+        ]
     }
 }
+
+

@@ -186,9 +186,10 @@
                 <label class="form-label">Pedido:</label>
                 <select class="form-select" id="pedido" onchange="cambiarTipoPedido()">
                     <option value="" selected disabled>-- Seleccione un pedido --</option>
-                    <option value="sistema">Ventanas Sistema (S/. 9.00)</option>
-                    <option value="serie80">Serie 80 (S/. 35.00)</option>
-                    <option value="serie25">Serie 25 CC (S/. 25.00)</option>
+                    <option value="sistema">Ventanas Sistema </option>
+                    <option value="serie80">Serie 80 </option>
+                    <option value="serie60">Serie 60 </option>
+                    <option value="serie25">Serie 25  </option>
                 </select>
             </div>
             <div class="col-12 mb-3">
@@ -268,6 +269,9 @@
         } else if (tipoPedidoActual === 'serie80') {
             archivoHtml = 'serie80.html';
             archivoJs = 'serie80.js';
+        } else if (tipoPedidoActual === 'serie60') {
+            archivoHtml = 'serie60.html';
+            archivoJs = 'serie60.js';
         } else {
             archivoHtml = 'sistema.html';
             archivoJs = 'sistema.js';
@@ -291,6 +295,8 @@
                     inicializarSistema(configuracionCompleta);
                 } else if (tipoPedidoActual === 'serie80' && typeof inicializarSerie80 === 'function') {
                     inicializarSerie80(configuracionCompleta);
+                } else if (tipoPedidoActual === 'serie60' && typeof inicializarSerie60 === 'function') {
+                    inicializarSerie60(configuracionCompleta);
                 }
             };
         } catch (error) {
@@ -367,6 +373,7 @@ function cargarTabAdmin(tipo) {
 function generarTablaPerfiles() {
     const sistema = configuracionCompleta.sistema.perfiles;
     const serie80 = configuracionCompleta.serie80.perfiles;
+    const serie60 = configuracionCompleta.serie60.perfiles;
     
     return `
         <h6 class="text-info">Ventanas Sistema</h6>
@@ -394,12 +401,26 @@ function generarTablaPerfiles() {
                 `).join('')}
             </tbody>
         </table>
+
+        <h6 class="text-info mt-3">Serie 60</h6>
+        <table class="table table-sm table-dark">
+            <thead><tr><th>Estándar (S/.)</th><th>Pesado (S/.)</th></tr></thead>
+            <tbody>
+                ${serie60.estandar.map((p, i) => `
+                    <tr>
+                        <td><input type="text" class="form-control form-control-sm" value="${p.p}" data-tipo="perfil" data-sistema="serie60" data-categoria="estandar" data-indice="${i}" data-nombre="${p.n}" data-codigo="${p.c}" style="width: 100px;"></td>
+                        <td><input type="text" class="form-control form-control-sm" value="${serie60.pesados[i]?.p || ''}" data-tipo="perfil" data-sistema="serie60" data-categoria="pesados" data-indice="${i}" data-nombre="${p.n}" data-codigo="${p.c}" style="width: 100px;"></td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
     `;
 }
 
 function generarTablaAccesorios() {
     const sistema = configuracionCompleta.sistema.accesorios;
     const serie80 = configuracionCompleta.serie80.accesorios;
+    const serie60 = configuracionCompleta.serie60.accesorios;
     
     return `
         <h6 class="text-info">Ventanas Sistema</h6>
@@ -407,12 +428,16 @@ function generarTablaAccesorios() {
         
         <h6 class="text-info mt-3">Serie 80</h6>
         ${generarTablaItems(serie80.estandar, serie80.pesados, 'serie80', 'accesorio')}
+
+        <h6 class="text-info mt-3">Serie 60</h6>
+        ${generarTablaItems(serie60.estandar, serie60.pesados, 'serie60', 'accesorio')}
     `;
 }
 
 function generarTablaTiras() {
     const sistema = configuracionCompleta.sistema.tiras;
     const serie80 = configuracionCompleta.serie80.tiras;
+    const serie60 = configuracionCompleta.serie60.tiras;
     
     return `
         <h6 class="text-info">Ventanas Sistema</h6>
@@ -420,12 +445,16 @@ function generarTablaTiras() {
         
         <h6 class="text-info mt-3">Serie 80</h6>
         ${generarTablaItems(serie80.estandar, serie80.pesados, 'serie80', 'tira')}
+
+        <h6 class="text-info mt-3">Serie 60</h6>
+        ${generarTablaItems(serie60.estandar, serie60.pesados, 'serie60', 'tira')}
     `;
 }
 
 function generarTablaVidrios() {
     const sistema = configuracionCompleta.sistema.vidrios;
     const serie80 = configuracionCompleta.serie80.vidrios;
+    const serie60 = configuracionCompleta.serie60.vidrios;
     
     return `
         <h6 class="text-info">Ventanas Sistema</h6>
@@ -441,6 +470,14 @@ function generarTablaVidrios() {
             <div class="row mb-2">
                 <div class="col-4">${v.n}</div>
                 <div class="col-4"><input type="text" class="form-control form-control-sm" value="${v.p}" data-tipo="vidrio" data-sistema="serie80" data-indice="${i}" style="width: 100px;"></div>
+            </div>
+        `).join('')}
+
+        <h6 class="text-info mt-3">Serie 60</h6>
+        ${serie60.map((v, i) => `
+            <div class="row mb-2">
+                <div class="col-4">${v.n}</div>
+                <div class="col-4"><input type="text" class="form-control form-control-sm" value="${v.p}" data-tipo="vidrio" data-sistema="serie60" data-indice="${i}" style="width: 100px;"></div>
             </div>
         `).join('')}
     `;
