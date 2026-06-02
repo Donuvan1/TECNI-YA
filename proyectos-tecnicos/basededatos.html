@@ -407,6 +407,28 @@
         ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 10px; }
         ::-webkit-scrollbar-thumb { background: rgba(187,134,252,0.5); border-radius: 10px; }
 
+        /* BOTONES DE COLOR MULTISELECCIÓN */
+        .multi-color-botones {
+            background: rgba(255,255,255,0.03);
+            border-radius: 20px;
+            padding: 4px 8px;
+        }
+        .btn-color-multi {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid #888;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            padding: 0;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+        .btn-color-multi:hover {
+            transform: scale(1.15);
+            box-shadow: 0 0 6px rgba(255,255,255,0.3);
+        }
+
         /* Responsive */
         @media (max-width: 480px) {
             .acciones-superior {
@@ -418,6 +440,13 @@
             }
             .precios {
                 gap: 3px;
+            }
+            .btn-color-multi {
+                width: 18px;
+                height: 18px;
+            }
+            .multi-color-botones {
+                padding: 3px 6px;
             }
         }
     </style>
@@ -489,6 +518,33 @@
             <button class="btn-accion btn-agregar" onclick="agregarItem()">+ Agregar nuevo</button>
             <button class="btn-accion btn-guardar" onclick="guardarCambios()">💾 Guardar cambios</button>
             <button class="btn-accion btn-importar" onclick="importarDatos()" title="Importar datos (próximamente)">📥 Importar</button>
+        </div>
+
+        <!-- TOGGLE DE EDICIÓN Y BOTONES DE COLOR MULTISELECCIÓN -->
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+            <button id="btnToggleEdicion" class="btn-accion" onclick="toggleEdicion()" 
+                style="flex:1;min-width:160px;padding:10px;border:none;border-radius:12px;font-weight:600;font-size:0.85rem;cursor:pointer;transition:0.2s;text-align:center;background:#444;color:#aaa;">
+                🔒 Edición desactivada
+            </button>
+            
+            <!-- BOTONES DE COLOR MULTISELECCIÓN PARA VARILLAS -->
+            <div id="multiColorVarillas" class="multi-color-botones" style="display:flex;align-items:center;gap:4px;">
+                <span style="font-size:0.6rem;color:#888;white-space:nowrap;margin-right:2px;">🎨</span>
+                <button class="btn-color-multi" id="btnColorVarilla_natural" onclick="toggleColorVarilla('natural')" title="Natural" style="background:#808080;border-color:#808080;"></button>
+                <button class="btn-color-multi" id="btnColorVarilla_negro" onclick="toggleColorVarilla('negro')" title="Negro" style="background:transparent;border-color:#1a1a1a;opacity:0.5;"></button>
+                <button class="btn-color-multi" id="btnColorVarilla_negro_brillante" onclick="toggleColorVarilla('negro_brillante')" title="Negro Brillante" style="background:transparent;border-color:#000;opacity:0.5;"></button>
+                <button class="btn-color-multi" id="btnColorVarilla_blanco" onclick="toggleColorVarilla('blanco')" title="Blanco" style="background:transparent;border-color:#F5F5F5;opacity:0.5;"></button>
+                <button class="btn-color-multi" id="btnColorVarilla_madera" onclick="toggleColorVarilla('madera')" title="Madera" style="background:transparent;border-color:#8B5E3C;opacity:0.5;"></button>
+            </div>
+            
+            <!-- BOTONES DE COLOR MULTISELECCIÓN PARA ACCESORIOS -->
+            <div id="multiColorAccOtros" class="multi-color-botones" style="display:none;align-items:center;gap:4px;">
+                <span style="font-size:0.6rem;color:#888;white-space:nowrap;margin-right:2px;">🎨</span>
+                <button class="btn-color-multi" id="btnColorAccOtros_gris" onclick="toggleColorAccOtros('gris')" title="Gris" style="background:#808080;border-color:#808080;"></button>
+                <button class="btn-color-multi" id="btnColorAccOtros_negro" onclick="toggleColorAccOtros('negro')" title="Negro" style="background:transparent;border-color:#1a1a1a;opacity:0.5;"></button>
+                <button class="btn-color-multi" id="btnColorAccOtros_blanco" onclick="toggleColorAccOtros('blanco')" title="Blanco" style="background:transparent;border-color:#F5F5F5;opacity:0.5;"></button>
+                <button class="btn-color-multi" id="btnColorAccOtros_madera" onclick="toggleColorAccOtros('madera')" title="Madera" style="background:transparent;border-color:#8B5E3C;opacity:0.5;"></button>
+            </div>
         </div>
 
         <!-- LISTA DE ITEMS -->

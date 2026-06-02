@@ -67,6 +67,11 @@ let filtroBusqueda = '';
 let colorVarillaActual = 'natural';
 let colorTiraActual = 'gris';
 let colorAccOtrosActual = 'gris';
+let modoEdicion = false;
+
+// Colores seleccionados para guardado múltiple (multiselección)
+let coloresVarillaSeleccionados = new Set(['natural']);
+let coloresAccOtrosSeleccionados = new Set(['gris']);
 
 // Inicializar estructura vacía para cada categoría
 CATEGORIAS.forEach(cat => {
@@ -283,31 +288,34 @@ function renderizarItems() {
             const pieCompraCalculado = pie2 > 0 ? precioCompra / pie2 : 0;
             const pieVentaSugerido = pieCompraCalculado + 0.7;
             const apkSugerido = pieCompraCalculado + 1.00;
+            const readonlyAttr = modoEdicion ? '' : 'readonly';
+            const btnEliminarHtml = modoEdicion ? `<button class="btn-eliminar-item" onclick="eliminarItem('${catId}', ${idxReal})" title="Eliminar">✕</button>` : '';
             
             html += `
             <div class="item item-plancha" data-categoria="${catId}" data-index="${idxReal}">
                 <div style="display:flex;align-items:center;gap:6px;flex:1 1 100%;">
                     <span class="item-categoria-tag">${item._categoriaIcono} ${item._categoriaNombre}</span>
-                    <button class="btn-eliminar-item" onclick="eliminarItem('${catId}', ${idxReal})" title="Eliminar">✕</button>
+                    ${btnEliminarHtml}
                 </div>
                 <div class="item-nombre">
                     <input type="text" class="form-control form-control-sm" 
                         style="background:#1a1a2a;border:1px solid #444;color:#fff;font-size:0.82rem;" 
                         value="${escapeHtml(item.n || '')}" 
-                        onchange="actualizarItem('${catId}', ${idxReal}, 'n', this.value)" placeholder="Nombre">
+                        onchange="actualizarItem('${catId}', ${idxReal}, 'n', this.value)" placeholder="Nombre"
+                        onfocus="this.select()" ${readonlyAttr}>
                 </div>
                 <div class="item-medidas item-medidas-4">
                     <div class="medida-grupo">
                         <span class="medida-label">Ancho (cm)</span>
                         <input type="number" class="medida-input sin-spinner" value="${ancho || 0}" 
                             onchange="actualizarMedidaPlancha(${idxReal}, 'ancho', parseFloat(this.value) || 0)"
-                            onfocus="this.select()">
+                            onfocus="this.select()" ${readonlyAttr}>
                     </div>
                     <div class="medida-grupo">
                         <span class="medida-label">Alto (cm)</span>
                         <input type="number" class="medida-input sin-spinner" value="${alto || 0}" 
                             onchange="actualizarMedidaPlancha(${idxReal}, 'alto', parseFloat(this.value) || 0)"
-                            onfocus="this.select()">
+                            onfocus="this.select()" ${readonlyAttr}>
                     </div>
                     <div class="medida-grupo">
                         <span class="medida-label">Pie²</span>
@@ -318,7 +326,7 @@ function renderizarItems() {
                         <span class="medida-label">Precio Compra</span>
                         <input type="number" class="medida-input sin-spinner" value="${precioCompra || 0}" 
                             onchange="actualizarPrecioPlancha(${idxReal}, 'compra', parseFloat(this.value) || 0)"
-                            onfocus="this.select()">
+                            onfocus="this.select()" ${readonlyAttr}>
                     </div>
                 </div>
                 <div class="precios precios-plancha">
@@ -328,7 +336,7 @@ function renderizarItems() {
                             <span style="position:absolute;left:4px;top:50%;transform:translateY(-50%);font-size:0.65rem;color:#00ff00;z-index:1;">S/</span>
                             <input type="number" class="precio-input sin-spinner" style="padding-left:16px;" value="${precios.venta_plancha || 0}" 
                                 onchange="actualizarPrecioPlancha(${idxReal}, 'venta_plancha', parseFloat(this.value) || 0)"
-                                onfocus="this.select()">
+                                onfocus="this.select()" ${readonlyAttr}>
                         </div>
                     </div>
                     <div class="precio-grupo">
@@ -347,7 +355,7 @@ function renderizarItems() {
                                 <input type="number" class="precio-input sin-spinner" style="padding-left:16px;" value="${(precios.pie_venta || pieVentaSugerido).toFixed(2)}" 
                                     onchange="actualizarPrecioPlancha(${idxReal}, 'pie_venta', parseFloat(this.value) || 0)"
                                     onfocus="mostrarSugerido(this, ${pieVentaSugerido.toFixed(2)})"
-                                    onblur="ocultarSugerido(this)">
+                                    onblur="ocultarSugerido(this)" ${readonlyAttr}>
                             </div>
                             <span class="sugerido-flotante" style="display:none;">💡 Sugerido: ${pieVentaSugerido.toFixed(2)}</span>
                         </div>
@@ -360,7 +368,7 @@ function renderizarItems() {
                                 <input type="number" class="precio-input sin-spinner" style="padding-left:16px;" value="${(precios.apk || apkSugerido).toFixed(2)}" 
                                     onchange="actualizarPrecioPlancha(${idxReal}, 'apk', parseFloat(this.value) || 0)"
                                     onfocus="mostrarSugerido(this, ${apkSugerido.toFixed(2)})"
-                                    onblur="ocultarSugerido(this)">
+                                    onblur="ocultarSugerido(this)" ${readonlyAttr}>
                             </div>
                             <span class="sugerido-flotante" style="display:none;">💡 Sugerido: ${apkSugerido.toFixed(2)}</span>
                         </div>
@@ -377,6 +385,8 @@ function renderizarItems() {
             const precios = item.precios || { compra: 0, venta: 0, xmetro: 0, apk: 0 };
             const xmetro = precios.xmetro || 0;
             const apkSugeridoTira = xmetro > 0 ? xmetro + 0.20 : 0;
+            const readonlyAttr = modoEdicion ? '' : 'readonly';
+            const btnEliminarHtml = modoEdicion ? `<button class="btn-eliminar-item" onclick="eliminarItem('${catId}', ${idxReal})" title="Eliminar">✕</button>` : '';
             
             // Obtener info del color actual de tiras
             const colorInfoTira = COLORES_TIRAS.find(c => c.id === colorTiraActual) || COLORES_TIRAS[0];
@@ -387,19 +397,21 @@ function renderizarItems() {
                     <span class="item-categoria-tag">${item._categoriaIcono} ${item._categoriaNombre}</span>
                     <span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${colorInfoTira.hex};border:1px solid #888;flex-shrink:0;" title="${colorInfoTira.nombre}"></span>
                     <span style="font-size:0.65rem;color:#aaa;flex-shrink:0;">${colorInfoTira.nombre}</span>
-                    <button class="btn-eliminar-item" onclick="eliminarItem('${catId}', ${idxReal})" title="Eliminar">✕</button>
+                    ${btnEliminarHtml}
                 </div>
                 <div class="item-nombre">
                     <input type="text" class="form-control form-control-sm" 
                         style="background:#1a1a2a;border:1px solid #444;color:#fff;font-size:0.82rem;" 
                         value="${escapeHtml(item.n || '')}" 
-                        onchange="actualizarItem('${catId}', ${idxReal}, 'n', this.value)" placeholder="Nombre">
+                        onchange="actualizarItem('${catId}', ${idxReal}, 'n', this.value)" placeholder="Nombre"
+                        onfocus="this.select()" ${readonlyAttr}>
                 </div>
                 <div class="item-codigo">
                     <input type="text" class="form-control form-control-sm" 
                         style="background:#1a1a2a;border:1px solid #444;color:#f1f508;font-size:0.72rem;width:80px;text-align:center;font-family:monospace;display:inline-block;" 
                         value="${escapeHtml(item.c || '')}" 
-                        onchange="actualizarItem('${catId}', ${idxReal}, 'c', this.value)" placeholder="Código">
+                        onchange="actualizarItem('${catId}', ${idxReal}, 'c', this.value)" placeholder="Código"
+                        onfocus="this.select()" ${readonlyAttr}>
                 </div>
                 <div class="precios">
                     <div class="precio-grupo">
@@ -408,7 +420,7 @@ function renderizarItems() {
                             <span style="position:absolute;left:4px;top:50%;transform:translateY(-50%);font-size:0.65rem;color:#00ff00;z-index:1;">S/</span>
                             <input type="number" step="0.01" class="precio-input sin-spinner" style="padding-left:16px;" value="${precios.compra || 0}" 
                                 onchange="actualizarPrecioTira(${idxReal}, 'compra', parseFloat(this.value) || 0)"
-                                onfocus="this.select()">
+                                onfocus="this.select()" ${readonlyAttr}>
                         </div>
                     </div>
                     <div class="precio-grupo">
@@ -417,7 +429,7 @@ function renderizarItems() {
                             <span style="position:absolute;left:4px;top:50%;transform:translateY(-50%);font-size:0.65rem;color:#00ff00;z-index:1;">S/</span>
                             <input type="number" step="0.01" class="precio-input sin-spinner" style="padding-left:16px;" value="${precios.venta || 0}" 
                                 onchange="actualizarPrecioTira(${idxReal}, 'venta', parseFloat(this.value) || 0)"
-                                onfocus="this.select()">
+                                onfocus="this.select()" ${readonlyAttr}>
                         </div>
                     </div>
                     <div class="precio-grupo">
@@ -426,7 +438,7 @@ function renderizarItems() {
                             <span style="position:absolute;left:4px;top:50%;transform:translateY(-50%);font-size:0.65rem;color:#00ff00;z-index:1;">S/</span>
                             <input type="number" step="0.01" class="precio-input sin-spinner" style="padding-left:16px;" value="${xmetro.toFixed(2)}" 
                                 onchange="actualizarPrecioTira(${idxReal}, 'xmetro', parseFloat(this.value) || 0)"
-                                onfocus="this.select()">
+                                onfocus="this.select()" ${readonlyAttr}>
                         </div>
                     </div>
                     <div class="precio-grupo">
@@ -437,7 +449,7 @@ function renderizarItems() {
                                 <input type="number" step="0.01" class="precio-input sin-spinner" style="padding-left:16px;" value="${(precios.apk || apkSugeridoTira).toFixed(2)}" 
                                     onchange="actualizarPrecioTira(${idxReal}, 'apk', parseFloat(this.value) || 0)"
                                     onfocus="mostrarSugeridoTira(this, ${apkSugeridoTira.toFixed(2)})"
-                                    onblur="ocultarSugerido(this)">
+                                    onblur="ocultarSugerido(this)" ${readonlyAttr}>
                             </div>
                             <span class="sugerido-flotante" style="display:none;">💡 Sugerido: ${apkSugeridoTira.toFixed(2)}</span>
                         </div>
@@ -457,6 +469,8 @@ function renderizarItems() {
             const preciosColor = preciosPorColor[colorActual] || { compra: 0, venta: 0, xmetro: 0, apk: 0 };
             const xmetro = preciosColor.xmetro || 0;
             const apkSugeridoVarilla = xmetro > 0 ? xmetro + 0.20 : 0;
+            const readonlyAttr = modoEdicion ? '' : 'readonly';
+            const btnEliminarHtml = modoEdicion ? `<button class="btn-eliminar-item" onclick="eliminarItem('${catId}', ${idxReal})" title="Eliminar">✕</button>` : '';
             
             // Obtener info del color actual
             const colorInfo = COLORES_VARILLAS.find(c => c.id === colorActual) || COLORES_VARILLAS[0];
@@ -468,19 +482,21 @@ function renderizarItems() {
                     <span class="item-categoria-tag">${item._categoriaIcono} ${item._categoriaNombre}</span>
                     <span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${colorInfo.hex};border:1px solid #888;flex-shrink:0;" title="${colorInfo.nombre}"></span>
                     <span style="font-size:0.65rem;color:#aaa;flex-shrink:0;">${colorInfo.nombre}</span>
-                    <button class="btn-eliminar-item" onclick="eliminarItem('${catId}', ${idxReal})" title="Eliminar">✕</button>
+                    ${btnEliminarHtml}
                 </div>
                 <div class="item-nombre">
                     <input type="text" class="form-control form-control-sm" 
                         style="background:#1a1a2a;border:1px solid #444;color:#fff;font-size:0.82rem;" 
                         value="${escapeHtml(item.n || '')}" 
-                        onchange="actualizarItem('${catId}', ${idxReal}, 'n', this.value)" placeholder="Nombre">
+                        onchange="actualizarItem('${catId}', ${idxReal}, 'n', this.value)" placeholder="Nombre"
+                        onfocus="this.select()" ${readonlyAttr}>
                 </div>
                 <div class="item-codigo">
                     <input type="text" class="form-control form-control-sm" 
                         style="background:#1a1a2a;border:1px solid #444;color:#f1f508;font-size:0.72rem;width:80px;text-align:center;font-family:monospace;display:inline-block;" 
                         value="${escapeHtml(item.c || '')}" 
-                        onchange="actualizarItem('${catId}', ${idxReal}, 'c', this.value)" placeholder="Código">
+                        onchange="actualizarItem('${catId}', ${idxReal}, 'c', this.value)" placeholder="Código"
+                        onfocus="this.select()" ${readonlyAttr}>
                 </div>
                 <div class="precios">
                     <div class="precio-grupo">
@@ -489,7 +505,7 @@ function renderizarItems() {
                             <span style="position:absolute;left:4px;top:50%;transform:translateY(-50%);font-size:0.65rem;color:#00ff00;z-index:1;">S/</span>
                             <input type="number" step="0.01" class="precio-input sin-spinner" style="padding-left:16px;" value="${preciosColor.compra || 0}" 
                                 onchange="actualizarPrecioVarilla(${idxReal}, 'compra', parseFloat(this.value) || 0)"
-                                onfocus="this.select()">
+                                onfocus="this.select()" ${readonlyAttr}>
                         </div>
                     </div>
                     <div class="precio-grupo">
@@ -498,7 +514,7 @@ function renderizarItems() {
                             <span style="position:absolute;left:4px;top:50%;transform:translateY(-50%);font-size:0.65rem;color:#00ff00;z-index:1;">S/</span>
                             <input type="number" step="0.01" class="precio-input sin-spinner" style="padding-left:16px;" value="${preciosColor.venta || 0}" 
                                 onchange="actualizarPrecioVarilla(${idxReal}, 'venta', parseFloat(this.value) || 0)"
-                                onfocus="this.select()">
+                                onfocus="this.select()" ${readonlyAttr}>
                         </div>
                     </div>
                     <div class="precio-grupo">
@@ -507,7 +523,7 @@ function renderizarItems() {
                             <span style="position:absolute;left:4px;top:50%;transform:translateY(-50%);font-size:0.65rem;color:#00ff00;z-index:1;">S/</span>
                             <input type="number" step="0.01" class="precio-input sin-spinner" style="padding-left:16px;" value="${xmetro.toFixed(2)}" 
                                 onchange="actualizarPrecioVarilla(${idxReal}, 'xmetro', parseFloat(this.value) || 0)"
-                                onfocus="this.select()">
+                                onfocus="this.select()" ${readonlyAttr}>
                         </div>
                     </div>
                     <div class="precio-grupo">
@@ -518,7 +534,7 @@ function renderizarItems() {
                                 <input type="number" step="0.01" class="precio-input sin-spinner" style="padding-left:16px;" value="${(preciosColor.apk || apkSugeridoVarilla).toFixed(2)}" 
                                     onchange="actualizarPrecioVarilla(${idxReal}, 'apk', parseFloat(this.value) || 0)"
                                     onfocus="mostrarSugeridoVarilla(this, ${apkSugeridoVarilla.toFixed(2)})"
-                                    onblur="ocultarSugerido(this)">
+                                    onblur="ocultarSugerido(this)" ${readonlyAttr}>
                             </div>
                             <span class="sugerido-flotante" style="display:none;">💡 Sugerido: ${apkSugeridoVarilla.toFixed(2)}</span>
                         </div>
@@ -529,15 +545,17 @@ function renderizarItems() {
         }
         
         // ============================================
-        // RENDERIZADO ESPECIAL PARA ACCESORIOS Y OTROS (como Tiras pero sin Venta)
+        // RENDERIZADO ESPECIAL PARA ACCESORIOS (con colores)
         // ============================================
-        if (catId === 'accesorios' || catId === 'otros') {
+        if (catId === 'accesorios') {
             // Obtener precios del color actual
             const preciosPorColor = item.precios || {};
             const colorActual = colorAccOtrosActual;
             const preciosColor = preciosPorColor[colorActual] || { compra: 0, xmetro: 0, apk: 0 };
             const xmetro = preciosColor.xmetro || 0;
             const apkSugerido = xmetro > 0 ? xmetro + 0.20 : 0;
+            const readonlyAttr = modoEdicion ? '' : 'readonly';
+            const btnEliminarHtml = modoEdicion ? `<button class="btn-eliminar-item" onclick="eliminarItem('${catId}', ${idxReal})" title="Eliminar">✕</button>` : '';
             
             // Obtener info del color actual
             const colorInfo = COLORES_ACC_OTROS.find(c => c.id === colorActual) || COLORES_ACC_OTROS[0];
@@ -549,19 +567,21 @@ function renderizarItems() {
                     <span class="item-categoria-tag">${item._categoriaIcono} ${item._categoriaNombre}</span>
                     <span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${colorInfo.hex};border:1px solid #888;flex-shrink:0;" title="${colorInfo.nombre}"></span>
                     <span style="font-size:0.65rem;color:#aaa;flex-shrink:0;">${colorInfo.nombre}</span>
-                    <button class="btn-eliminar-item" onclick="eliminarItem('${catId}', ${idxReal})" title="Eliminar">✕</button>
+                    ${btnEliminarHtml}
                 </div>
                 <div class="item-nombre">
                     <input type="text" class="form-control form-control-sm" 
                         style="background:#1a1a2a;border:1px solid #444;color:#fff;font-size:0.82rem;" 
                         value="${escapeHtml(item.n || '')}" 
-                        onchange="actualizarItem('${catId}', ${idxReal}, 'n', this.value)" placeholder="Nombre">
+                        onchange="actualizarItem('${catId}', ${idxReal}, 'n', this.value)" placeholder="Nombre"
+                        onfocus="this.select()" ${readonlyAttr}>
                 </div>
                 <div class="item-codigo">
                     <input type="text" class="form-control form-control-sm" 
                         style="background:#1a1a2a;border:1px solid #444;color:#f1f508;font-size:0.72rem;width:80px;text-align:center;font-family:monospace;display:inline-block;" 
                         value="${escapeHtml(item.c || '')}" 
-                        onchange="actualizarItem('${catId}', ${idxReal}, 'c', this.value)" placeholder="Código">
+                        onchange="actualizarItem('${catId}', ${idxReal}, 'c', this.value)" placeholder="Código"
+                        onfocus="this.select()" ${readonlyAttr}>
                 </div>
                 <div class="precios">
                     <div class="precio-grupo">
@@ -570,7 +590,7 @@ function renderizarItems() {
                             <span style="position:absolute;left:4px;top:50%;transform:translateY(-50%);font-size:0.65rem;color:#00ff00;z-index:1;">S/</span>
                             <input type="number" step="0.01" class="precio-input sin-spinner" style="padding-left:16px;" value="${preciosColor.compra || 0}" 
                                 onchange="actualizarPrecioAccOtros(${idxReal}, 'compra', parseFloat(this.value) || 0)"
-                                onfocus="this.select()">
+                                onfocus="this.select()" ${readonlyAttr}>
                         </div>
                     </div>
                     <div class="precio-grupo">
@@ -579,7 +599,7 @@ function renderizarItems() {
                             <span style="position:absolute;left:4px;top:50%;transform:translateY(-50%);font-size:0.65rem;color:#00ff00;z-index:1;">S/</span>
                             <input type="number" step="0.01" class="precio-input sin-spinner" style="padding-left:16px;" value="${xmetro.toFixed(2)}" 
                                 onchange="actualizarPrecioAccOtros(${idxReal}, 'xmetro', parseFloat(this.value) || 0)"
-                                onfocus="this.select()">
+                                onfocus="this.select()" ${readonlyAttr}>
                         </div>
                     </div>
                     <div class="precio-grupo">
@@ -590,9 +610,62 @@ function renderizarItems() {
                                 <input type="number" step="0.01" class="precio-input sin-spinner" style="padding-left:16px;" value="${(preciosColor.apk || apkSugerido).toFixed(2)}" 
                                     onchange="actualizarPrecioAccOtros(${idxReal}, 'apk', parseFloat(this.value) || 0)"
                                     onfocus="mostrarSugeridoAccOtros(this, ${apkSugerido.toFixed(2)})"
-                                    onblur="ocultarSugerido(this)">
+                                    onblur="ocultarSugerido(this)" ${readonlyAttr}>
                             </div>
                             <span class="sugerido-flotante" style="display:none;">💡 Sugerido: ${apkSugerido.toFixed(2)}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+            return;
+        }
+        
+        // ============================================
+        // RENDERIZADO ESPECIAL PARA OTROS (sin colores, sin APK)
+        // ============================================
+        if (catId === 'otros') {
+            const precios = item.precios || { compra: 0, xmetro: 0 };
+            const xmetro = precios.xmetro || 0;
+            const readonlyAttr = modoEdicion ? '' : 'readonly';
+            const btnEliminarHtml = modoEdicion ? `<button class="btn-eliminar-item" onclick="eliminarItem('${catId}', ${idxReal})" title="Eliminar">✕</button>` : '';
+            
+            html += `
+            <div class="item" data-categoria="${catId}" data-index="${idxReal}">
+                <div style="display:flex;align-items:center;gap:6px;flex:1 1 100%;">
+                    <span class="item-categoria-tag">${item._categoriaIcono} ${item._categoriaNombre}</span>
+                    ${btnEliminarHtml}
+                </div>
+                <div class="item-nombre">
+                    <input type="text" class="form-control form-control-sm" 
+                        style="background:#1a1a2a;border:1px solid #444;color:#fff;font-size:0.82rem;" 
+                        value="${escapeHtml(item.n || '')}" 
+                        onchange="actualizarItem('${catId}', ${idxReal}, 'n', this.value)" placeholder="Nombre"
+                        onfocus="this.select()" ${readonlyAttr}>
+                </div>
+                <div class="item-codigo">
+                    <input type="text" class="form-control form-control-sm" 
+                        style="background:#1a1a2a;border:1px solid #444;color:#f1f508;font-size:0.72rem;width:80px;text-align:center;font-family:monospace;display:inline-block;" 
+                        value="${escapeHtml(item.c || '')}" 
+                        onchange="actualizarItem('${catId}', ${idxReal}, 'c', this.value)" placeholder="Código"
+                        onfocus="this.select()" ${readonlyAttr}>
+                </div>
+                <div class="precios">
+                    <div class="precio-grupo">
+                        <span class="precio-label">Compra</span>
+                        <div style="position:relative;width:100%;">
+                            <span style="position:absolute;left:4px;top:50%;transform:translateY(-50%);font-size:0.65rem;color:#00ff00;z-index:1;">S/</span>
+                            <input type="number" step="0.01" class="precio-input sin-spinner" style="padding-left:16px;" value="${precios.compra || 0}" 
+                                onchange="actualizarPrecioOtros(${idxReal}, 'compra', parseFloat(this.value) || 0)"
+                                onfocus="this.select()" ${readonlyAttr}>
+                        </div>
+                    </div>
+                    <div class="precio-grupo">
+                        <span class="precio-label">Precio Venta</span>
+                        <div style="position:relative;width:100%;">
+                            <span style="position:absolute;left:4px;top:50%;transform:translateY(-50%);font-size:0.65rem;color:#00ff00;z-index:1;">S/</span>
+                            <input type="number" step="0.01" class="precio-input sin-spinner" style="padding-left:16px;" value="${xmetro.toFixed(2)}" 
+                                onchange="actualizarPrecioOtros(${idxReal}, 'xmetro', parseFloat(this.value) || 0)"
+                                onfocus="this.select()" ${readonlyAttr}>
                         </div>
                     </div>
                 </div>
@@ -622,7 +695,16 @@ function cambiarCategoria(categoria) {
     }
     const colorSelectorAccOtros = document.getElementById('colorSelectorAccOtrosWrapper');
     if (colorSelectorAccOtros) {
-        colorSelectorAccOtros.style.display = (categoria === 'accesorios' || categoria === 'otros') ? 'flex' : 'none';
+        colorSelectorAccOtros.style.display = categoria === 'accesorios' ? 'flex' : 'none';
+    }
+    // Mostrar/ocultar botones multiselección según la categoría
+    const multiVarillas = document.getElementById('multiColorVarillas');
+    if (multiVarillas) {
+        multiVarillas.style.display = categoria === 'varillas' ? 'flex' : 'none';
+    }
+    const multiAccOtros = document.getElementById('multiColorAccOtros');
+    if (multiAccOtros) {
+        multiAccOtros.style.display = categoria === 'accesorios' ? 'flex' : 'none';
     }
     // Si hay búsqueda activa, mantenerla (busca en todas)
     renderizarItems();
@@ -690,6 +772,18 @@ function actualizarPrecio(categoria, index, campo, valor) {
     renderizarItems();
 }
 
+function toggleEdicion() {
+    modoEdicion = !modoEdicion;
+    const btn = document.getElementById('btnToggleEdicion');
+    if (btn) {
+        btn.textContent = modoEdicion ? '🔓 Edición activa' : '🔒 Edición desactivada';
+        btn.style.background = modoEdicion ? '#bb86fc' : '#444';
+        btn.style.color = modoEdicion ? '#000' : '#aaa';
+    }
+    renderizarItems();
+    mostrarToast(modoEdicion ? '🔓 Edición activada' : '🔒 Edición desactivada');
+}
+
 function agregarItem() {
     // Agregar al INICIO del array de la categoría actual
     if (categoriaActual === 'planchas') {
@@ -715,8 +809,8 @@ function agregarItem() {
             c: '0000',
             precios: preciosPorColor
         });
-    } else if (categoriaActual === 'accesorios' || categoriaActual === 'otros') {
-        // Inicializar con precios por color para accesorios y otros
+    } else if (categoriaActual === 'accesorios') {
+        // Inicializar con precios por color para accesorios
         const preciosPorColor = {};
         COLORES_ACC_OTROS.forEach(color => {
             preciosPorColor[color.id] = { compra: 0, xmetro: 0, apk: 0 };
@@ -725,6 +819,13 @@ function agregarItem() {
             n: 'Nuevo item',
             c: '0000',
             precios: preciosPorColor
+        });
+    } else if (categoriaActual === 'otros') {
+        // Estructura simple sin colores para otros (sin APK)
+        datos[categoriaActual].unshift({
+            n: 'Nuevo item',
+            c: '0000',
+            precios: { compra: 0, xmetro: 0 }
         });
     } else {
         datos[categoriaActual].unshift({
@@ -848,32 +949,42 @@ function mostrarSugeridoTira(inputEl, sugerido) {
 
 function actualizarPrecioVarilla(index, campo, valor) {
     if (!datos['varillas'] || !datos['varillas'][index]) return;
-    const colorActual = colorVarillaActual;
     if (!datos['varillas'][index].precios) {
         datos['varillas'][index].precios = {};
     }
-    if (!datos['varillas'][index].precios[colorActual]) {
-        datos['varillas'][index].precios[colorActual] = { compra: 0, venta: 0, xmetro: 0, apk: 0 };
-    }
-    datos['varillas'][index].precios[colorActual][campo] = valor;
+    // Guardar en TODOS los colores seleccionados en los botones multiselección
+    const coloresAGuardar = coloresVarillaSeleccionados.size > 0 
+        ? Array.from(coloresVarillaSeleccionados) 
+        : [colorVarillaActual];
+    coloresAGuardar.forEach(colorId => {
+        if (!datos['varillas'][index].precios[colorId]) {
+            datos['varillas'][index].precios[colorId] = { compra: 0, venta: 0, xmetro: 0, apk: 0 };
+        }
+        datos['varillas'][index].precios[colorId][campo] = valor;
+    });
     renderizarItems();
 }
 
 // ============================================
-// FUNCIONES ESPECÍFICAS PARA ACCESORIOS, OTROS
+// FUNCIONES ESPECÍFICAS PARA ACCESORIOS (con colores)
 // ============================================
 
 function actualizarPrecioAccOtros(index, campo, valor) {
     const cat = categoriaActual;
     if (!datos[cat] || !datos[cat][index]) return;
-    const colorActual = colorAccOtrosActual;
     if (!datos[cat][index].precios) {
         datos[cat][index].precios = {};
     }
-    if (!datos[cat][index].precios[colorActual]) {
-        datos[cat][index].precios[colorActual] = { compra: 0, xmetro: 0, apk: 0 };
-    }
-    datos[cat][index].precios[colorActual][campo] = valor;
+    // Guardar en TODOS los colores seleccionados en los botones multiselección
+    const coloresAGuardar = coloresAccOtrosSeleccionados.size > 0 
+        ? Array.from(coloresAccOtrosSeleccionados) 
+        : [colorAccOtrosActual];
+    coloresAGuardar.forEach(colorId => {
+        if (!datos[cat][index].precios[colorId]) {
+            datos[cat][index].precios[colorId] = { compra: 0, xmetro: 0, apk: 0 };
+        }
+        datos[cat][index].precios[colorId][campo] = valor;
+    });
     renderizarItems();
 }
 
@@ -888,6 +999,19 @@ function mostrarSugeridoAccOtros(inputEl, sugerido) {
     }
 }
 
+// ============================================
+// FUNCIONES ESPECÍFICAS PARA OTROS (sin colores)
+// ============================================
+
+function actualizarPrecioOtros(index, campo, valor) {
+    if (!datos['otros'] || !datos['otros'][index]) return;
+    if (!datos['otros'][index].precios) {
+        datos['otros'][index].precios = { compra: 0, xmetro: 0 };
+    }
+    datos['otros'][index].precios[campo] = valor;
+    renderizarItems();
+}
+
 function mostrarSugeridoVarilla(inputEl, sugerido) {
     const contenedor = inputEl.closest('.precio-con-sugerido');
     if (contenedor) {
@@ -900,10 +1024,67 @@ function mostrarSugeridoVarilla(inputEl, sugerido) {
 }
 
 // ============================================
+// FUNCIONES PARA BOTONES DE COLOR MULTISELECCIÓN
+// ============================================
+
+function toggleColorVarilla(colorId) {
+    if (coloresVarillaSeleccionados.has(colorId)) {
+        // No permitir deseleccionar si es el único seleccionado
+        if (coloresVarillaSeleccionados.size > 1) {
+            coloresVarillaSeleccionados.delete(colorId);
+        }
+    } else {
+        coloresVarillaSeleccionados.add(colorId);
+    }
+    actualizarBotonesColorVarilla();
+}
+
+function toggleColorAccOtros(colorId) {
+    if (coloresAccOtrosSeleccionados.has(colorId)) {
+        if (coloresAccOtrosSeleccionados.size > 1) {
+            coloresAccOtrosSeleccionados.delete(colorId);
+        }
+    } else {
+        coloresAccOtrosSeleccionados.add(colorId);
+    }
+    actualizarBotonesColorAccOtros();
+}
+
+function actualizarBotonesColorVarilla() {
+    COLORES_VARILLAS.forEach(color => {
+        const btn = document.getElementById(`btnColorVarilla_${color.id}`);
+        if (btn) {
+            const seleccionado = coloresVarillaSeleccionados.has(color.id);
+            btn.style.background = seleccionado ? color.hex : 'transparent';
+            btn.style.borderColor = seleccionado ? '#00ff88' : color.hex;
+            btn.style.borderWidth = seleccionado ? '3px' : '2px';
+            btn.style.opacity = seleccionado ? '1' : '0.5';
+            btn.style.boxShadow = seleccionado ? '0 0 10px #00ff88, 0 0 20px rgba(0,255,136,0.3)' : 'none';
+        }
+    });
+}
+
+function actualizarBotonesColorAccOtros() {
+    COLORES_ACC_OTROS.forEach(color => {
+        const btn = document.getElementById(`btnColorAccOtros_${color.id}`);
+        if (btn) {
+            const seleccionado = coloresAccOtrosSeleccionados.has(color.id);
+            btn.style.background = seleccionado ? color.hex : 'transparent';
+            btn.style.borderColor = seleccionado ? '#00ff88' : color.hex;
+            btn.style.borderWidth = seleccionado ? '3px' : '2px';
+            btn.style.opacity = seleccionado ? '1' : '0.5';
+            btn.style.boxShadow = seleccionado ? '0 0 10px #00ff88, 0 0 20px rgba(0,255,136,0.3)' : 'none';
+        }
+    });
+}
+
+// ============================================
 // INICIALIZACIÓN
 // ============================================
 
 
 document.addEventListener('DOMContentLoaded', async () => {
     await cargarDatos();
+    actualizarBotonesColorVarilla();
+    actualizarBotonesColorAccOtros();
 });
