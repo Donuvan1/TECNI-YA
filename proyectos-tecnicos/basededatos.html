@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>Aluminios - Base de Datos</title>
+    <title>TECNI-YA - Base de Datos</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -14,25 +14,25 @@
             min-height: 100vh;
             padding: 20px;
         }
-        .container { max-width: 600px; margin: 0 auto; }
+        .container { max-width: 650px; margin: 0 auto; }
 
         /* HEADER */
         .header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         .header h1 {
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             background: linear-gradient(135deg, #bb86fc, #03dac6);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
             font-weight: 700;
         }
-        .header p { color: #888; font-size: 0.8rem; margin-top: 5px; }
+        .header p { color: #888; font-size: 0.75rem; margin-top: 3px; }
 
-        /* SELECTOR DE COLOR (UNO PARA TODOS) */
-        .color-selector {
+        /* SELECTOR DE CATEGORÍA */
+        .categoria-selector {
             display: flex;
             align-items: center;
             gap: 10px;
@@ -40,34 +40,34 @@
             border: 1px solid #444;
             border-radius: 12px;
             padding: 10px 14px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
-        .color-selector label {
-            font-size: 0.9rem;
+        .categoria-selector label {
+            font-size: 0.85rem;
             color: #ccc;
             white-space: nowrap;
             font-weight: 500;
         }
-        .color-selector select {
+        .categoria-selector select {
             flex: 1;
             background: #1a1a2a;
             border: 1px solid #555;
             border-radius: 8px;
             color: #fff;
             padding: 8px 10px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             cursor: pointer;
             outline: none;
         }
-        .color-selector select:focus {
+        .categoria-selector select:focus {
             border-color: #bb86fc;
         }
-        .color-selector select option {
+        .categoria-selector select option {
             background: #1a1a2a;
             color: #fff;
         }
 
-        /* BUSCADOR */
+        /* BUSCADOR GENERAL */
         .buscador-wrapper {
             display: flex;
             align-items: center;
@@ -75,7 +75,7 @@
             border: 1px solid #444;
             border-radius: 12px;
             padding: 0 12px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             transition: border-color 0.2s;
         }
         .buscador-wrapper:focus-within {
@@ -91,7 +91,7 @@
             background: transparent;
             border: none;
             color: #fff;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             padding: 10px 0;
             outline: none;
             min-width: 0;
@@ -102,7 +102,7 @@
             border: none;
             color: #888;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             padding: 4px 8px;
             border-radius: 50%;
             flex-shrink: 0;
@@ -112,12 +112,52 @@
             background: rgba(255,255,255,0.1);
         }
 
+        /* BARRA DE ACCIONES SUPERIOR */
+        .acciones-superior {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .acciones-superior .btn-accion {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: center;
+        }
+        .btn-agregar {
+            background: #03dac6;
+            color: #000;
+        }
+        .btn-agregar:hover { filter: brightness(1.1); }
+        .btn-guardar {
+            background: #bb86fc;
+            color: #000;
+        }
+        .btn-guardar:hover { filter: brightness(1.1); }
+        .btn-importar {
+            background: #2a2a3a;
+            color: #aaa;
+            border: 1px solid #444 !important;
+            flex: 0 0 auto;
+            padding: 10px 14px !important;
+            font-size: 0.8rem !important;
+        }
+        .btn-importar:hover {
+            background: #3a3a4a;
+            color: #fff;
+        }
+
         /* RESULTADOS */
         .resultados-info {
             text-align: center;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: #888;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             padding: 4px;
             background: rgba(255,255,255,0.03);
             border-radius: 8px;
@@ -128,21 +168,35 @@
             background: #2a2a3a;
             border: 1px solid #3a3a4a;
             border-radius: 12px;
-            padding: 12px;
-            margin-bottom: 8px;
+            padding: 10px 12px;
+            margin-bottom: 6px;
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
+        }
+        .item-categoria-tag {
+            font-size: 0.6rem;
+            color: #03dac6;
+            background: rgba(3,218,198,0.1);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            flex: 0 0 auto;
         }
         .item-nombre {
             flex: 1 1 100%;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             color: #ddd;
             font-weight: 500;
         }
+        .item-nombre input {
+            width: 100%;
+        }
         .item-codigo {
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             color: #f1f508;
             font-family: monospace;
             background: rgba(0,0,0,0.3);
@@ -150,9 +204,15 @@
             border-radius: 6px;
             white-space: nowrap;
         }
+        .item-codigo input {
+            width: 80px;
+            text-align: center;
+            font-family: monospace;
+            display: inline-block;
+        }
         .precios {
             display: flex;
-            gap: 6px;
+            gap: 4px;
             flex: 1 1 100%;
             justify-content: flex-start;
         }
@@ -164,7 +224,7 @@
             flex: 1;
         }
         .precio-label {
-            font-size: 0.55rem;
+            font-size: 0.5rem;
             color: #888;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -172,47 +232,130 @@
         }
         .precio-input {
             width: 100%;
-            padding: 4px 6px;
+            padding: 3px 4px;
             background: #121212;
             border: 1px solid #555;
             border-radius: 6px;
             color: #00ff00;
             text-align: center;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             outline: none;
         }
-        .precio-input:focus {
+
+        /* BOTÓN ELIMINAR */
+        /* ESTILOS PARA PLANCHAS */
+        .item-plancha {
+            border-color: #ff9800 !important;
+            border-left: 3px solid #ff9800 !important;
+        }
+        .item-medidas {
+            display: flex;
+            gap: 6px;
+            flex: 1 1 100%;
+            margin-top: 2px;
+        }
+        .item-medidas-4 {
+            gap: 4px;
+        }
+        .medida-grupo {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            flex: 1;
+            min-width: 0;
+        }
+        .medida-label {
+            font-size: 0.5rem;
+            color: #ff9800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+        .medida-input {
+            width: 100%;
+            padding: 3px 4px;
+            background: #121212;
+            border: 1px solid #ff9800;
+            border-radius: 6px;
+            color: #ff9800;
+            text-align: center;
+            font-size: 0.75rem;
+            outline: none;
+        }
+        .medida-input:focus {
+            border-color: #ffcc02;
+        }
+        .precios-plancha {
+            margin-top: 4px;
+        }
+        .precio-auto {
+            color: #00bcd4 !important;
+            border-color: #00bcd4 !important;
+            cursor: default !important;
+            opacity: 0.85;
+        }
+        .precio-con-sugerido {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+        .sugerido-flotante {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: #ffcc02;
+            font-size: 0.6rem;
+            padding: 2px 8px;
+            border-radius: 6px;
+            white-space: nowrap;
+            z-index: 10;
+            margin-top: 2px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+            border: 1px solid #ffcc02;
+            animation: fadeIn 0.2s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(-4px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        /* Quitar flechitas de inputs numéricos */
+        .sin-spinner::-webkit-inner-spin-button,
+        .sin-spinner::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .sin-spinner {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+        /* Focus: seleccionar todo el texto */
+        .medida-input:focus, .precio-input:focus {
+            outline: none;
+        }
+        .medida-input:focus, .precio-input:focus {
             border-color: #bb86fc;
+            box-shadow: 0 0 0 2px rgba(187,134,252,0.3);
         }
 
-        /* BOTONES */
-        .btn-agregar {
-            width: 100%;
-            padding: 10px;
-            background: #03dac6;
-            color: #000;
+        .btn-eliminar-item {
+            background: none;
             border: none;
-            border-radius: 12px;
-            font-weight: 600;
+            color: #ff4444;
             cursor: pointer;
-            margin-top: 10px;
+            font-size: 0.8rem;
+            padding: 2px 6px;
+            border-radius: 6px;
             transition: 0.2s;
+            flex: 0 0 auto;
         }
-        .btn-agregar:hover { filter: brightness(1.1); }
-
-        .btn-guardar {
-            width: 100%;
-            padding: 12px;
-            background: #bb86fc;
-            color: #000;
-            border: none;
-            border-radius: 12px;
-            font-weight: 700;
-            cursor: pointer;
-            margin-top: 12px;
-            transition: 0.2s;
+        .btn-eliminar-item:hover {
+            background: rgba(255,68,68,0.15);
         }
-        .btn-guardar:hover { filter: brightness(1.1); }
 
         .btn-volver {
             display: block;
@@ -251,7 +394,7 @@
 
         .estado-conexion {
             text-align: center;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             padding: 4px;
             border-radius: 10px;
             margin-bottom: 10px;
@@ -263,38 +406,89 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 10px; }
         ::-webkit-scrollbar-thumb { background: rgba(187,134,252,0.5); border-radius: 10px; }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .acciones-superior {
+                flex-wrap: wrap;
+            }
+            .acciones-superior .btn-accion {
+                font-size: 0.75rem;
+                padding: 8px;
+            }
+            .precios {
+                gap: 3px;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🪟 ALUMINIOS</h1>
-            <p>Perfiles - Precios de compra, venta, x metro y APK</p>
+            <h1>📦 BASE DE DATOS</h1>
+            <p>Varillas · Planchas · Tiras · Accesorios · Otros</p>
         </div>
 
         <div id="estadoConexion" class="estado-conexion loading">⏳ Cargando...</div>
 
-        <!-- SELECTOR DE COLOR (UNO PARA TODOS) -->
-        <div class="color-selector">
-            <label>🎨 Color:</label>
-            <select id="colorSelector" onchange="cambiarColorGlobal(this.value)">
-                <option value="natural">Natural</option>
-                <option value="negro">Negro</option>
-                <option value="blanco">Blanco</option>
-                <option value="madera">Madera</option>
-                <option value="negro_brillante">Negro Brillante</option>
-                <option value="dune">Dune</option>
-                <option value="otro">Otro</option>
+        <!-- SELECTOR DE CATEGORÍA -->
+        <div class="categoria-selector">
+            <label>📂 Categoría:</label>
+            <select id="categoriaSelector" onchange="cambiarCategoria(this.value)">
+                <option value="varillas">🔩 Varillas</option>
+                <option value="planchas">🪟 Planchas</option>
+                <option value="tiras">📏 Tiras</option>
+                <option value="accesorios">🔧 Accesorios</option>
+                <option value="otros">📦 Otros</option>
             </select>
         </div>
 
-        <!-- BUSCADOR -->
+        <!-- SELECTOR DE COLOR PARA VARILLAS -->
+        <div class="categoria-selector" id="colorSelectorWrapper" style="display:flex;">
+            <label>🎨 Color:</label>
+            <select id="colorSelector" onchange="cambiarColorVarilla(this.value)">
+                <option value="natural" style="background:#808080;color:#fff;">⬜ Natural</option>
+                <option value="negro" style="background:#1a1a1a;color:#fff;">⬛ Negro</option>
+                <option value="negro_brillante" style="background:#000;color:#fff;">⬛ Negro Brillante</option>
+                <option value="blanco" style="background:#F5F5F5;color:#000;">⬜ Blanco</option>
+                <option value="madera" style="background:#8B5E3C;color:#fff;">🟫 Madera</option>
+            </select>
+        </div>
+
+        <!-- SELECTOR DE COLOR PARA TIRAS -->
+        <div class="categoria-selector" id="colorSelectorTirasWrapper" style="display:none;">
+            <label>🎨 Color:</label>
+            <select id="colorSelectorTiras" onchange="cambiarColorTira(this.value)">
+                <option value="gris" style="background:#808080;color:#fff;">⬜ Gris</option>
+                <option value="negro" style="background:#1a1a1a;color:#fff;">⬛ Negro</option>
+            </select>
+        </div>
+
+        <!-- SELECTOR DE COLOR PARA ACCESORIOS Y OTROS -->
+        <div class="categoria-selector" id="colorSelectorAccOtrosWrapper" style="display:none;">
+            <label>🎨 Color:</label>
+            <select id="colorSelectorAccOtros" onchange="cambiarColorAccOtros(this.value)">
+                <option value="gris" style="background:#808080;color:#fff;">⬜ Gris</option>
+                <option value="negro" style="background:#1a1a1a;color:#fff;">⬛ Negro</option>
+                <option value="blanco" style="background:#F5F5F5;color:#000;">⬜ Blanco</option>
+                <option value="madera" style="background:#8B5E3C;color:#fff;">🟫 Madera</option>
+            </select>
+        </div>
+
+        <!-- BUSCADOR GENERAL -->
         <div class="buscador-wrapper">
             <span class="buscador-icono">🔍</span>
             <input type="text" class="buscador-input" id="buscadorInput" 
-                placeholder="Buscar por nombre o código..." 
+                placeholder="Buscar en todas las categorías..." 
                 oninput="aplicarFiltro()">
             <button class="buscador-clear" id="btnClear" style="display:none" onclick="limpiarBusqueda()">✕</button>
+        </div>
+
+        <!-- BARRA DE ACCIONES SUPERIOR -->
+        <div class="acciones-superior">
+            <button class="btn-accion btn-agregar" onclick="agregarItem()">+ Agregar nuevo</button>
+            <button class="btn-accion btn-guardar" onclick="guardarCambios()">💾 Guardar cambios</button>
+            <button class="btn-accion btn-importar" onclick="importarDatos()" title="Importar datos (próximamente)">📥 Importar</button>
         </div>
 
         <!-- LISTA DE ITEMS -->
