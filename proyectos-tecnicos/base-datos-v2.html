@@ -1,0 +1,2160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Base de Datos 2.0</title>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, query, onSnapshot, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyB4W_0bdRoL-VnN6FAiSWhnQWNO-fRairc",
+            authDomain: "proyecto-libertad-38c2a.firebaseapp.com",
+            projectId: "proyecto-libertad-38c2a",
+            storageBucket: "proyecto-libertad-38c2a.firebasestorage.app",
+            messagingSenderId: "115380076439",
+            appId: "1:115380076439:web:85383b2c32cdb40c798ed2"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        // ========== FIRESTORE SYNC ==========
+        const FIRESTORE_COLLECTION = 'baseDatosV2';
+        let ultimaSyncFirestore = 0;
+        let sincronizando = false;
+        
+        async function guardarEnFirestore() {
+            if (sincronizando) return;
+            sincronizando = true;
+            try {
+                const datos = JSON.parse(localStorage.getItem('baseDatosItems') || '{}');
+                await setDoc(doc(db, FIRESTORE_COLLECTION, 'datos'), {
+                    items: datos,
+                    updatedAt: new Date().toISOString()
+                });
+                ultimaSyncFirestore = Date.now();
+            } catch (e) {
+                console.warn('⚠️ Error al guardar en Firestore (sin conexión?):', e.message);
+            } finally {
+                sincronizando = false;
+            }
+        }
+        
+        async function cargarDeFirestore() {
+            try {
+                const docSnap = await getDoc(doc(db, FIRESTORE_COLLECTION, 'datos'));
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (data.items && Object.keys(data.items).length > 0) {
+                        localStorage.setItem('baseDatosItems', JSON.stringify(data.items));
+                        console.log('✅ Datos cargados desde Firestore');
+                        return true;
+                    }
+                }
+            } catch (e) {
+                console.warn('⚠️ Error al cargar de Firestore (sin conexión?):', e.message);
+            }
+            return false;
+        }
+        
+        // Sobrescribir guardarEnLocalStorage para que también guarde en Firestore
+        const originalGuardarEnLocalStorage = window.guardarEnLocalStorage;
+        window.guardarEnLocalStorage = function() {
+            if (originalGuardarEnLocalStorage) originalGuardarEnLocalStorage();
+            guardarEnFirestore();
+        };
+        
+        // ========== DATOS INICIALES POR DEFECTO ==========
+        function generarDatosIniciales() {
+            const datos = {};
+            
+            // Perfiles (varillas) - datos desde sistema.js
+            const perfilesEst = [
+                {n: "m fija corrediza", c: "3185", p: 3.64},
+                {n: "m doble corrediza", c: "3188", p: 4.45},
+                {n: "puente standar", c: "5283", p: 8.26},
+                {n: "puente doble corr", c: "5284", p: 10.14},
+                {n: "riel inferior", c: "8413", p: 1.86},
+                {n: "riel doble", c: "8444", p: 3.51},
+                {n: "u-12", c: "u-12", p: 2.30},
+                {n: "perfil H", c: "8220", p: 5.55},
+                {n: "portafelpa", c: "8116", p: 0.81},
+                {n: "angulo", c: "4104", p: 0.83},
+                {n: "soporte", c: "0000", p: 20.00},
+                {n: "U-13", c: "U-13", p: 2.50},
+                {n: "u bajita", c: "3206", p: 2.00}
+            ];
+            const perfilesPes = [
+                {n: "m fija corrediza", c: "3185", p: 3.64},
+                {n: "m doble corrediza", c: "3188", p: 4.45},
+                {n: "puente pesado", c: "5282", p: 10.54},
+                {n: "puente doble corr", c: "5284", p: 10.14},
+                {n: "riel inferior", c: "83132", p: 2.77},
+                {n: "riel doble", c: "8445", p: 3.61},
+                {n: "U baja", c: "3003", p: 2.80},
+                {n: "perfil H", c: "8221", p: 6.38},
+                {n: "portafelpa", c: "8115", p: 0.85},
+                {n: "ángulo", c: "4103", p: 1.02},
+                {n: "soporte", c: "0000", p: 20.00},
+                {n: "u-alta", c: "7955", p: 3.00},
+                {n: "u alta pesada", c: "3009", p: 3.50}
+            ];
+            
+            const coloresVarillas = [
+                { value: 'natural', label: 'Natural (Gris)' },
+                { value: 'negro', label: 'Negro' },
+                { value: 'negro-brillante', label: 'Negro Brillante' },
+                { value: 'blanco', label: 'Blanco' },
+                { value: 'madera', label: 'Madera' },
+                { value: 'duna', label: 'Duna' }
+            ];
+            
+            // Perfiles estándar en varillas
+            perfilesEst.forEach(perfil => {
+                coloresVarillas.forEach(color => {
+                    const key = `varillas_${color.value}`;
+                    if (!datos[key]) datos[key] = [];
+                    datos[key].push({
+                        nombre: perfil.n, codigo: perfil.c, medida: '—',
+                        stock: 0, compra: 0, venta: perfil.p, ventaMetro: 0, apk: 0,
+                        vendidos: 0, categoria: 'varillas', colorTexto: color.label, color: color.value
+                    });
+                });
+            });
+            
+            // Perfiles pesados en varillas
+            perfilesPes.forEach(perfil => {
+                coloresVarillas.forEach(color => {
+                    const key = `varillas_${color.value}`;
+                    if (!datos[key]) datos[key] = [];
+                    datos[key].push({
+                        nombre: perfil.n + ' (P)', codigo: perfil.c, medida: '—',
+                        stock: 0, compra: 0, venta: perfil.p, ventaMetro: 0, apk: 0,
+                        vendidos: 0, categoria: 'varillas', colorTexto: color.label, color: color.value
+                    });
+                });
+            });
+            
+            // Accesorios
+            const accsEst = [
+                {n: "Seguro F C", c: "s-s", p: 2.50},
+                {n: "Seguro C C", c: "s-b", p: 1.50},
+                {n: "Garruchas", c: "r-15", p: 1.05},
+                {n: "Plaquitas", c: "p-q", p: 0.50}
+            ];
+            const coloresAcc = [
+                { value: 'gris', label: 'Gris' },
+                { value: 'negro', label: 'Negro' },
+                { value: 'blanco', label: 'Blanco' },
+                { value: 'madera', label: 'Madera' }
+            ];
+            accsEst.forEach(acc => {
+                coloresAcc.forEach(color => {
+                    const key = `accesorios_${color.value}`;
+                    if (!datos[key]) datos[key] = [];
+                    datos[key].push({
+                        nombre: acc.n, codigo: acc.c, medida: '—',
+                        stock: 0, compra: 0, venta: acc.p, ventaMetro: 0, apk: 0,
+                        vendidos: 0, categoria: 'accesorios', colorTexto: color.label, color: color.value
+                    });
+                });
+            });
+            
+            // Tiras
+            const tirasData = [
+                {n: "Felpa 10", c: "f-10", p: 0.50},
+                {n: "Felpa 15", c: "f-15", p: 0.75}
+            ];
+            const coloresTiras = [
+                { value: 'gris', label: 'Gris' },
+                { value: 'negro', label: 'Negro' },
+                { value: 'blanco', label: 'Blanco' }
+            ];
+            tirasData.forEach(tira => {
+                coloresTiras.forEach(color => {
+                    const key = `tiras_${color.value}`;
+                    if (!datos[key]) datos[key] = [];
+                    datos[key].push({
+                        nombre: tira.n, codigo: tira.c, medida: '—',
+                        stock: 0, compra: 0, venta: tira.p, ventaMetro: 0, apk: 0,
+                        vendidos: 0, categoria: 'tiras', colorTexto: color.label, color: color.value
+                    });
+                });
+            });
+            
+            // Vidrios (en Otros)
+            const vidriosData = [
+                { n: "Incoloro 2 mm", p: 1.50 },
+                { n: "Incoloro 4 mm", p: 3.00 },
+                { n: "Incoloro 5.5 mm", p: 4.50 },
+                { n: "Reflejante 6 mm", p: 8.50 },
+                { n: "Catedral 4 mm", p: 5.00 }
+            ];
+            vidriosData.forEach(v => {
+                const key = 'otros_general';
+                if (!datos[key]) datos[key] = [];
+                datos[key].push({
+                    nombre: v.n, codigo: '—', medida: '—',
+                    stock: 0, compra: 0, venta: v.p, ventaMetro: 0, apk: 0,
+                    vendidos: 0, categoria: 'otros', colorTexto: 'General', color: 'general'
+                });
+            });
+            
+            return datos;
+        }
+        
+        // Al iniciar, intentar cargar de Firestore si no hay datos locales
+        window.addEventListener('DOMContentLoaded', async function() {
+            const datosLocales = localStorage.getItem('baseDatosItems');
+            if (!datosLocales || datosLocales === '{}') {
+                const cargo = await cargarDeFirestore();
+                if (cargo) {
+                    console.log('✅ Datos cargados desde Firestore');
+                    if (typeof window.mostrarInfoCategoria === 'function') {
+                        const cat = document.getElementById('categoriaSelect')?.value;
+                        const col = document.getElementById('colorSelect')?.value;
+                        if (cat && col) window.mostrarInfoCategoria(cat, col);
+                    }
+                } else {
+                    // No hay datos en Firestore ni local: generar datos iniciales
+                    console.log('🔄 Generando datos iniciales por defecto...');
+                    datosGuardados = generarDatosIniciales();
+                    guardarEnLocalStorage();
+                    guardarEnFirestore();
+                    console.log('✅ Datos iniciales generados y guardados');
+                }
+            }
+            // Sincronizar cada 30 segundos
+            setInterval(guardarEnFirestore, 30000);
+        });
+        
+        window.db = db;
+        window.guardarEnFirestore = guardarEnFirestore;
+        window.cargarDeFirestore = cargarDeFirestore;
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .dashboard {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* ========== CABECERA ========== */
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, #bb86fc, #03dac6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        /* ========== BOTÓN VOLVER ========== */
+        .btn-volver {
+            background: #2c2c3e;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            color: #fff;
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 20px;
+            transition: 0.2s;
+        }
+
+        .btn-volver:hover {
+            background: #3c3c4e;
+            transform: scale(1.02);
+        }
+
+        /* ========== SELECTS ========== */
+        .select-container {
+            margin-bottom: 15px;
+        }
+
+        .select-label {
+            font-size: 0.85rem;
+            color: #bb86fc;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .select-categoria,
+        .select-color {
+            width: 100%;
+            padding: 12px 16px;
+            background: #2c2c3e;
+            border: 1px solid #444;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23bb86fc' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            transition: 0.2s;
+        }
+
+        .select-categoria:hover,
+        .select-color:hover {
+            border-color: #bb86fc;
+        }
+
+        .select-categoria:focus,
+        .select-color:focus {
+            outline: none;
+            border-color: #bb86fc;
+            box-shadow: 0 0 10px rgba(187, 134, 252, 0.3);
+        }
+
+        .select-categoria option,
+        .select-color option {
+            background: #1e1e2e;
+            color: #fff;
+        }
+
+        /* Selector de color oculto por defecto */
+        .color-container {
+            display: none;
+            margin-bottom: 15px;
+        }
+
+        .color-container.visible {
+            display: block;
+        }
+
+        /* ========== BUSCADOR ========== */
+        .buscador-container {
+            margin-bottom: 15px;
+        }
+
+        .buscador-input {
+            width: 100%;
+            padding: 12px 16px;
+            background: #2c2c3e;
+            border: 1px solid #444;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 0.85rem;
+            transition: 0.2s;
+            outline: none;
+        }
+
+        .buscador-input::placeholder {
+            color: #666;
+        }
+
+        .buscador-input:focus {
+            border-color: #bb86fc;
+            box-shadow: 0 0 10px rgba(187, 134, 252, 0.3);
+        }
+
+        /* ========== BOTONES DE ACCIÓN ========== */
+        .acciones {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .btn-accion {
+            flex: 1;
+            background: #2c2c3e;
+            border: none;
+            padding: 10px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            color: #fff;
+            text-align: center;
+            text-decoration: none;
+            transition: 0.2s;
+        }
+
+        .btn-accion:hover {
+            transform: scale(1.02);
+            filter: brightness(1.1);
+        }
+
+        .btn-importar {
+            background: #03dac6;
+            color: #000;
+        }
+
+        .btn-agregar {
+            background: #25D366;
+            color: #000;
+        }
+
+        /* ========== CÍRCULOS DE COLORES ========== */
+        .colores-container {
+            display: none;
+            margin-bottom: 15px;
+        }
+
+        .colores-container.visible {
+            display: block;
+        }
+
+        .colores-titulo {
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 10px;
+        }
+
+        .colores-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .color-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .color-item:hover {
+            transform: scale(1.1);
+        }
+
+        .color-item.seleccionado .circulo {
+            box-shadow: 0 0 0 3px #bb86fc, 0 0 12px rgba(187, 134, 252, 0.5);
+        }
+
+        .circulo {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.2);
+            transition: 0.2s;
+        }
+
+        .color-nombre {
+            font-size: 0.6rem;
+            color: #aaa;
+            text-align: center;
+            max-width: 60px;
+            line-height: 1.2;
+        }
+
+        /* ========== FORMULARIO NUEVO ITEM ========== */
+        .form-nuevo-item {
+            display: none;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid #444;
+            border-radius: 12px;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+
+        .form-nuevo-item.visible {
+            display: block;
+        }
+
+        .form-acciones-top {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .form-acciones-top .btn-accion-form {
+            flex: 1;
+            padding: 6px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .form-acciones-top .btn-accion-form:hover {
+            transform: scale(1.02);
+            filter: brightness(1.1);
+        }
+
+        .btn-guardar-item-top {
+            background: #25D366;
+            color: #000;
+        }
+
+        .btn-cancelar-item-top {
+            background: transparent;
+            border: 1px solid #555 !important;
+            color: #888;
+        }
+
+        .btn-cancelar-item-top:hover {
+            border-color: #ff4444 !important;
+            color: #ff4444;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        .form-grid .campo-full {
+            grid-column: 1 / -1;
+        }
+
+        .form-grid .campo-precios {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 6px;
+        }
+
+        .campo-form {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .campo-form label {
+            font-size: 0.6rem;
+            color: #bb86fc;
+        }
+
+        /* Ocultar flechitas de inputs numéricos en todo el formulario */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        .campo-form input {
+            width: 100%;
+            padding: 6px 8px;
+            background: #2c2c3e;
+            border: 1px solid #444;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 0.8rem;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        .campo-form input:focus {
+            border-color: #25D366;
+            box-shadow: 0 0 6px rgba(37, 211, 102, 0.3);
+        }
+
+        .campo-form input::placeholder {
+            color: #555;
+            font-size: 0.7rem;
+        }
+
+        /* Sugerencia flotante para APK */
+        .campo-apk-wrapper {
+            position: relative;
+        }
+
+        .sugerencia-apk {
+            display: none;
+            position: absolute;
+            top: -22px;
+            left: 0;
+            right: 0;
+            background: #ff9800;
+            color: #000;
+            font-size: 0.6rem;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-align: center;
+            white-space: nowrap;
+            z-index: 10;
+        }
+
+        .sugerencia-apk.visible {
+            display: block;
+        }
+
+        /* ========== CONTENEDOR DE DATOS ========== */
+        .contenedor-datos {
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .contenedor-datos .placeholder {
+            color: #666;
+            font-size: 0.9rem;
+            text-align: center;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 30px 20px;
+            width: 100%;
+        }
+
+        .contenedor-datos .placeholder .icono {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        /* ========== FOOTER ========== */
+        .footer {
+            text-align: center;
+            font-size: 0.6rem;
+            color: #555;
+            margin-top: 20px;
+        }
+
+        /* ========== TOAST ========== */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            z-index: 1100;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- CABECERA -->
+        <div class="header">
+            <h1>🗄️ BASE DE DATOS</h1>
+        </div>
+
+        <!-- BOTÓN VOLVER -->
+        <a href="proyectos.html" class="btn-volver">⬅ Volver</a>
+
+        <!-- BUSCADOR GLOBAL (siempre visible) -->
+        <div class="buscador-container" style="margin-bottom: 15px;">
+            <input type="text" class="buscador-input" id="buscadorInput" placeholder="🔍 Buscar en todas las categorías..." autocomplete="off" oninput="buscarDatosGlobal()">
+        </div>
+
+        <!-- SELECT CATEGORÍA -->
+        <div class="select-container">
+            <label class="select-label">Selecciona una categoría:</label>
+            <select class="select-categoria" id="categoriaSelect" onchange="cambiarCategoria()">
+                <option value="">-- Seleccionar --</option>
+                <option value="planchas">📋 Planchas</option>
+                <option value="varillas">🔩 Varillas</option>
+                <option value="accesorios">🔧 Accesorios</option>
+                <option value="tiras">📏 Tiras</option>
+                <option value="otros">📦 Otros</option>
+            </select>
+        </div>
+
+        <!-- SELECT COLOR (dinámico) -->
+        <div class="color-container" id="colorContainer">
+            <label class="select-label" id="colorLabel">Selecciona un color:</label>
+            <select class="select-color" id="colorSelect" onchange="cambiarColor()">
+                <option value="">-- Seleccionar --</option>
+            </select>
+        </div>
+
+        <!-- BOTONES DE ACCIÓN (se muestran al seleccionar categoría) -->
+        <div class="acciones" id="accionesContainer" style="display:none;">
+            <button class="btn-accion btn-importar" onclick="importarDatos()">📥 Importar</button>
+            <button class="btn-accion btn-agregar" id="btnAgregar" onclick="agregarNuevo()">➕ Agregar Nuevo</button>
+        </div>
+
+        <!-- CÍRCULOS DE COLORES (se muestran según categoría) -->
+        <div class="colores-container" id="coloresContainer">
+            <div class="colores-titulo">Colores disponibles:</div>
+            <div class="colores-grid" id="coloresGrid"></div>
+        </div>
+
+        <!-- FORMULARIO NUEVO ITEM -->
+        <div class="form-nuevo-item" id="formNuevoItem">
+            <div class="form-acciones-top">
+                <button class="btn-accion-form btn-cancelar-item-top" onclick="cancelarNuevoItem()">✖ Cancelar</button>
+                <button class="btn-accion-form btn-guardar-item-top" onclick="guardarNuevoItem()">💾 Guardar</button>
+            </div>
+            <div class="form-grid">
+                <div class="campo-form" style="grid-column: 1 / -1;">
+                    <label>Nombre del material</label>
+                    <div style="display: flex; gap: 8px; align-items: end;">
+                        <div style="flex: 1; position: relative;">
+                            <input type="text" id="inputNombre" placeholder="Ej: Perfil H, Felpa 10..." autocomplete="off" onfocus="this.select()" oninput="validarRepetidos()" style="width: 100%;">
+                            <div id="avisoNombreRepetido" style="display:none; position: absolute; bottom: -16px; left: 0; font-size: 0.55rem; color: #ff9800; white-space: nowrap;"></div>
+                        </div>
+                        <div id="navegadorColorForm" style="display: flex; flex-direction: column; gap: 2px; min-width: 160px;">
+                            <label style="font-size: 0.6rem; color: #bb86fc;">Color</label>
+                            <div style="display: flex; gap: 4px; align-items: center; background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 4px 6px;">
+                                <button onclick="navegarColorForm('anterior')" style="background: none; border: none; color: #bb86fc; font-size: 1rem; cursor: pointer; padding: 2px 6px;">◀</button>
+                                <div id="colorFormDisplay" style="flex: 1; text-align: center; color: #03dac6; font-size: 0.8rem; font-weight: 600; white-space: nowrap;">—</div>
+                                <button onclick="navegarColorForm('siguiente')" style="background: none; border: none; color: #bb86fc; font-size: 1rem; cursor: pointer; padding: 2px 6px;">▶</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- FILA PARA CÓDIGO / MEDIDA / STOCK (varillas, accesorios, tiras, otros) -->
+                <div id="filaCodigoMedidaStock" style="grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
+                    <div style="display: flex; flex-direction: column; gap: 2px;">
+                        <label style="font-size: 0.6rem; color: #bb86fc;">Código</label>
+                        <div style="position: relative;">
+                            <input type="text" id="inputCodigo" placeholder="Ej: 8220, f-10..." autocomplete="off" onfocus="this.select()" oninput="validarRepetidos()" style="width:100%; padding: 6px 8px; background: #2c2c3e; border: 1px solid #444; border-radius: 6px; color: #fff; font-size: 0.8rem; outline: none;">
+                            <div id="avisoCodigoRepetido" style="display:none; position: absolute; bottom: -20px; left: 0; font-size: 0.55rem; color: #ff9800; white-space: nowrap;"></div>
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 2px;">
+                        <label style="font-size: 0.6rem; color: #bb86fc;">Medida</label>
+                        <input type="text" id="inputMedida" placeholder="Ej: 6.00" autocomplete="off" onfocus="this.select()" style="width:100%; padding: 6px 8px; background: #2c2c3e; border: 1px solid #444; border-radius: 6px; color: #fff; font-size: 0.8rem; outline: none;">
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 2px;">
+                        <label style="font-size: 0.6rem; color: #bb86fc;">Stock</label>
+                        <input type="number" id="inputStock" placeholder="0" autocomplete="off" oninput="sincronizarControlVentas()" onfocus="this.select()" style="width:100%; padding: 6px 8px; background: #2c2c3e; border: 1px solid #444; border-radius: 6px; color: #fff; font-size: 0.8rem; outline: none;">
+                    </div>
+                </div>
+                <!-- FILA DE PRECIOS NORMAL (varillas, accesorios, tiras, otros) -->
+                <div id="filaPreciosNormal" class="campo-precios">
+                    <div class="campo-form">
+                        <label>Compra</label>
+                        <input type="number" step="0.01" id="inputCompra" placeholder="0.00" autocomplete="off" onblur="formatearDecimal(this)" onfocus="this.select()">
+                    </div>
+                    <div class="campo-form">
+                        <label>Venta</label>
+                        <input type="number" step="0.01" id="inputVenta" placeholder="0.00" autocomplete="off" onblur="formatearDecimal(this)" onfocus="this.select()">
+                    </div>
+                    <div class="campo-form">
+                        <label>Vta x m</label>
+                        <input type="number" step="0.01" id="inputVentaMetro" placeholder="0.00" autocomplete="off" onblur="formatearDecimal(this)" oninput="calcularApkAuto()" onfocus="this.select()">
+                    </div>
+                    <div class="campo-form campo-apk-wrapper">
+                        <label>APK</label>
+                        <div class="sugerencia-apk" id="sugerenciaApk"></div>
+                        <input type="number" step="0.01" id="inputApk" placeholder="0.00" autocomplete="off" onblur="formatearDecimal(this)" onfocus="this.select();mostrarSugerenciaApk()">
+                    </div>
+                </div>
+
+                <!-- ========== CAMPOS DE PLANCHAS (ocultos por defecto) ========== -->
+                <div id="filaPlanchas" style="display: none; grid-column: 1 / -1;">
+                    <!-- FILA PARA CÓDIGO / STOCK -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px;">
+                        <div style="display: flex; flex-direction: column; gap: 2px;">
+                            <label style="font-size: 0.6rem; color: #bb86fc;">Código</label>
+                            <input type="text" id="inputCodigoPlancha" placeholder="Ej: PL-001" autocomplete="off" onfocus="this.select()" style="width:100%; padding: 6px 8px; background: #2c2c3e; border: 1px solid #444; border-radius: 6px; color: #fff; font-size: 0.8rem; outline: none;">
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 2px;">
+                            <label style="font-size: 0.6rem; color: #bb86fc;">Stock</label>
+                            <input type="number" id="inputStockPlanchaFila" placeholder="0" autocomplete="off" oninput="sincronizarControlVentas()" onfocus="this.select()" style="width:100%; padding: 6px 8px; background: #2c2c3e; border: 1px solid #444; border-radius: 6px; color: #fff; font-size: 0.8rem; outline: none;">
+                        </div>
+                    </div>
+                    <!-- FILA PARA ANCHO / ALTO / PIE² / COMPRA -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; margin-bottom: 6px;">
+                        <div style="display: flex; flex-direction: column; gap: 2px;">
+                            <label style="font-size: 0.6rem; color: #bb86fc;">Ancho</label>
+                            <input type="number" step="0.01" id="inputAncho" placeholder="0.00" autocomplete="off" oninput="calcularPlancha()" onfocus="this.select()" style="width:100%; padding: 6px 8px; background: #2c2c3e; border: 1px solid #444; border-radius: 6px; color: #fff; font-size: 0.8rem; outline: none;">
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 2px;">
+                            <label style="font-size: 0.6rem; color: #bb86fc;">Alto</label>
+                            <input type="number" step="0.01" id="inputAlto" placeholder="0.00" autocomplete="off" oninput="calcularPlancha()" onfocus="this.select()" style="width:100%; padding: 6px 8px; background: #2c2c3e; border: 1px solid #444; border-radius: 6px; color: #fff; font-size: 0.8rem; outline: none;">
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 2px;">
+                            <label style="font-size: 0.6rem; color: #bb86fc;">Pie²</label>
+                            <input type="text" id="inputPie2" placeholder="0.00" readonly style="width:100%; padding: 6px 8px; background: #1a1a2e; border: 1px solid #03dac6; border-radius: 6px; color: #03dac6; font-size: 0.8rem; font-weight: bold; outline: none; cursor: default;">
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 2px;">
+                            <label style="font-size: 0.6rem; color: #bb86fc;">Compra</label>
+                            <input type="number" step="0.01" id="inputCompraPlancha" placeholder="0.00" autocomplete="off" onblur="formatearDecimal(this)" oninput="calcularPlancha()" onfocus="this.select()" style="width:100%; padding: 6px 8px; background: #2c2c3e; border: 1px solid #444; border-radius: 6px; color: #fff; font-size: 0.8rem; outline: none;">
+                        </div>
+                    </div>
+                    <!-- FILA DE PRECIOS: Venta / Pie Compra / Pie Venta / APK -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px;">
+                        <div class="campo-form">
+                            <label>Venta</label>
+                            <input type="number" step="0.01" id="inputVentaPlancha" placeholder="0.00" autocomplete="off" onblur="formatearDecimal(this)" onfocus="this.select()">
+                        </div>
+                        <div class="campo-form">
+                            <label>Pie Compra</label>
+                            <input type="text" id="inputPieCompra" placeholder="0.00" readonly style="background: #1a1a2e !important; color: #03dac6 !important; font-weight: bold; cursor: default;">
+                        </div>
+                        <div class="campo-form" style="position: relative;">
+                            <label>Pie Venta</label>
+                            <div class="sugerencia-apk" id="sugerenciaPieVenta"></div>
+                            <input type="number" step="0.01" id="inputPieVenta" placeholder="0.00" autocomplete="off" onblur="formatearDecimal(this)" onfocus="this.select();mostrarSugerenciaPieVenta()" oninput="ocultarSugerenciaPieVenta()" style="width:100%; padding: 6px 8px; background: #2c2c3e; border: 1px solid #444; border-radius: 6px; color: #fff; font-size: 0.8rem; outline: none;">
+                        </div>
+                        <div class="campo-form campo-apk-wrapper">
+                            <label>APK</label>
+                            <div class="sugerencia-apk" id="sugerenciaApkPlancha"></div>
+                            <input type="number" step="0.01" id="inputApkPlancha" placeholder="0.00" autocomplete="off" onblur="formatearDecimal(this)" onfocus="this.select();mostrarSugerenciaApkPlancha()" oninput="ocultarSugerenciaApkPlancha()" style="width:100%; padding: 6px 8px; background: #2c2c3e; border: 1px solid #444; border-radius: 6px; color: #fff; font-size: 0.8rem; outline: none;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== SECCIÓN DE CONTROL DE VENTAS ========== -->
+                <div class="control-ventas" id="controlVentas" style="margin-top: 10px; background: rgba(0,0,0,0.3); border: 1px solid #444; border-radius: 10px; padding: 10px; grid-column: 1 / -1;">
+                    <div style="font-size: 0.7rem; color: #03dac6; margin-bottom: 8px; font-weight: 600;">📊 CONTROL DE VENTAS</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
+                        <div class="campo-form">
+                            <label style="color: #03dac6;">Stock</label>
+                            <input type="number" id="inputStockNuevo" placeholder="0" readonly style="background: #1a1a2e !important; color: #03dac6 !important; font-weight: bold; cursor: default;">
+                        </div>
+                        <div class="campo-form">
+                            <label style="color: #ff9800;">Vendidos</label>
+                            <input type="number" id="inputVendidos" placeholder="0" readonly style="background: #1a1a2e !important; color: #ff9800 !important; font-weight: bold; cursor: default;">
+                        </div>
+                        <div class="campo-form">
+                            <label style="color: #25D366;">Vender</label>
+                            <div style="display: flex; gap: 4px; align-items: center;">
+                                <input type="number" id="inputVender" placeholder="0" min="0" onfocus="this.select()" style="color: #25D366 !important; font-weight: bold; flex: 1;">
+                                <button onclick="confirmarVenta()" style="padding: 6px 10px; background: #25D366; border: none; border-radius: 6px; color: #000; font-size: 0.65rem; font-weight: 700; cursor: pointer; white-space: nowrap;">✓ Vender</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONTENEDOR DE DATOS -->
+        <div class="contenedor-datos" id="contenedorDatos">
+            <div class="placeholder">
+                <div class="icono">🗄️</div>
+                <p>Selecciona una categoría para ver sus datos</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            Optimizador Pro v1.0 | Industrial Full
+        </div>
+    </div>
+
+    <input type="file" id="importFile" style="display:none" accept=".json">
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        let ultimoItemGuardado = null;
+        let editandoIndex = -1; // -1 = nuevo, >=0 = editando item en esa posición
+        let backupDatosGuardados = null; // Copia de seguridad para cancelar
+        // Almacenamiento local de items por categoría+color
+        let datosGuardados = JSON.parse(localStorage.getItem('baseDatosItems') || '{}');
+
+        function guardarEnLocalStorage() {
+            localStorage.setItem('baseDatosItems', JSON.stringify(datosGuardados));
+        }
+
+        function obtenerKey(categoria, color) {
+            return `${categoria}_${color || 'sin-color'}`;
+        }
+
+        // Colores disponibles por categoría
+        const coloresPorCategoria = {
+            planchas: [
+                { value: 'general', label: 'General', hex: '#888888' }
+            ],
+            varillas: [
+                { value: 'natural', label: 'Natural (Gris)', hex: '#b0b0b0' },
+                { value: 'negro', label: 'Negro', hex: '#1a1a1a' },
+                { value: 'negro-brillante', label: 'Negro Brillante', hex: '#0d0d0d' },
+                { value: 'blanco', label: 'Blanco', hex: '#f0f0f0' },
+                { value: 'madera', label: 'Madera', hex: '#8B5E3C' },
+                { value: 'duna', label: 'Duna', hex: '#C4A882' }
+            ],
+            tiras: [
+                { value: 'gris', label: 'Gris', hex: '#808080' },
+                { value: 'negro', label: 'Negro', hex: '#1a1a1a' },
+                { value: 'blanco', label: 'Blanco', hex: '#f0f0f0' }
+            ],
+            accesorios: [
+                { value: 'gris', label: 'Gris', hex: '#808080' },
+                { value: 'negro', label: 'Negro', hex: '#1a1a1a' },
+                { value: 'blanco', label: 'Blanco', hex: '#f0f0f0' },
+                { value: 'madera', label: 'Madera', hex: '#8B5E3C' }
+            ],
+            otros: [
+                { value: 'general', label: 'General', hex: '#888888' }
+            ]
+        };
+
+        const nombres = {
+            planchas: 'Planchas',
+            varillas: 'Varillas',
+            accesorios: 'Accesorios',
+            tiras: 'Tiras',
+            otros: 'Otros'
+        };
+
+        const iconos = {
+            planchas: '📋',
+            varillas: '🔩',
+            accesorios: '🔧',
+            tiras: '📏',
+            otros: '📦'
+        };
+
+        function formatearDecimal(input) {
+            if (input.value !== '') {
+                const num = parseFloat(input.value);
+                if (!isNaN(num)) {
+                    input.value = num.toFixed(2);
+                }
+            }
+        }
+
+        function calcularApkAuto() {
+            const ventaMetro = parseFloat(document.getElementById('inputVentaMetro').value) || 0;
+            const apkInput = document.getElementById('inputApk');
+            if (ventaMetro > 0) {
+                const apkCalculado = ventaMetro + 0.20;
+                apkInput.value = apkCalculado.toFixed(2);
+            }
+            ocultarSugerenciaApk();
+        }
+
+        function mostrarSugerenciaApk() {
+            const ventaMetro = parseFloat(document.getElementById('inputVentaMetro').value) || 0;
+            const apkInput = document.getElementById('inputApk');
+            const apkActual = parseFloat(apkInput.value) || 0;
+            const sugerencia = document.getElementById('sugerenciaApk');
+            
+            if (ventaMetro > 0) {
+                const apkCalculado = ventaMetro + 0.20;
+                // Solo mostrar sugerencia si el valor actual es diferente al calculado
+                if (Math.abs(apkActual - apkCalculado) > 0.01) {
+                    sugerencia.textContent = `💡 Sugerido: ${apkCalculado.toFixed(2)} (Vta x m + 0.20)`;
+                    sugerencia.classList.add('visible');
+                }
+            }
+        }
+
+        function ocultarSugerenciaApk() {
+            document.getElementById('sugerenciaApk').classList.remove('visible');
+        }
+
+        // ========== FUNCIONES DE PLANCHAS ==========
+
+        function calcularPlancha() {
+            const ancho = parseFloat(document.getElementById('inputAncho').value) || 0;
+            const alto = parseFloat(document.getElementById('inputAlto').value) || 0;
+            const compra = parseFloat(document.getElementById('inputCompraPlancha').value) || 0;
+
+            // Pie² = (Ancho × Alto) / 900
+            const pie2 = (ancho * alto) / 900;
+            document.getElementById('inputPie2').value = pie2 > 0 ? pie2.toFixed(2) : '0.00';
+
+            // Pie Compra = Precio Compra / Pie²
+            if (pie2 > 0 && compra > 0) {
+                const pieCompra = compra / pie2;
+                document.getElementById('inputPieCompra').value = pieCompra.toFixed(2);
+
+                // Pie Venta = Pie Compra + 0.70
+                const pieVenta = pieCompra + 0.70;
+                document.getElementById('inputPieVenta').value = pieVenta.toFixed(2);
+
+                // APK = Pie Venta + 0.20
+                const apk = pieVenta + 0.20;
+                document.getElementById('inputApkPlancha').value = apk.toFixed(2);
+            } else {
+                document.getElementById('inputPieCompra').value = '0.00';
+                document.getElementById('inputPieVenta').value = '0.00';
+                document.getElementById('inputApkPlancha').value = '0.00';
+            }
+        }
+
+        function mostrarSugerenciaPieVenta() {
+            const pieCompra = parseFloat(document.getElementById('inputPieCompra').value) || 0;
+            const pieVentaInput = document.getElementById('inputPieVenta');
+            const pieVentaActual = parseFloat(pieVentaInput.value) || 0;
+            const sugerencia = document.getElementById('sugerenciaPieVenta');
+            
+            if (pieCompra > 0) {
+                const sugerido = pieCompra + 0.70;
+                if (Math.abs(pieVentaActual - sugerido) > 0.01) {
+                    sugerencia.textContent = `💡 Sugerido: ${sugerido.toFixed(2)} (Pie Compra + 0.70)`;
+                    sugerencia.classList.add('visible');
+                }
+            }
+        }
+
+        function mostrarSugerenciaApkPlancha() {
+            const pieVenta = parseFloat(document.getElementById('inputPieVenta').value) || 0;
+            const apkInput = document.getElementById('inputApkPlancha');
+            const apkActual = parseFloat(apkInput.value) || 0;
+            const sugerencia = document.getElementById('sugerenciaApkPlancha');
+            
+            if (pieVenta > 0) {
+                const sugerido = pieVenta + 0.20;
+                if (Math.abs(apkActual - sugerido) > 0.01) {
+                    sugerencia.textContent = `💡 Sugerido: ${sugerido.toFixed(2)} (Pie Venta + 0.20)`;
+                    sugerencia.classList.add('visible');
+                }
+            }
+        }
+
+        function ocultarSugerenciaPieVenta() {
+            document.getElementById('sugerenciaPieVenta').classList.remove('visible');
+        }
+
+        function ocultarSugerenciaApkPlancha() {
+            document.getElementById('sugerenciaApkPlancha').classList.remove('visible');
+        }
+
+        // ========== MIGRAR DATOS DE PLANCHAS ==========
+        (function migrarPlanchas() {
+            const planchasViejos = JSON.parse(localStorage.getItem('planchasItems') || '[]');
+            if (planchasViejos.length > 0) {
+                const key = 'planchas_general';
+                if (!datosGuardados[key]) {
+                    datosGuardados[key] = [];
+                }
+                planchasViejos.forEach(item => {
+                    // Verificar si ya existe en la nueva estructura
+                    const existe = datosGuardados[key].some(i => i.nombre === item.nombre && i.codigo === item.codigo);
+                    if (!existe) {
+                        datosGuardados[key].push({
+                            ...item,
+                            categoria: 'planchas',
+                            colorTexto: 'General',
+                            color: 'general'
+                        });
+                    }
+                });
+                guardarEnLocalStorage();
+                // Limpiar datos viejos para que no se migren de nuevo
+                localStorage.removeItem('planchasItems');
+                console.log('✅ Datos de planchas migrados a baseDatosItems');
+            }
+        })();
+
+        function mostrarToast(mensaje) {
+            const toast = document.getElementById('toast');
+            toast.innerText = mensaje;
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 2000);
+        }
+
+        function ajustarCamposPorCategoria(categoria) {
+            // Ocultar/mostrar campos individuales del formulario según la categoría
+            const campoMedida = document.querySelector('#inputMedida')?.closest('div');
+            const campoVtaMetro = document.querySelector('#inputVentaMetro')?.closest('.campo-form');
+            const campoApk = document.querySelector('#inputApk')?.closest('.campo-form');
+            const campoApkWrapper = document.querySelector('#inputApk')?.closest('.campo-apk-wrapper');
+            const navegadorColorForm = document.querySelector('#navegadorColorForm');
+            const campoStock = document.querySelector('#inputStock')?.closest('div');
+            const campoVenta = document.querySelector('#inputVenta')?.closest('.campo-form');
+            const controlVentas = document.getElementById('controlVentas');
+            const filaCodigoMedidaStock = document.getElementById('filaCodigoMedidaStock');
+            const filaPreciosNormal = document.getElementById('filaPreciosNormal');
+
+            // Mostrar todo por defecto
+            if (campoMedida) campoMedida.style.display = '';
+            if (campoVtaMetro) campoVtaMetro.style.display = '';
+            if (campoApk) campoApk.style.display = '';
+            if (campoApkWrapper) campoApkWrapper.style.display = '';
+            if (navegadorColorForm) navegadorColorForm.style.display = '';
+            if (campoStock) campoStock.style.display = '';
+            if (campoVenta) campoVenta.style.display = '';
+            if (controlVentas) controlVentas.style.display = '';
+            if (filaCodigoMedidaStock) filaCodigoMedidaStock.style.display = 'grid';
+            if (filaPreciosNormal) filaPreciosNormal.style.display = 'grid';
+
+            // Ocultar/mostrar campos de planchas
+            const filaPlanchas = document.getElementById('filaPlanchas');
+            if (filaPlanchas) filaPlanchas.style.display = 'none';
+
+            switch (categoria) {
+                case 'planchas':
+                    // Ocultar campos normales, mostrar campos de planchas
+                    if (campoMedida) campoMedida.style.display = 'none';
+                    if (campoVtaMetro) campoVtaMetro.style.display = 'none';
+                    if (campoApk) campoApk.style.display = 'none';
+                    if (campoApkWrapper) campoApkWrapper.style.display = 'none';
+                    if (navegadorColorForm) navegadorColorForm.style.display = 'none';
+                    if (filaCodigoMedidaStock) filaCodigoMedidaStock.style.display = 'none';
+                    if (filaPreciosNormal) filaPreciosNormal.style.display = 'none';
+                    if (filaPlanchas) filaPlanchas.style.display = 'block';
+                    break;
+                case 'accesorios':
+                    if (campoMedida) campoMedida.style.display = 'none';
+                    if (campoVtaMetro) campoVtaMetro.style.display = 'none';
+                    break;
+                case 'tiras':
+                    if (campoMedida) campoMedida.style.display = 'none';
+                    break;
+                case 'otros':
+                    if (campoMedida) campoMedida.style.display = 'none';
+                    if (campoVtaMetro) campoVtaMetro.style.display = 'none';
+                    if (campoApk) campoApk.style.display = 'none';
+                    if (campoApkWrapper) campoApkWrapper.style.display = 'none';
+                    if (navegadorColorForm) navegadorColorForm.style.display = 'none';
+                    break;
+            }
+        }
+
+        function cambiarCategoria() {
+            const categoria = document.getElementById('categoriaSelect').value;
+
+            const colorContainer = document.getElementById('colorContainer');
+            const colorSelect = document.getElementById('colorSelect');
+            const contenedor = document.getElementById('contenedorDatos');
+            const accionesContainer = document.getElementById('accionesContainer');
+            const coloresContainer = document.getElementById('coloresContainer');
+            const coloresGrid = document.getElementById('coloresGrid');
+            const formNuevoItem = document.getElementById('formNuevoItem');
+
+            // Resetear color select y ocultar formulario
+            colorSelect.value = '';
+            colorContainer.classList.remove('visible');
+            coloresContainer.classList.remove('visible');
+            formNuevoItem.classList.remove('visible');
+
+            if (!categoria) {
+                contenedor.innerHTML = `
+                    <div class="placeholder">
+                        <div class="icono">🗄️</div>
+                        <p>Selecciona una categoría para ver sus datos</p>
+                    </div>
+                `;
+                accionesContainer.style.display = 'none';
+                return;
+            }
+
+            // Mostrar botones al seleccionar categoría
+            accionesContainer.style.display = 'flex';
+
+            // Ajustar campos del formulario según la categoría
+            ajustarCamposPorCategoria(categoria);
+
+            // Mostrar selector de color si la categoría tiene colores definidos
+
+            if (coloresPorCategoria[categoria]) {
+                colorSelect.innerHTML = '<option value="">-- Seleccionar --</option>';
+                coloresPorCategoria[categoria].forEach(color => {
+                    const option = document.createElement('option');
+                    option.value = color.value;
+                    option.textContent = color.label;
+                    colorSelect.appendChild(option);
+                });
+                colorContainer.classList.add('visible');
+
+                // Mostrar círculos de colores
+                coloresGrid.innerHTML = '';
+                coloresPorCategoria[categoria].forEach(color => {
+                    const item = document.createElement('div');
+                    item.className = 'color-item';
+                    item.dataset.value = color.value;
+                    item.onclick = function() { seleccionarColorCirculo(categoria, color.value); };
+                    item.innerHTML = `
+                        <div class="circulo" style="background: ${color.hex};"></div>
+                        <div class="color-nombre">${color.label}</div>
+                    `;
+                    coloresGrid.appendChild(item);
+                });
+                coloresContainer.classList.add('visible');
+
+                // Para categorías con un solo color, seleccionarlo automáticamente
+                if (coloresPorCategoria[categoria].length === 1) {
+                    colorSelect.value = coloresPorCategoria[categoria][0].value;
+                    mostrarInfoCategoria(categoria, colorSelect.value);
+                } else {
+                    mostrarInfoCategoria(categoria, null);
+                }
+            } else {
+                mostrarInfoCategoria(categoria, null);
+            }
+        }
+
+        // Colores seleccionados adicionales (además del principal del select)
+        let coloresAdicionales = [];
+
+        function seleccionarColorCirculo(categoria, value) {
+            // Solo permitir si el formulario está visible (agregando o editando)
+            const form = document.getElementById('formNuevoItem');
+            if (!form.classList.contains('visible')) {
+                return;
+            }
+            
+            const colorPrincipal = document.getElementById('colorSelect').value;
+            
+            if (value === colorPrincipal) {
+                // El color principal no se puede desmarcar
+                return;
+            }
+            
+            // Toggle del color adicional
+            const idx = coloresAdicionales.indexOf(value);
+            if (idx === -1) {
+                coloresAdicionales.push(value);
+            } else {
+                coloresAdicionales.splice(idx, 1);
+            }
+            
+            actualizarCirculosSeleccionados();
+        }
+
+        function actualizarCirculosSeleccionados() {
+            const colorPrincipal = document.getElementById('colorSelect').value;
+            document.querySelectorAll('.color-item').forEach(el => {
+                const val = el.dataset.value;
+                if (val === colorPrincipal) {
+                    el.classList.add('seleccionado');
+                } else if (coloresAdicionales.includes(val)) {
+                    el.classList.add('seleccionado');
+                } else {
+                    el.classList.remove('seleccionado');
+                }
+            });
+        }
+
+        function cambiarColor() {
+            const categoria = document.getElementById('categoriaSelect').value;
+            const color = document.getElementById('colorSelect').value;
+            // Limpiar colores adicionales al cambiar el principal
+            coloresAdicionales = [];
+            actualizarCirculosSeleccionados();
+            mostrarInfoCategoria(categoria, color);
+        }
+
+        function actualizarDisplayColorForm() {
+            const categoria = document.getElementById('categoriaSelect').value;
+            const colores = coloresPorCategoria[categoria];
+            const colorPrincipal = document.getElementById('colorSelect').value;
+            const display = document.getElementById('colorFormDisplay');
+
+            if (colores && colorPrincipal) {
+                const colorInfo = colores.find(c => c.value === colorPrincipal);
+                if (colorInfo) {
+                    display.innerHTML = `<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${colorInfo.hex};border:1px solid rgba(255,255,255,0.3);vertical-align:middle;margin-right:4px;"></span> ${colorInfo.label}`;
+                    return;
+                }
+            }
+            display.textContent = '—';
+        }
+
+        function validarRepetidos() {
+            // Función desactivada: los avisos de duplicados se muestran en las tarjetas de items guardados
+        }
+
+        function guardarSilencioso() {
+            const nombre = document.getElementById('inputNombre').value.trim();
+            if (!nombre) return;
+
+            const codigo = document.getElementById('inputCodigo').value.trim();
+            const medida = document.getElementById('inputMedida').value.trim();
+
+            const categoria = document.getElementById('categoriaSelect').value;
+            const colorPrincipal = document.getElementById('colorSelect').value;
+            const colorTexto = colorPrincipal ? document.getElementById('colorSelect').options[document.getElementById('colorSelect').selectedIndex].text : '';
+
+            const vendidos = parseInt(document.getElementById('inputVendidos').value) || 0;
+
+            let itemCompleto;
+            if (categoria === 'planchas') {
+                const stock = document.getElementById('inputStockPlanchaFila').value;
+                const compra = document.getElementById('inputCompraPlancha').value;
+                const venta = document.getElementById('inputVentaPlancha').value;
+                const ancho = document.getElementById('inputAncho').value;
+                const alto = document.getElementById('inputAlto').value;
+                const pie2 = document.getElementById('inputPie2').value;
+                const pieCompra = document.getElementById('inputPieCompra').value;
+                const pieVenta = document.getElementById('inputPieVenta').value;
+                const apk = document.getElementById('inputApkPlancha').value;
+
+                itemCompleto = {
+                    nombre, codigo: codigo || '—', medida: '—',
+                    stock: stock ? parseInt(stock) : 0,
+                    compra: compra ? parseFloat(compra) : 0,
+                    venta: venta ? parseFloat(venta) : 0,
+                    ventaMetro: 0,
+                    apk: apk ? parseFloat(apk) : 0,
+                    ancho: ancho ? parseFloat(ancho) : 0,
+                    alto: alto ? parseFloat(alto) : 0,
+                    pie2: pie2 ? parseFloat(pie2) : 0,
+                    pieCompra: pieCompra ? parseFloat(pieCompra) : 0,
+                    pieVenta: pieVenta ? parseFloat(pieVenta) : 0,
+                    vendidos, categoria, colorTexto
+                };
+            } else {
+                const compra = document.getElementById('inputCompra').value;
+                const venta = document.getElementById('inputVenta').value;
+                const ventaMetro = document.getElementById('inputVentaMetro').value;
+                const apk = document.getElementById('inputApk').value;
+                const stock = document.getElementById('inputStock').value;
+
+                itemCompleto = {
+                    nombre, codigo: codigo || '—', medida: medida || '—',
+                    stock: stock ? parseInt(stock) : 0,
+                    compra: compra ? parseFloat(compra) : 0,
+                    venta: venta ? parseFloat(venta) : 0,
+                    ventaMetro: ventaMetro ? parseFloat(ventaMetro) : 0,
+                    apk: apk ? parseFloat(apk) : 0,
+                    vendidos, categoria, colorTexto
+                };
+            }
+
+            const itemBase = {
+                nombre, codigo: codigo || '—', medida: '—',
+                stock: 0, compra: 0, venta: 0, ventaMetro: 0, apk: 0,
+                vendidos: 0, categoria, colorTexto
+            };
+
+            const coloresCompletos = [colorPrincipal];
+            coloresAdicionales.forEach(c => { if (!coloresCompletos.includes(c)) coloresCompletos.push(c); });
+
+            const todosLosColores = coloresPorCategoria[categoria] || [];
+            const coloresDeCategoria = todosLosColores.map(c => c.value);
+
+            coloresDeCategoria.forEach(color => {
+                const key = obtenerKey(categoria, color);
+                if (!datosGuardados[key]) datosGuardados[key] = [];
+                const esCompleto = coloresCompletos.includes(color);
+                const item = esCompleto ? { ...itemCompleto, color } : { ...itemBase, color };
+
+                // Buscar si el item ya existe en este color por nombre+código
+                const idxEnColor = datosGuardados[key].findIndex(i => i.nombre === itemCompleto.nombre && i.codigo === itemCompleto.codigo);
+                if (idxEnColor >= 0) {
+                    // Ya existe: actualizar según corresponda
+                    if (esCompleto) {
+                        datosGuardados[key][idxEnColor] = item;
+                    } else {
+                        datosGuardados[key][idxEnColor].nombre = item.nombre;
+                        datosGuardados[key][idxEnColor].codigo = item.codigo;
+                    }
+                } else {
+                    // No existe: crear nuevo
+                    datosGuardados[key].push(item);
+                }
+            });
+            guardarEnLocalStorage();
+            ultimoItemGuardado = itemCompleto;
+            editandoIndex = -1;
+        }
+
+        function navegarColorForm(direccion) {
+            const categoria = document.getElementById('categoriaSelect').value;
+            const colores = coloresPorCategoria[categoria];
+            if (!colores) return;
+
+            const colorActual = document.getElementById('colorSelect').value;
+            if (!colorActual) return;
+
+            // Guardar silenciosamente los datos del color actual antes de navegar
+            guardarSilencioso();
+
+            const idxActual = colores.findIndex(c => c.value === colorActual);
+            let nuevoIdx;
+            if (direccion === 'siguiente') {
+                nuevoIdx = (idxActual + 1) % colores.length;
+            } else {
+                nuevoIdx = (idxActual - 1 + colores.length) % colores.length;
+            }
+
+            const nuevoColor = colores[nuevoIdx].value;
+            document.getElementById('colorSelect').value = nuevoColor;
+            coloresAdicionales = [];
+            actualizarCirculosSeleccionados();
+            actualizarDisplayColorForm();
+
+            // Buscar si el item existe en el nuevo color para cargar sus datos
+            const key = obtenerKey(categoria, nuevoColor);
+            const items = datosGuardados[key] || [];
+            const nombreActual = document.getElementById('inputNombre').value.trim();
+            const itemEncontrado = items.find(i => i.nombre === nombreActual && i.codigo === (document.getElementById('inputCodigo').value.trim() || '—'));
+
+            if (itemEncontrado) {
+                // Cargar datos guardados de este color
+                cargarItemEnFormulario(itemEncontrado);
+            } else {
+                // Limpiar formulario para el nuevo color
+                document.getElementById('inputNombre').value = '';
+                document.getElementById('inputCodigo').value = '';
+                document.getElementById('inputMedida').value = '595';
+                document.getElementById('inputStock').value = '';
+                document.getElementById('inputCompra').value = '';
+                document.getElementById('inputVenta').value = '';
+                document.getElementById('inputVentaMetro').value = '';
+                document.getElementById('inputApk').value = '';
+                document.getElementById('inputStockNuevo').value = 0;
+                document.getElementById('inputVendidos').value = 0;
+                document.getElementById('inputVender').value = 0;
+                editandoIndex = -1;
+            }
+
+            // Actualizar la vista de abajo SIN ocultar el formulario
+            mostrarInfoCategoria(categoria, nuevoColor);
+        }
+
+        function navegarColor(direccion) {
+
+            const categoria = document.getElementById('categoriaSelect').value;
+            const colorActual = document.getElementById('colorSelect').value;
+            const colores = coloresPorCategoria[categoria];
+            if (!colores || !colorActual) return;
+
+            const idxActual = colores.findIndex(c => c.value === colorActual);
+            let nuevoIdx;
+            if (direccion === 'siguiente') {
+                nuevoIdx = (idxActual + 1) % colores.length;
+            } else {
+                nuevoIdx = (idxActual - 1 + colores.length) % colores.length;
+            }
+
+            const nuevoColor = colores[nuevoIdx].value;
+            document.getElementById('colorSelect').value = nuevoColor;
+            coloresAdicionales = [];
+            actualizarCirculosSeleccionados();
+            mostrarInfoCategoria(categoria, nuevoColor);
+        }
+
+        function mostrarInfoCategoria(categoria, color) {
+            const contenedor = document.getElementById('contenedorDatos');
+
+            // Si hay color seleccionado, buscar items guardados
+            if (color) {
+                const key = obtenerKey(categoria, color);
+                const items = datosGuardados[key] || [];
+
+                const colores = coloresPorCategoria[categoria];
+                const colorEncontrado = colores.find(c => c.value === color);
+                const colorHex = colorEncontrado ? colorEncontrado.hex : '#888';
+                const colorTexto = colorEncontrado ? colorEncontrado.label : '';
+
+                // Generar navegación de colores con flechas
+                let navColores = '';
+                if (colores && colores.length > 1) {
+                    navColores = `
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px;">
+                            <button onclick="navegarColor('anterior')" style="background: none; border: none; color: #bb86fc; font-size: 1.2rem; cursor: pointer; padding: 4px 8px;">◀</button>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <div style="width: 16px; height: 16px; border-radius: 50%; background: ${colorHex}; border: 2px solid rgba(255,255,255,0.3);"></div>
+                                <span style="color: #03dac6; font-weight: bold; font-size: 0.85rem;">${colorTexto}</span>
+                            </div>
+                            <button onclick="navegarColor('siguiente')" style="background: none; border: none; color: #bb86fc; font-size: 1.2rem; cursor: pointer; padding: 4px 8px;">▶</button>
+                        </div>
+                    `;
+                } else {
+                    navColores = `
+                        <p style="color: #03dac6; font-size: 0.85rem; margin-bottom: 10px; text-align: center;">🎨 Color: ${colorTexto}</p>
+                    `;
+                }
+
+                // Detectar duplicados entre todos los items del color actual
+                const nombresRepetidos = new Set();
+                const codigosRepetidos = new Set();
+                const nombreCount = {};
+                const codigoCount = {};
+                items.forEach(item => {
+                    nombreCount[item.nombre] = (nombreCount[item.nombre] || 0) + 1;
+                    if (item.codigo !== '—') codigoCount[item.codigo] = (codigoCount[item.codigo] || 0) + 1;
+                });
+                Object.entries(nombreCount).forEach(([k, v]) => { if (v > 1) nombresRepetidos.add(k); });
+                Object.entries(codigoCount).forEach(([k, v]) => { if (v > 1) codigosRepetidos.add(k); });
+
+                if (items.length === 0) {
+                    contenedor.innerHTML = `
+                        <div class="placeholder">
+                            <div class="icono">${iconos[categoria]}</div>
+                            <p style="color: #bb86fc; font-weight: bold; margin-bottom: 8px;">${nombres[categoria]}</p>
+                            ${navColores}
+                            <p style="color: #888; font-size: 0.8rem;">No hay datos guardados para ${colorTexto.toLowerCase()}</p>
+                        </div>
+                    `;
+                } else {
+                    let itemsHtml = '';
+                    items.forEach((item, index) => {
+                        const colores = coloresPorCategoria[categoria] || [];
+                        const colorInfo = colores.find(c => c.value === item.color);
+                        const itemColorHex = colorInfo ? colorInfo.hex : '#888';
+                        const itemColorLabel = colorInfo ? colorInfo.label : item.color || '—';
+                        const nombreDuplicado = nombresRepetidos.has(item.nombre);
+                        const codigoDuplicado = codigosRepetidos.has(item.codigo) && item.codigo !== '—';
+                        const borderColor = nombreDuplicado || codigoDuplicado ? '#ff9800' : '#444';
+                        itemsHtml += `
+                            <div style="background: rgba(0,0,0,0.4); border: 1px solid ${borderColor}; border-radius: 12px; padding: 10px; margin-bottom: 8px;${nombreDuplicado || codigoDuplicado ? ' box-shadow: 0 0 8px rgba(255,152,0,0.3);' : ''}">
+                                ${nombreDuplicado ? `<div style="font-size: 0.55rem; color: #ff9800; font-weight: 600; margin-bottom: 4px; text-align: center;">⚠️ Nombre repetido: "${item.nombre}"</div>` : ''}
+                                ${codigoDuplicado ? `<div style="font-size: 0.55rem; color: #ff9800; font-weight: 600; margin-bottom: 4px; text-align: center;">⚠️ Código repetido: "${item.codigo}"</div>` : ''}
+                                <div style="display: flex; align-items: center; gap: 4px; margin-bottom: 8px;">
+                                    <div style="flex: 1; min-width: 0;">
+                                        <div style="font-size: 0.6rem; color: #bb86fc; margin-bottom: 2px;">Nombre</div>
+                                        <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 6px 8px; color: #25D366; font-size: 0.85rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${item.nombre}</div>
+                                    </div>
+                                    <button onclick="editarItemGuardadoIndex(${index})" style="padding: 6px 16px; background: #bb86fc; border: none; border-radius: 6px; color: #000; font-size: 0.65rem; font-weight: 600; cursor: pointer; white-space: nowrap; margin-top: 14px;">✏️ Editar</button>
+                                    <button onclick="borrarItemGuardado(${index})" style="padding: 6px 16px; background: #ff4444; border: none; border-radius: 6px; color: #fff; font-size: 0.65rem; font-weight: 600; cursor: pointer; white-space: nowrap; margin-top: 14px;">🗑️ Borrar</button>
+                                </div>
+                                <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 0.6rem; color: #bb86fc; margin-bottom: 2px;">Código</div>
+                                        <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 6px 8px; color: #25D366; font-size: 0.8rem; font-weight: 500; text-align: center;">${item.codigo}</div>
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 0.6rem; color: #bb86fc; margin-bottom: 2px;">Medida</div>
+                                        <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 6px 8px; color: #25D366; font-size: 0.8rem; font-weight: 500; text-align: center;">${item.medida}</div>
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 0.6rem; color: #bb86fc; margin-bottom: 2px;">Stock</div>
+                                        <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 6px 8px; color: #25D366; font-size: 0.8rem; font-weight: 500; text-align: center;">${item.stock || 0}</div>
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 0.6rem; color: #bb86fc; margin-bottom: 2px;">Color</div>
+                                        <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 6px 8px; display: flex; align-items: center; gap: 6px; justify-content: center;">
+                                            <div style="width: 14px; height: 14px; border-radius: 50%; background: ${itemColorHex}; border: 1px solid rgba(255,255,255,0.2); flex-shrink: 0;"></div>
+                                            <span style="color: #25D366; font-size: 0.7rem; font-weight: 500;">${itemColorLabel}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                ${categoria === 'planchas' ? `
+                                <div style="display: flex; gap: 4px; margin-bottom: 4px;">
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 0.55rem; color: #bb86fc; margin-bottom: 2px;">Ancho</div>
+                                        <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 5px 6px; color: #25D366; font-size: 0.75rem; font-weight: 600; text-align: center;">${item.ancho ? item.ancho.toFixed(2) : '0.00'}</div>
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 0.55rem; color: #bb86fc; margin-bottom: 2px;">Alto</div>
+                                        <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 5px 6px; color: #25D366; font-size: 0.75rem; font-weight: 600; text-align: center;">${item.alto ? item.alto.toFixed(2) : '0.00'}</div>
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 0.55rem; color: #bb86fc; margin-bottom: 2px;">Pie²</div>
+                                        <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 5px 6px; color: #25D366; font-size: 0.75rem; font-weight: 600; text-align: center;">${item.pie2 ? item.pie2.toFixed(2) : '0.00'}</div>
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 0.55rem; color: #bb86fc; margin-bottom: 2px;">Compra</div>
+                                        <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 5px 6px; color: #25D366; font-size: 0.75rem; font-weight: 600; text-align: center;">S/ ${item.compra.toFixed(2)}</div>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 4px;">
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 0.55rem; color: #bb86fc; margin-bottom: 2px;">Venta</div>
+                                        <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 5px 6px; color: #25D366; font-size: 0.75rem; font-weight: 600; text-align: center;">S/ ${item.venta.toFixed(2)}</div>
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 0.55rem; color: #bb86fc; margin-bottom: 2px;">Pie Compra</div>
+                                        <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 5px 6px; color: #25D366; font-size: 0.75rem; font-weight: 600; text-align: center;">${item.pieCompra ? item.pieCompra.toFixed(2) : '0.00'}</div>
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 0.55rem; color: #bb86fc; margin-bottom: 2px;">Pie Venta</div>
+                                        <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 5px 6px; color: #25D366; font-size: 0.75rem; font-weight: 600; text-align: center;">${item.pieVenta ? item.pieVenta.toFixed(2) : '0.00'}</div>
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 0.55rem; color: #bb86fc; margin-bottom: 2px;">APK</div>
+                                        <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 5px 6px; color: #25D366; font-size: 0.75rem; font-weight: 600; text-align: center;">${item.apk.toFixed(2)}</div>
+                                    </div>
+                                </div>
+                                ` : `
+                                <div style="display: flex; gap: 4px;">
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 0.55rem; color: #bb86fc; margin-bottom: 2px;">Compra</div>
+                                        <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 5px 6px; color: #25D366; font-size: 0.75rem; font-weight: 600; text-align: center;">S/ ${item.compra.toFixed(2)}</div>
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 0.55rem; color: #bb86fc; margin-bottom: 2px;">Venta</div>
+                                        <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 5px 6px; color: #25D366; font-size: 0.75rem; font-weight: 600; text-align: center;">S/ ${item.venta.toFixed(2)}</div>
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 0.55rem; color: #bb86fc; margin-bottom: 2px;">Vta x m</div>
+                                        <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 5px 6px; color: #25D366; font-size: 0.75rem; font-weight: 600; text-align: center;">S/ ${item.ventaMetro.toFixed(2)}</div>
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 0.55rem; color: #bb86fc; margin-bottom: 2px;">APK</div>
+                                        <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 5px 6px; color: #25D366; font-size: 0.75rem; font-weight: 600; text-align: center;">${item.apk.toFixed(2)}</div>
+                                    </div>
+                                </div>
+                                `}
+                                ${item.vendidos ? `
+                                <div style="display: flex; gap: 4px; margin-top: 6px; padding-top: 6px; border-top: 1px solid #333;">
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 0.55rem; color: #03dac6; margin-bottom: 2px;">Stock Disp.</div>
+                                        <div style="background: #1a1a2e; border: 1px solid #03dac6; border-radius: 6px; padding: 5px 6px; color: #03dac6; font-size: 0.75rem; font-weight: 600; text-align: center;">${Math.max(0, (item.stock || 0) - item.vendidos)}</div>
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 0.55rem; color: #ff9800; margin-bottom: 2px;">Vendidos</div>
+                                        <div style="background: #1a1a2e; border: 1px solid #ff9800; border-radius: 6px; padding: 5px 6px; color: #ff9800; font-size: 0.75rem; font-weight: 600; text-align: center;">${item.vendidos}</div>
+                                    </div>
+                                </div>
+                                ` : ''}
+                            </div>
+                        `;
+                    });
+
+                    contenedor.innerHTML = `
+                        <div style="width: 100%;">
+                            <p style="color: #bb86fc; font-weight: bold; margin-bottom: 8px; text-align: center;">${nombres[categoria]}</p>
+                            ${navColores}
+                            ${itemsHtml}
+                        </div>
+                    `;
+                }
+
+                mostrarToast(`📂 ${nombres[categoria]} - ${colorTexto}`);
+                return;
+            }
+
+            // Sin color seleccionado
+            contenedor.innerHTML = `
+                <div class="placeholder">
+                    <div class="icono">${iconos[categoria]}</div>
+                    <p style="color: #bb86fc; font-weight: bold; margin-bottom: 8px;">${nombres[categoria]}</p>
+                    <p style="color: #888; font-size: 0.8rem;">Selecciona un color para ver sus datos</p>
+                </div>
+            `;
+
+            if (!document.getElementById('colorContainer').classList.contains('visible')) {
+                mostrarToast(`📂 Categoría: ${nombres[categoria]}`);
+            }
+        }
+
+        // ========== BÚSQUEDA GLOBAL (en todas las categorías) ==========
+
+        function buscarDatosGlobal() {
+            const texto = document.getElementById('buscadorInput').value.trim().toLowerCase();
+            const contenedor = document.getElementById('contenedorDatos');
+
+            if (texto.length === 0) {
+                // Si no hay texto, mostrar la info normal según categoría seleccionada
+                const categoria = document.getElementById('categoriaSelect').value;
+                if (categoria) {
+                    const color = document.getElementById('colorSelect').value;
+                    mostrarInfoCategoria(categoria, color || null);
+                } else {
+                    contenedor.innerHTML = `
+                        <div class="placeholder">
+                            <div class="icono">🗄️</div>
+                            <p>Selecciona una categoría para ver sus datos</p>
+                        </div>
+                    `;
+                }
+                return;
+            }
+
+            // Buscar en TODAS las categorías y TODOS los colores
+            let resultados = [];
+            Object.keys(coloresPorCategoria).forEach(categoria => {
+                const colores = coloresPorCategoria[categoria] || [];
+                colores.forEach(color => {
+                    const key = obtenerKey(categoria, color.value);
+                    const items = datosGuardados[key] || [];
+                    items.forEach(item => {
+                        const nombreMatch = item.nombre.toLowerCase().includes(texto);
+                        const codigoMatch = item.codigo.toLowerCase().includes(texto);
+                        if (nombreMatch || codigoMatch) {
+                            resultados.push({
+                                ...item,
+                                categoria: categoria,
+                                categoriaLabel: nombres[categoria] || categoria,
+                                categoriaIcono: iconos[categoria] || '📦',
+                                color: color.value,
+                                colorLabel: color.label,
+                                colorHex: color.hex
+                            });
+                        }
+                    });
+                });
+            });
+
+            if (resultados.length === 0) {
+                contenedor.innerHTML = `
+                    <div class="placeholder">
+                        <div class="icono">🔍</div>
+                        <p style="color: #03dac6; font-size: 0.85rem; margin-bottom: 8px;">Buscando: "${texto}"</p>
+                        <p style="color: #888; font-size: 0.8rem;">Sin resultados en ninguna categoría</p>
+                    </div>
+                `;
+            } else {
+                let itemsHtml = '';
+                resultados.forEach((item, index) => {
+                    const cat = item.categoria;
+                    const col = item.color;
+                    itemsHtml += `
+                        <div onclick="seleccionarResultadoBusqueda('${cat}', '${col}')" style="background: rgba(0,0,0,0.4); border: 1px solid #444; border-radius: 12px; padding: 10px; margin-bottom: 8px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.borderColor='#bb86fc'" onmouseout="this.style.borderColor='#444'">
+                            <div style="display: flex; align-items: center; gap: 4px; margin-bottom: 8px;">
+                                <div style="flex: 1; min-width: 0;">
+                                    <div style="font-size: 0.6rem; color: #bb86fc; margin-bottom: 2px;">Nombre</div>
+                                    <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 6px 8px; color: #25D366; font-size: 0.85rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${item.nombre}</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 6px;">
+                                <div style="flex: 1;">
+                                    <div style="font-size: 0.6rem; color: #bb86fc; margin-bottom: 2px;">Código</div>
+                                    <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 6px 8px; color: #25D366; font-size: 0.8rem; font-weight: 500; text-align: center;">${item.codigo}</div>
+                                </div>
+                                <div style="flex: 1;">
+                                    <div style="font-size: 0.6rem; color: #bb86fc; margin-bottom: 2px;">Categoría</div>
+                                    <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 6px 8px; color: #25D366; font-size: 0.8rem; font-weight: 500; text-align: center;">${item.categoriaIcono} ${item.categoriaLabel}</div>
+                                </div>
+                                <div style="flex: 1;">
+                                    <div style="font-size: 0.6rem; color: #bb86fc; margin-bottom: 2px;">Color</div>
+                                    <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 6px 8px; display: flex; align-items: center; gap: 6px; justify-content: center;">
+                                        <div style="width: 14px; height: 14px; border-radius: 50%; background: ${item.colorHex}; border: 1px solid rgba(255,255,255,0.2); flex-shrink: 0;"></div>
+                                        <span style="color: #25D366; font-size: 0.7rem; font-weight: 500;">${item.colorLabel}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                contenedor.innerHTML = `
+                    <div style="width: 100%;">
+                        <p style="color: #03dac6; font-size: 0.85rem; margin-bottom: 8px; text-align: center;">🔍 Resultados para: "${texto}" (${resultados.length})</p>
+                        ${itemsHtml}
+                    </div>
+                `;
+            }
+        }
+
+        // ========== SELECCIONAR RESULTADO DE BÚSQUEDA ==========
+
+        function seleccionarResultadoBusqueda(categoria, color) {
+            const categoriaSelect = document.getElementById('categoriaSelect');
+            const colorSelect = document.getElementById('colorSelect');
+            
+            // Cambiar categoría si es diferente
+            if (categoriaSelect.value !== categoria) {
+                categoriaSelect.value = categoria;
+                const event = new Event('change');
+                categoriaSelect.dispatchEvent(event);
+            }
+            
+            // Seleccionar el color después de que cambiarCategoria() se ejecute
+            setTimeout(() => {
+                colorSelect.value = color;
+                coloresAdicionales = [];
+                actualizarCirculosSeleccionados();
+                mostrarInfoCategoria(categoria, color);
+                // Limpiar el buscador
+                document.getElementById('buscadorInput').value = '';
+            }, 50);
+        }
+
+        // ========== FUNCIONES DE BOTONES ==========
+
+        function importarDatos() {
+            document.getElementById('importFile').click();
+        }
+
+        document.getElementById('importFile')?.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    mostrarToast('📥 Datos importados correctamente');
+                } catch (err) {
+                    mostrarToast('❌ Archivo inválido');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        });
+
+        // ========== FUNCIÓN DE CONTROL DE VENTAS ==========
+
+        function confirmarVenta() {
+            const categoria = document.getElementById('categoriaSelect').value;
+            let stockPrincipal;
+            if (categoria === 'planchas') {
+                stockPrincipal = parseInt(document.getElementById('inputStockPlanchaFila').value) || 0;
+            } else {
+                stockPrincipal = parseInt(document.getElementById('inputStock').value) || 0;
+            }
+            const vender = parseInt(document.getElementById('inputVender').value) || 0;
+            const vendidosActuales = parseInt(document.getElementById('inputVendidos').value) || 0;
+            const stockNuevoActual = parseInt(document.getElementById('inputStockNuevo').value) || 0;
+
+            if (vender <= 0) {
+                mostrarToast('❌ Ingresa una cantidad válida para vender');
+                return;
+            }
+
+            if (vender > stockNuevoActual) {
+                mostrarToast(`❌ No hay suficiente stock. Disponible: ${stockNuevoActual}`);
+                return;
+            }
+
+            // Calcular nuevos valores
+            const nuevosVendidos = vendidosActuales + vender;
+            const nuevoStock = stockNuevoActual - vender;
+
+            // Actualizar campos
+            document.getElementById('inputVendidos').value = nuevosVendidos;
+            document.getElementById('inputStockNuevo').value = nuevoStock;
+            document.getElementById('inputVender').value = '';
+
+            mostrarToast(`✅ Venta registrada: ${vender} unidad(es)`);
+        }
+
+        function sincronizarControlVentas() {
+            const categoria = document.getElementById('categoriaSelect').value;
+            let stockPrincipal;
+            if (categoria === 'planchas') {
+                stockPrincipal = parseInt(document.getElementById('inputStockPlanchaFila').value) || 0;
+            } else {
+                stockPrincipal = parseInt(document.getElementById('inputStock').value) || 0;
+            }
+            // Al cambiar el stock principal, reiniciar el control de ventas
+            document.getElementById('inputStockNuevo').value = stockPrincipal;
+            document.getElementById('inputVendidos').value = 0;
+            document.getElementById('inputVender').value = '';
+        }
+
+        function agregarNuevo() {
+            const categoria = document.getElementById('categoriaSelect').value;
+            if (!categoria) {
+                mostrarToast('❌ Selecciona una categoría primero');
+                return;
+            }
+            // Para varillas, tiras y accesorios, requerir color seleccionado
+            const categoriasConColor = ['varillas', 'tiras', 'accesorios'];
+            if (categoriasConColor.includes(categoria)) {
+                const color = document.getElementById('colorSelect').value;
+                if (!color) {
+                    mostrarToast('❌ Selecciona un color primero');
+                    return;
+                }
+            }
+            const form = document.getElementById('formNuevoItem');
+            // Si ya está visible, lo ocultamos
+            if (form.classList.contains('visible')) {
+                form.classList.remove('visible');
+                return;
+            }
+            // Hacer backup de los datos actuales antes de cualquier modificación
+            backupDatosGuardados = JSON.parse(JSON.stringify(datosGuardados));
+            // Actualizar el display del color en el formulario
+            actualizarDisplayColorForm();
+
+            // Limpiar campos y poner medida por defecto 595
+            document.getElementById('inputNombre').value = '';
+            document.getElementById('inputCodigo').value = '';
+            document.getElementById('inputMedida').value = '595';
+            document.getElementById('inputStock').value = '';
+            document.getElementById('inputCompra').value = '';
+            document.getElementById('inputVenta').value = '';
+            document.getElementById('inputVentaMetro').value = '';
+            document.getElementById('inputApk').value = '';
+            // Limpiar campos de planchas
+            document.getElementById('inputStockPlanchaFila').value = '';
+            document.getElementById('inputAncho').value = '';
+            document.getElementById('inputAlto').value = '';
+            document.getElementById('inputPie2').value = '0.00';
+            document.getElementById('inputCompraPlancha').value = '';
+            document.getElementById('inputVentaPlancha').value = '';
+            document.getElementById('inputPieCompra').value = '0.00';
+            document.getElementById('inputPieVenta').value = '';
+            document.getElementById('inputApkPlancha').value = '';
+            // Limpiar control de ventas
+            document.getElementById('inputStockNuevo').value = 0;
+            document.getElementById('inputVendidos').value = 0;
+            document.getElementById('inputVender').value = 0;
+            form.classList.add('visible');
+            // Scroll hacia el formulario
+            form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function cancelarNuevoItem() {
+            document.getElementById('formNuevoItem').classList.remove('visible');
+            // Restaurar datos al estado antes de abrir el formulario
+            if (backupDatosGuardados) {
+                datosGuardados = JSON.parse(JSON.stringify(backupDatosGuardados));
+                guardarEnLocalStorage();
+                backupDatosGuardados = null;
+                // Recargar la vista del color actual
+                const categoria = document.getElementById('categoriaSelect').value;
+                const color = document.getElementById('colorSelect').value;
+                if (categoria && color) {
+                    mostrarInfoCategoria(categoria, color);
+                }
+            }
+            mostrarToast('✖ Cancelado');
+        }
+
+        function editarItemGuardadoIndex(index) {
+            const categoria = document.getElementById('categoriaSelect').value;
+            const color = document.getElementById('colorSelect').value;
+            if (!categoria || !color) {
+                mostrarToast('❌ Selecciona categoría y color');
+                return;
+            }
+            const key = obtenerKey(categoria, color);
+            const items = datosGuardados[key] || [];
+            if (index < 0 || index >= items.length) {
+                mostrarToast('❌ Item no encontrado');
+                return;
+            }
+            // Hacer backup de los datos actuales antes de editar
+            backupDatosGuardados = JSON.parse(JSON.stringify(datosGuardados));
+            const item = items[index];
+            ultimoItemGuardado = item;
+            editandoIndex = index; // Guardar el índice para reemplazar al guardar
+            cargarItemEnFormulario(item);
+        }
+
+        function borrarItemGuardado(index) {
+            const categoria = document.getElementById('categoriaSelect').value;
+            const color = document.getElementById('colorSelect').value;
+            if (!categoria || !color) {
+                mostrarToast('❌ Selecciona categoría y color');
+                return;
+            }
+            const key = obtenerKey(categoria, color);
+            const items = datosGuardados[key] || [];
+            if (index < 0 || index >= items.length) {
+                mostrarToast('❌ Item no encontrado');
+                return;
+            }
+            const item = items[index];
+            if (!confirm(`¿Borrar "${item.nombre}" de TODOS los colores?`)) return;
+
+            // Obtener todos los colores de la categoría
+            const todosLosColores = coloresPorCategoria[categoria] || [];
+            const coloresDeCategoria = todosLosColores.map(c => c.value);
+
+            // Borrar de TODOS los colores
+            coloresDeCategoria.forEach(colorKey => {
+                const k = obtenerKey(categoria, colorKey);
+                const itemsColor = datosGuardados[k] || [];
+                const idx = itemsColor.findIndex(i => i.nombre === item.nombre && i.codigo === item.codigo);
+                if (idx >= 0) {
+                    itemsColor.splice(idx, 1);
+                    if (itemsColor.length === 0) {
+                        delete datosGuardados[k];
+                    }
+                }
+            });
+
+            guardarEnLocalStorage();
+            mostrarToast(`🗑️ "${item.nombre}" borrado de todos los colores`);
+            mostrarInfoCategoria(categoria, color);
+        }
+
+        function editarItemGuardado() {
+            if (!ultimoItemGuardado) {
+                mostrarToast('❌ No hay item para editar');
+                return;
+            }
+            const item = ultimoItemGuardado;
+            cargarItemEnFormulario(item);
+        }
+
+        function cargarItemEnFormulario(item) {
+            document.getElementById('inputNombre').value = item.nombre;
+            document.getElementById('inputCodigo').value = item.codigo === '—' ? '' : item.codigo;
+            document.getElementById('inputMedida').value = item.medida === '—' ? '595' : item.medida;
+
+            const categoria = document.getElementById('categoriaSelect').value;
+
+            if (categoria === 'planchas' || item.categoria === 'planchas') {
+                // Cargar campos de planchas
+                document.getElementById('inputStockPlanchaFila').value = item.stock || '';
+                document.getElementById('inputAncho').value = item.ancho > 0 ? item.ancho.toFixed(2) : '';
+                document.getElementById('inputAlto').value = item.alto > 0 ? item.alto.toFixed(2) : '';
+                document.getElementById('inputPie2').value = item.pie2 > 0 ? item.pie2.toFixed(2) : '0.00';
+                document.getElementById('inputCompraPlancha').value = item.compra > 0 ? item.compra.toFixed(2) : '';
+                document.getElementById('inputVentaPlancha').value = item.venta > 0 ? item.venta.toFixed(2) : '';
+                document.getElementById('inputPieCompra').value = item.pieCompra > 0 ? item.pieCompra.toFixed(2) : '0.00';
+                document.getElementById('inputPieVenta').value = item.pieVenta > 0 ? item.pieVenta.toFixed(2) : '0.00';
+                document.getElementById('inputApkPlancha').value = item.apk > 0 ? item.apk.toFixed(2) : '';
+            } else {
+                // Cargar campos normales
+                document.getElementById('inputStock').value = item.stock || '';
+                document.getElementById('inputCompra').value = item.compra > 0 ? item.compra.toFixed(2) : '';
+                document.getElementById('inputVenta').value = item.venta > 0 ? item.venta.toFixed(2) : '';
+                document.getElementById('inputVentaMetro').value = item.ventaMetro > 0 ? item.ventaMetro.toFixed(2) : '';
+                document.getElementById('inputApk').value = item.apk > 0 ? item.apk.toFixed(2) : '';
+            }
+
+
+            // Cargar datos de control de ventas si existen
+            const vendidosGuardados = item.vendidos || 0;
+            const stockPrincipal = item.stock || 0;
+            document.getElementById('inputVendidos').value = vendidosGuardados;
+            document.getElementById('inputVender').value = 0;
+            document.getElementById('inputStockNuevo').value = Math.max(0, stockPrincipal - vendidosGuardados);
+
+            // Seleccionar el color si existe
+            if (item.color) {
+                document.getElementById('colorSelect').value = item.color;
+                // Sincronizar círculos
+                document.querySelectorAll('.color-item').forEach(el => el.classList.remove('seleccionado'));
+                const circulo = document.querySelector(`.color-item[data-value="${item.color}"]`);
+                if (circulo) circulo.classList.add('seleccionado');
+            }
+
+            // Actualizar el display del color en el formulario
+            actualizarDisplayColorForm();
+
+            const form = document.getElementById('formNuevoItem');
+            form.classList.add('visible');
+            form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            mostrarToast('✏️ Editando item');
+        }
+
+        function guardarNuevoItem() {
+            const nombre = document.getElementById('inputNombre').value.trim();
+            const codigo = document.getElementById('inputCodigo').value.trim();
+            const medida = document.getElementById('inputMedida').value.trim();
+            const categoria = document.getElementById('categoriaSelect').value;
+            const colorPrincipal = document.getElementById('colorSelect').value;
+            const colorTexto = colorPrincipal ? document.getElementById('colorSelect').options[document.getElementById('colorSelect').selectedIndex].text : '';
+            const vendidos = parseInt(document.getElementById('inputVendidos').value) || 0;
+
+            if (!nombre) {
+                mostrarToast('❌ El nombre del material es obligatorio');
+                document.getElementById('inputNombre').focus();
+                return;
+            }
+
+            // Leer campos según categoría
+            let itemCompleto;
+            if (categoria === 'planchas') {
+                const stock = document.getElementById('inputStockPlanchaFila').value;
+                const compra = document.getElementById('inputCompraPlancha').value;
+                const venta = document.getElementById('inputVentaPlancha').value;
+                const ancho = document.getElementById('inputAncho').value;
+                const alto = document.getElementById('inputAlto').value;
+                const pie2 = document.getElementById('inputPie2').value;
+                const pieCompra = document.getElementById('inputPieCompra').value;
+                const pieVenta = document.getElementById('inputPieVenta').value;
+                const apk = document.getElementById('inputApkPlancha').value;
+
+                itemCompleto = {
+                    nombre: nombre,
+                    codigo: codigo || '—',
+                    medida: '—',
+                    stock: stock ? parseInt(stock) : 0,
+                    compra: compra ? parseFloat(compra) : 0,
+                    venta: venta ? parseFloat(venta) : 0,
+                    ventaMetro: 0,
+                    apk: apk ? parseFloat(apk) : 0,
+                    ancho: ancho ? parseFloat(ancho) : 0,
+                    alto: alto ? parseFloat(alto) : 0,
+                    pie2: pie2 ? parseFloat(pie2) : 0,
+                    pieCompra: pieCompra ? parseFloat(pieCompra) : 0,
+                    pieVenta: pieVenta ? parseFloat(pieVenta) : 0,
+                    vendidos: vendidos,
+                    categoria: categoria,
+                    colorTexto: colorTexto
+                };
+            } else {
+                const compra = document.getElementById('inputCompra').value;
+                const venta = document.getElementById('inputVenta').value;
+                const ventaMetro = document.getElementById('inputVentaMetro').value;
+                const apk = document.getElementById('inputApk').value;
+                const stock = document.getElementById('inputStock').value;
+
+                itemCompleto = {
+                    nombre: nombre,
+                    codigo: codigo || '—',
+                    medida: medida || '—',
+                    stock: stock ? parseInt(stock) : 0,
+                    compra: compra ? parseFloat(compra) : 0,
+                    venta: venta ? parseFloat(venta) : 0,
+                    ventaMetro: ventaMetro ? parseFloat(ventaMetro) : 0,
+                    apk: apk ? parseFloat(apk) : 0,
+                    vendidos: vendidos,
+                    categoria: categoria,
+                    colorTexto: colorTexto
+                };
+            }
+
+            // Datos base (solo nombre y código, para colores no seleccionados)
+            const itemBase = {
+                nombre: nombre,
+                codigo: codigo || '—',
+                medida: '—',
+                stock: 0,
+                compra: 0,
+                venta: 0,
+                ventaMetro: 0,
+                apk: 0,
+                vendidos: 0,
+                categoria: categoria,
+                colorTexto: colorTexto
+            };
+
+            // Colores donde se guardarán datos completos (los seleccionados con círculos)
+            const coloresCompletos = [colorPrincipal];
+            coloresAdicionales.forEach(c => {
+                if (!coloresCompletos.includes(c)) coloresCompletos.push(c);
+            });
+
+            // Obtener todos los colores de la categoría
+            const todosLosColores = coloresPorCategoria[categoria] || [];
+            const coloresDeCategoria = todosLosColores.map(c => c.value);
+
+            // Guardar en TODOS los colores de la categoría
+            coloresDeCategoria.forEach(color => {
+                const key = obtenerKey(categoria, color);
+                if (!datosGuardados[key]) {
+                    datosGuardados[key] = [];
+                }
+
+                // Determinar si este color tiene datos completos o solo nombre/código
+                const esCompleto = coloresCompletos.includes(color);
+                const item = esCompleto ? { ...itemCompleto, color: color } : { ...itemBase, color: color };
+
+                // Buscar si el item ya existe en este color por nombre+código
+                const idxEnColor = datosGuardados[key].findIndex(i => i.nombre === itemCompleto.nombre && i.codigo === itemCompleto.codigo);
+                if (idxEnColor >= 0) {
+                    // Ya existe: actualizar según corresponda
+                    if (esCompleto) {
+                        datosGuardados[key][idxEnColor] = item;
+                    } else {
+                        datosGuardados[key][idxEnColor].nombre = item.nombre;
+                        datosGuardados[key][idxEnColor].codigo = item.codigo;
+                    }
+                } else {
+                    // No existe: crear nuevo
+                    datosGuardados[key].push(item);
+                }
+            });
+            guardarEnLocalStorage();
+
+            // Guardar el último item para poder editarlo
+            ultimoItemGuardado = itemCompleto;
+
+            console.log('Item guardado en todos los colores:', coloresDeCategoria, 'Completos:', coloresCompletos);
+            mostrarToast(`✅ "${nombre}" guardado en ${coloresDeCategoria.length} color(es)`);
+
+            editandoIndex = -1; // Resetear modo edición
+
+            // Descartar backup porque el guardado fue exitoso
+            backupDatosGuardados = null;
+
+            // Ocultar formulario
+            document.getElementById('formNuevoItem').classList.remove('visible');
+
+            // Mostrar los datos actualizados del color seleccionado
+            mostrarInfoCategoria(categoria, colorPrincipal);
+        }
+    </script>
+</body>
+</html>

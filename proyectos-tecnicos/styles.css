@@ -42,3 +42,15 @@ hr { border-color: #444; }
     color: #00d4ff !important;             /* Celeste brillante */
     font-weight: bold;
 }
+
+/* Grupo seleccionado visualmente en base de datos */
+.grupo-seleccionado {
+    outline: 3px solid #00ff88 !important;
+    outline-offset: -1px;
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.7), 0 0 40px rgba(0, 255, 136, 0.3) !important;
+    border-radius: 10px !important;
+    position: relative;
+    z-index: 1;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
