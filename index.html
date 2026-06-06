@@ -1773,6 +1773,8 @@
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUser = user;
+                // Guardar UID en localStorage para que base-datos-v2.html lo use
+                localStorage.setItem('tecniya_uid', user.uid);
                 const fotoActual = await guardarUsuarioOnline(user);
                 loginContainer.classList.add('hidden');
                 mainContainer.classList.remove('hidden');
@@ -1782,6 +1784,8 @@
                 profileImg.src = fotoActual || `https://ui-avatars.com/api/?background=0a84ff&color=fff&name=${encodeURIComponent(nombreMostrar)}`;
                 escucharUsuarios(user.uid);
             } else {
+                // Limpiar UID de localStorage al cerrar sesión
+                localStorage.removeItem('tecniya_uid');
                 if (unsubscribeUsers) unsubscribeUsers();
                 if (unsubscribeMessages) unsubscribeMessages();
                 if (unsubscribeTyping) unsubscribeTyping();

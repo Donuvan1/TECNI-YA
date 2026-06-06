@@ -25,14 +25,19 @@
         let ultimaSyncFirestore = 0;
         let sincronizando = false;
         
+        // Obtener UID del usuario desde localStorage (lo guarda index.html al iniciar sesión)
+        const usuarioUID = localStorage.getItem('tecniya_uid') || 'compartido';
+        
         async function guardarEnFirestore() {
             if (sincronizando) return;
             sincronizando = true;
             try {
                 const datos = JSON.parse(localStorage.getItem('baseDatosItems') || '{}');
-                await setDoc(doc(db, FIRESTORE_COLLECTION, 'datos'), {
+                // Cada usuario guarda en su propio documento usando su UID
+                await setDoc(doc(db, FIRESTORE_COLLECTION, usuarioUID), {
                     items: datos,
-                    updatedAt: new Date().toISOString()
+                    updatedAt: new Date().toISOString(),
+                    usuarioUID: usuarioUID
                 });
                 ultimaSyncFirestore = Date.now();
             } catch (e) {
@@ -44,12 +49,13 @@
         
         async function cargarDeFirestore() {
             try {
-                const docSnap = await getDoc(doc(db, FIRESTORE_COLLECTION, 'datos'));
+                // Cada usuario carga desde su propio documento usando su UID
+                const docSnap = await getDoc(doc(db, FIRESTORE_COLLECTION, usuarioUID));
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     if (data.items && Object.keys(data.items).length > 0) {
                         localStorage.setItem('baseDatosItems', JSON.stringify(data.items));
-                        console.log('✅ Datos cargados desde Firestore');
+                        console.log('✅ Datos cargados desde Firestore para usuario:', usuarioUID);
                         return true;
                     }
                 }
