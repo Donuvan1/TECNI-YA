@@ -982,6 +982,9 @@
         
         function cerrarProyectos() {
             proyectosModal.classList.remove('active');
+            // Recargar el iframe para que vuelva a proyectos.html al reabrir
+            proyectosIframe.src = 'proyectos-tecnicos/proyectos.html';
+            proyectosIframe.dataset.cargado = 'false';
         }
         
         proyectosPanelBtn.addEventListener('click', abrirProyectos);
