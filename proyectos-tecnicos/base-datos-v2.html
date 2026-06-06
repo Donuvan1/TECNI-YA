@@ -6,7 +6,7 @@
     <title>Base de Datos 2.0</title>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, query, onSnapshot, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs, onSnapshot, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
         
         const firebaseConfig = {
             apiKey: "AIzaSyB4W_0bdRoL-VnN6FAiSWhnQWNO-fRairc",
@@ -28,16 +28,46 @@
         // Obtener UID del usuario desde localStorage (lo guarda index.html al iniciar sesión)
         const usuarioUID = localStorage.getItem('tecniya_uid') || 'compartido';
         
+        // ========== CÓDIGO DE SERIE DIARIO ==========
+        function generarCodigoDiario() {
+            // Generar un código único basado en la fecha de hoy
+            const hoy = new Date();
+            const fechaStr = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
+            
+            // Usar el UID + fecha para generar un hash simple
+            const base = usuarioUID + fechaStr;
+            let hash = 0;
+            for (let i = 0; i < base.length; i++) {
+                const char = base.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash; // Convertir a 32-bit integer
+            }
+            // Tomar valor absoluto y convertir a alfanumérico de 8 caracteres
+            const absHash = Math.abs(hash);
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            let codigo = '';
+            let temp = absHash;
+            for (let i = 0; i < 8; i++) {
+                codigo += chars[temp % chars.length];
+                temp = Math.floor(temp / chars.length);
+            }
+            // Formatear como XXXX-XXXX
+            return codigo.substring(0, 4) + '-' + codigo.substring(4, 8);
+        }
+        
         async function guardarEnFirestore() {
             if (sincronizando) return;
             sincronizando = true;
             try {
                 const datos = JSON.parse(localStorage.getItem('baseDatosItems') || '{}');
+                const codigoDiario = generarCodigoDiario();
                 // Cada usuario guarda en su propio documento usando su UID
                 await setDoc(doc(db, FIRESTORE_COLLECTION, usuarioUID), {
                     items: datos,
                     updatedAt: new Date().toISOString(),
-                    usuarioUID: usuarioUID
+                    usuarioUID: usuarioUID,
+                    codigoDiario: codigoDiario,
+                    fechaCodigo: new Date().toISOString().split('T')[0]
                 });
                 ultimaSyncFirestore = Date.now();
             } catch (e) {
@@ -45,6 +75,85 @@
             } finally {
                 sincronizando = false;
             }
+        }
+        
+        // ========== IMPORTAR DATOS DE OTRO USUARIO ==========
+        async function importarDeOtroUsuario() {
+            const codigoIngresado = document.getElementById('inputCodigoImportar').value.trim().toUpperCase();
+            if (!codigoIngresado) {
+                mostrarToast('❌ Ingresa un código de serie');
+                return;
+            }
+            
+            mostrarToast('🔍 Buscando usuario...');
+            document.getElementById('modalImportar').style.display = 'none';
+            
+            try {
+                // Buscar en Firestore un documento que tenga este código diario
+                const q = query(collection(db, FIRESTORE_COLLECTION), where('codigoDiario', '==', codigoIngresado));
+                const querySnapshot = await getDocs(q);
+                
+                let encontrado = false;
+                querySnapshot.forEach((docSnap) => {
+                    if (docSnap.id !== usuarioUID) { // No importar de uno mismo
+                        const data = docSnap.data();
+                        if (data.items && Object.keys(data.items).length > 0) {
+                            // Fusionar los datos importados con los actuales
+                            const misDatos = JSON.parse(localStorage.getItem('baseDatosItems') || '{}');
+                            const datosImportados = data.items;
+                            
+                            let itemsImportados = 0;
+                            // Recorrer cada categoría+color del otro usuario
+                            Object.keys(datosImportados).forEach(key => {
+                                if (!misDatos[key]) {
+                                    misDatos[key] = [];
+                                }
+                                datosImportados[key].forEach(itemImportado => {
+                                    // Verificar si ya existe (por nombre+código)
+                                    const existe = misDatos[key].some(i => 
+                                        i.nombre === itemImportado.nombre && i.codigo === itemImportado.codigo
+                                    );
+                                    if (!existe) {
+                                        misDatos[key].push(itemImportado);
+                                        itemsImportados++;
+                                    }
+                                });
+                            });
+                            
+                            if (itemsImportados > 0) {
+                                localStorage.setItem('baseDatosItems', JSON.stringify(misDatos));
+                                datosGuardados = misDatos;
+                                guardarEnFirestore();
+                                mostrarToast(`✅ ${itemsImportados} item(s) importados`);
+                                // Recargar vista
+                                const categoria = document.getElementById('categoriaSelect').value;
+                                const color = document.getElementById('colorSelect').value;
+                                if (categoria) mostrarInfoCategoria(categoria, color || null);
+                            } else {
+                                mostrarToast('ℹ️ No hay items nuevos para importar');
+                            }
+                            encontrado = true;
+                        }
+                    }
+                });
+                
+                if (!encontrado) {
+                    mostrarToast('❌ No se encontró ningún usuario con ese código');
+                }
+            } catch (e) {
+                console.error('Error al importar:', e);
+                mostrarToast('❌ Error al buscar: ' + e.message);
+            }
+        }
+        
+        function mostrarModalImportar() {
+            document.getElementById('modalImportar').style.display = 'flex';
+            document.getElementById('inputCodigoImportar').value = '';
+            document.getElementById('inputCodigoImportar').focus();
+        }
+        
+        function cerrarModalImportar() {
+            document.getElementById('modalImportar').style.display = 'none';
         }
         
         async function cargarDeFirestore() {
@@ -865,6 +974,19 @@
     </div>
 
     <input type="file" id="importFile" style="display:none" accept=".json">
+
+    <!-- MODAL IMPORTAR DATOS DE OTRO USUARIO -->
+    <div id="modalImportar" class="modal" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center;">
+        <div style="background: #1e1e2e; border-radius: 20px; padding: 20px; max-width: 90%; width: 350px; border: 1px solid #bb86fc;">
+            <h3 style="color: #bb86fc; margin-bottom: 10px; font-size: 1rem;">📥 Importar materiales</h3>
+            <p style="color: #888; font-size: 0.75rem; margin-bottom: 12px;">Pide a otro usuario su código de serie (lo encuentra en Proyectos → Número de Serie). El código cambia cada día.</p>
+            <input type="text" id="inputCodigoImportar" placeholder="Ej: ABCD-1234" autocomplete="off" style="width:100%; padding: 12px 16px; background: #2c2c3e; border: 1px solid #444; border-radius: 12px; color: #fff; font-size: 1rem; font-weight: bold; text-align: center; text-transform: uppercase; outline: none; letter-spacing: 3px;" onkeydown="if(event.key==='Enter') importarDeOtroUsuario()">
+            <div style="display: flex; gap: 10px; margin-top: 15px; justify-content: flex-end;">
+                <button onclick="cerrarModalImportar()" style="padding: 10px 20px; background: #444; border: none; border-radius: 10px; color: #fff; font-size: 0.8rem; font-weight: 600; cursor: pointer;">Cancelar</button>
+                <button onclick="importarDeOtroUsuario()" style="padding: 10px 20px; background: #03dac6; border: none; border-radius: 10px; color: #000; font-size: 0.8rem; font-weight: 700; cursor: pointer;">📥 Importar</button>
+            </div>
+        </div>
+    </div>
 
     <div id="toast" class="toast"></div>
 
@@ -1970,7 +2092,7 @@
         // ========== FUNCIONES DE BOTONES ==========
 
         function importarDatos() {
-            document.getElementById('importFile').click();
+            mostrarModalImportar();
         }
 
         document.getElementById('importFile')?.addEventListener('change', function(event) {

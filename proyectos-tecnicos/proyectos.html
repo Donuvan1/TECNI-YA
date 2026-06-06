@@ -339,18 +339,27 @@
             `;
         }
 
-        // Número de serie
+        // Número de serie (basado en UID + fecha, cambia cada día)
         function generarNumeroSerie() {
-            let stored = localStorage.getItem('app_serial');
-            if (stored) return stored;
-            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789';
-            let serial = '';
-            for (let i = 0; i < 10; i++) {
-                if (i === 3 || i === 6) serial += '-';
-                serial += chars[Math.floor(Math.random() * chars.length)];
+            const uid = localStorage.getItem('tecniya_uid') || 'compartido';
+            const hoy = new Date();
+            const fechaStr = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
+            const base = uid + fechaStr;
+            let hash = 0;
+            for (let i = 0; i < base.length; i++) {
+                const char = base.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
             }
-            localStorage.setItem('app_serial', serial);
-            return serial;
+            const absHash = Math.abs(hash);
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            let codigo = '';
+            let temp = absHash;
+            for (let i = 0; i < 8; i++) {
+                codigo += chars[temp % chars.length];
+                temp = Math.floor(temp / chars.length);
+            }
+            return codigo.substring(0, 4) + '-' + codigo.substring(4, 8);
         }
 
         function mostrarNumeroSerie() {
