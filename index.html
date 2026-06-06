@@ -973,8 +973,11 @@
         // Funciones para abrir/cerrar el modal de proyectos
         function abrirProyectos() {
             proyectosModal.classList.add('active');
-            // Recargar el iframe para asegurar que está actualizado
-            proyectosIframe.src = proyectosIframe.src;
+            // Solo recargar si no está ya cargado (evitar duplicación)
+            if (!proyectosIframe.dataset.cargado) {
+                proyectosIframe.src = proyectosIframe.src;
+                proyectosIframe.dataset.cargado = 'true';
+            }
         }
         
         function cerrarProyectos() {

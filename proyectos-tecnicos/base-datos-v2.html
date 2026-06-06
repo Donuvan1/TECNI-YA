@@ -205,25 +205,31 @@
             return datos;
         }
         
-        // Al iniciar, intentar cargar de Firestore si no hay datos locales
+        // Al iniciar, SIEMPRE cargar desde Firestore (base de datos 2.0)
+        // y sobrescribir cualquier dato local anterior
         window.addEventListener('DOMContentLoaded', async function() {
-            const datosLocales = localStorage.getItem('baseDatosItems');
-            if (!datosLocales || datosLocales === '{}') {
-                const cargo = await cargarDeFirestore();
-                if (cargo) {
-                    console.log('✅ Datos cargados desde Firestore');
-                    if (typeof window.mostrarInfoCategoria === 'function') {
-                        const cat = document.getElementById('categoriaSelect')?.value;
-                        const col = document.getElementById('colorSelect')?.value;
-                        if (cat && col) window.mostrarInfoCategoria(cat, col);
-                    }
-                } else {
-                    // No hay datos en Firestore ni local: generar datos iniciales
+            const cargo = await cargarDeFirestore();
+            if (cargo) {
+                console.log('✅ Datos cargados desde Firestore (baseDatosV2)');
+                // Actualizar la variable global con los datos de Firestore
+                datosGuardados = JSON.parse(localStorage.getItem('baseDatosItems') || '{}');
+                if (typeof window.mostrarInfoCategoria === 'function') {
+                    const cat = document.getElementById('categoriaSelect')?.value;
+                    const col = document.getElementById('colorSelect')?.value;
+                    if (cat && col) window.mostrarInfoCategoria(cat, col);
+                }
+            } else {
+                // No hay datos en Firestore: verificar si hay datos locales
+                const datosLocales = localStorage.getItem('baseDatosItems');
+                if (!datosLocales || datosLocales === '{}') {
+                    // No hay datos en ningún lado: generar datos iniciales
                     console.log('🔄 Generando datos iniciales por defecto...');
                     datosGuardados = generarDatosIniciales();
                     guardarEnLocalStorage();
                     guardarEnFirestore();
                     console.log('✅ Datos iniciales generados y guardados');
+                } else {
+                    console.log('📦 Usando datos locales existentes');
                 }
             }
             // Sincronizar cada 30 segundos
@@ -661,7 +667,7 @@
         </div>
 
         <!-- BOTÓN VOLVER -->
-        <a href="proyectos.html" class="btn-volver">⬅ Volver</a>
+        <a href="proyectos.html" class="btn-volver" onclick="if (window.parent !== window) { window.parent.document.getElementById('closeProyectosModalBtn')?.click(); return false; }">⬅ Volver</a>
 
         <!-- BUSCADOR GLOBAL (siempre visible) -->
         <div class="buscador-container" style="margin-bottom: 15px;">
@@ -766,12 +772,8 @@
 
                 <!-- ========== CAMPOS DE PLANCHAS (ocultos por defecto) ========== -->
                 <div id="filaPlanchas" style="display: none; grid-column: 1 / -1;">
-                    <!-- FILA PARA CÓDIGO / STOCK -->
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px;">
-                        <div style="display: flex; flex-direction: column; gap: 2px;">
-                            <label style="font-size: 0.6rem; color: #bb86fc;">Código</label>
-                            <input type="text" id="inputCodigoPlancha" placeholder="Ej: PL-001" autocomplete="off" onfocus="this.select()" style="width:100%; padding: 6px 8px; background: #2c2c3e; border: 1px solid #444; border-radius: 6px; color: #fff; font-size: 0.8rem; outline: none;">
-                        </div>
+                    <!-- FILA PARA STOCK (ocupa todo el ancho, sin código) -->
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 6px; margin-bottom: 6px;">
                         <div style="display: flex; flex-direction: column; gap: 2px;">
                             <label style="font-size: 0.6rem; color: #bb86fc;">Stock</label>
                             <input type="number" id="inputStockPlanchaFila" placeholder="0" autocomplete="off" oninput="sincronizarControlVentas()" onfocus="this.select()" style="width:100%; padding: 6px 8px; background: #2c2c3e; border: 1px solid #444; border-radius: 6px; color: #fff; font-size: 0.8rem; outline: none;">
@@ -1265,9 +1267,9 @@
 
         function guardarSilencioso() {
             const nombre = document.getElementById('inputNombre').value.trim();
-            if (!nombre) return;
-
             const codigo = document.getElementById('inputCodigo').value.trim();
+            if (!nombre && !codigo) return;
+
             const medida = document.getElementById('inputMedida').value.trim();
 
             const categoria = document.getElementById('categoriaSelect').value;
@@ -1472,7 +1474,7 @@
                 const nombreCount = {};
                 const codigoCount = {};
                 items.forEach(item => {
-                    nombreCount[item.nombre] = (nombreCount[item.nombre] || 0) + 1;
+                    if (item.nombre) nombreCount[item.nombre] = (nombreCount[item.nombre] || 0) + 1;
                     if (item.codigo !== '—') codigoCount[item.codigo] = (codigoCount[item.codigo] || 0) + 1;
                 });
                 Object.entries(nombreCount).forEach(([k, v]) => { if (v > 1) nombresRepetidos.add(k); });
@@ -1509,6 +1511,21 @@
                                     <button onclick="editarItemGuardadoIndex(${index})" style="padding: 6px 16px; background: #bb86fc; border: none; border-radius: 6px; color: #000; font-size: 0.65rem; font-weight: 600; cursor: pointer; white-space: nowrap; margin-top: 14px;">✏️ Editar</button>
                                     <button onclick="borrarItemGuardado(${index})" style="padding: 6px 16px; background: #ff4444; border: none; border-radius: 6px; color: #fff; font-size: 0.65rem; font-weight: 600; cursor: pointer; white-space: nowrap; margin-top: 14px;">🗑️ Borrar</button>
                                 </div>
+                                ${categoria === 'planchas' ? `
+                                <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 0.6rem; color: #bb86fc; margin-bottom: 2px;">Stock</div>
+                                        <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 6px 8px; color: #25D366; font-size: 0.8rem; font-weight: 500; text-align: center;">${item.stock || 0}</div>
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 0.6rem; color: #bb86fc; margin-bottom: 2px;">Color</div>
+                                        <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 6px 8px; display: flex; align-items: center; gap: 6px; justify-content: center;">
+                                            <div style="width: 14px; height: 14px; border-radius: 50%; background: ${itemColorHex}; border: 1px solid rgba(255,255,255,0.2); flex-shrink: 0;"></div>
+                                            <span style="color: #25D366; font-size: 0.7rem; font-weight: 500;">${itemColorLabel}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                ` : `
                                 <div style="display: flex; gap: 6px; margin-bottom: 8px;">
                                     <div style="flex: 1;">
                                         <div style="font-size: 0.6rem; color: #bb86fc; margin-bottom: 2px;">Código</div>
@@ -1530,6 +1547,7 @@
                                         </div>
                                     </div>
                                 </div>
+                                `}
                                 ${categoria === 'planchas' ? `
                                 <div style="display: flex; gap: 4px; margin-bottom: 4px;">
                                     <div style="flex: 1;">
@@ -1552,7 +1570,7 @@
                                 <div style="display: flex; gap: 4px;">
                                     <div style="flex: 1;">
                                         <div style="font-size: 0.55rem; color: #bb86fc; margin-bottom: 2px;">Venta</div>
-                                        <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 5px 6px; color: #25D366; font-size: 0.75rem; font-weight: 600; text-align: center;">S/ ${item.venta.toFixed(2)}</div>
+                                        <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 5px 6px; color: #ffffff; font-size: 0.75rem; font-weight: 600; text-align: center;">S/ ${item.venta.toFixed(2)}</div>
                                     </div>
                                     <div style="flex: 1;">
                                         <div style="font-size: 0.55rem; color: #bb86fc; margin-bottom: 2px;">Pie Compra</div>
@@ -1560,7 +1578,7 @@
                                     </div>
                                     <div style="flex: 1;">
                                         <div style="font-size: 0.55rem; color: #bb86fc; margin-bottom: 2px;">Pie Venta</div>
-                                        <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 5px 6px; color: #25D366; font-size: 0.75rem; font-weight: 600; text-align: center;">${item.pieVenta ? item.pieVenta.toFixed(2) : '0.00'}</div>
+                                        <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 5px 6px; color: #448AFF; font-size: 0.75rem; font-weight: 600; text-align: center;">${item.pieVenta ? item.pieVenta.toFixed(2) : '0.00'}</div>
                                     </div>
                                     <div style="flex: 1;">
                                         <div style="font-size: 0.55rem; color: #bb86fc; margin-bottom: 2px;">APK</div>
@@ -1575,11 +1593,11 @@
                                     </div>
                                     <div style="flex: 1;">
                                         <div style="font-size: 0.55rem; color: #bb86fc; margin-bottom: 2px;">Venta</div>
-                                        <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 5px 6px; color: #25D366; font-size: 0.75rem; font-weight: 600; text-align: center;">S/ ${item.venta.toFixed(2)}</div>
+                                        <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 5px 6px; color: #ffffff; font-size: 0.75rem; font-weight: 600; text-align: center;">S/ ${item.venta.toFixed(2)}</div>
                                     </div>
                                     <div style="flex: 1;">
                                         <div style="font-size: 0.55rem; color: #bb86fc; margin-bottom: 2px;">Vta x m</div>
-                                        <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 5px 6px; color: #25D366; font-size: 0.75rem; font-weight: 600; text-align: center;">S/ ${item.ventaMetro.toFixed(2)}</div>
+                                        <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 5px 6px; color: #448AFF; font-size: 0.75rem; font-weight: 600; text-align: center;">S/ ${item.ventaMetro.toFixed(2)}</div>
                                     </div>
                                     <div style="flex: 1;">
                                         <div style="font-size: 0.55rem; color: #bb86fc; margin-bottom: 2px;">APK</div>
@@ -1687,33 +1705,66 @@
                     </div>
                 `;
             } else {
+                // Agrupar resultados por nombre+código+categoría
+                const grupos = {};
+                resultados.forEach(item => {
+                    const key = `${item.nombre}|${item.codigo}|${item.categoria}`;
+                    if (!grupos[key]) {
+                        grupos[key] = {
+                            nombre: item.nombre,
+                            codigo: item.codigo,
+                            categoria: item.categoria,
+                            categoriaLabel: item.categoriaLabel,
+                            categoriaIcono: item.categoriaIcono,
+                            colores: []
+                        };
+                    }
+                    grupos[key].colores.push({
+                        value: item.color,
+                        label: item.colorLabel,
+                        hex: item.colorHex
+                    });
+                });
+
+                const gruposArray = Object.values(grupos);
                 let itemsHtml = '';
-                resultados.forEach((item, index) => {
-                    const cat = item.categoria;
-                    const col = item.color;
+                gruposArray.forEach(grupo => {
+                    const cat = grupo.categoria;
+                    const primerColor = grupo.colores[0].value;
+                    // Generar bolitas de colores
+                    let coloresHtml = '';
+                    grupo.colores.forEach(c => {
+                        coloresHtml += `
+                            <div style="display: flex; align-items: center; gap: 4px;">
+                                <div style="width: 14px; height: 14px; border-radius: 50%; background: ${c.hex}; border: 1px solid rgba(255,255,255,0.2); flex-shrink: 0;"></div>
+                                <span style="color: #aaa; font-size: 0.65rem;">${c.label}</span>
+                            </div>
+                        `;
+                    });
+                    const nombreEscapado = grupo.nombre.replace(/'/g, "\\'");
+                    const codigoEscapado = grupo.codigo.replace(/'/g, "\\'");
                     itemsHtml += `
-                        <div onclick="seleccionarResultadoBusqueda('${cat}', '${col}')" style="background: rgba(0,0,0,0.4); border: 1px solid #444; border-radius: 12px; padding: 10px; margin-bottom: 8px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.borderColor='#bb86fc'" onmouseout="this.style.borderColor='#444'">
+                        <div onclick="seleccionarResultadoBusqueda('${cat}', '${primerColor}', '${nombreEscapado}', '${codigoEscapado}')" style="background: rgba(0,0,0,0.4); border: 1px solid #444; border-radius: 12px; padding: 10px; margin-bottom: 8px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.borderColor='#bb86fc'" onmouseout="this.style.borderColor='#444'">
                             <div style="display: flex; align-items: center; gap: 4px; margin-bottom: 8px;">
                                 <div style="flex: 1; min-width: 0;">
                                     <div style="font-size: 0.6rem; color: #bb86fc; margin-bottom: 2px;">Nombre</div>
-                                    <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 6px 8px; color: #25D366; font-size: 0.85rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${item.nombre}</div>
+                                    <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 6px 8px; color: #25D366; font-size: 0.85rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${grupo.nombre}</div>
                                 </div>
                             </div>
-                            <div style="display: flex; gap: 6px;">
+                            <div style="display: flex; gap: 6px; margin-bottom: 6px;">
                                 <div style="flex: 1;">
                                     <div style="font-size: 0.6rem; color: #bb86fc; margin-bottom: 2px;">Código</div>
-                                    <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 6px 8px; color: #25D366; font-size: 0.8rem; font-weight: 500; text-align: center;">${item.codigo}</div>
+                                    <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 6px 8px; color: #25D366; font-size: 0.8rem; font-weight: 500; text-align: center;">${grupo.codigo}</div>
                                 </div>
                                 <div style="flex: 1;">
                                     <div style="font-size: 0.6rem; color: #bb86fc; margin-bottom: 2px;">Categoría</div>
-                                    <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 6px 8px; color: #25D366; font-size: 0.8rem; font-weight: 500; text-align: center;">${item.categoriaIcono} ${item.categoriaLabel}</div>
+                                    <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 6px 8px; color: #25D366; font-size: 0.8rem; font-weight: 500; text-align: center;">${grupo.categoriaIcono} ${grupo.categoriaLabel}</div>
                                 </div>
-                                <div style="flex: 1;">
-                                    <div style="font-size: 0.6rem; color: #bb86fc; margin-bottom: 2px;">Color</div>
-                                    <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 6px 8px; display: flex; align-items: center; gap: 6px; justify-content: center;">
-                                        <div style="width: 14px; height: 14px; border-radius: 50%; background: ${item.colorHex}; border: 1px solid rgba(255,255,255,0.2); flex-shrink: 0;"></div>
-                                        <span style="color: #25D366; font-size: 0.7rem; font-weight: 500;">${item.colorLabel}</span>
-                                    </div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.6rem; color: #bb86fc; margin-bottom: 4px;">Colores (${grupo.colores.length})</div>
+                                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                    ${coloresHtml}
                                 </div>
                             </div>
                         </div>
@@ -1722,7 +1773,7 @@
 
                 contenedor.innerHTML = `
                     <div style="width: 100%;">
-                        <p style="color: #03dac6; font-size: 0.85rem; margin-bottom: 8px; text-align: center;">🔍 Resultados para: "${texto}" (${resultados.length})</p>
+                        <p style="color: #03dac6; font-size: 0.85rem; margin-bottom: 8px; text-align: center;">🔍 Resultados para: "${texto}" (${gruposArray.length} encontrados)</p>
                         ${itemsHtml}
                     </div>
                 `;
@@ -1731,7 +1782,7 @@
 
         // ========== SELECCIONAR RESULTADO DE BÚSQUEDA ==========
 
-        function seleccionarResultadoBusqueda(categoria, color) {
+        function seleccionarResultadoBusqueda(categoria, color, nombreItem, codigoItem) {
             const categoriaSelect = document.getElementById('categoriaSelect');
             const colorSelect = document.getElementById('colorSelect');
             
@@ -1747,10 +1798,167 @@
                 colorSelect.value = color;
                 coloresAdicionales = [];
                 actualizarCirculosSeleccionados();
-                mostrarInfoCategoria(categoria, color);
+                
+                // Mostrar solo el item filtrado
+                const key = obtenerKey(categoria, color);
+                const items = datosGuardados[key] || [];
+                const itemEncontrado = items.find(i => i.nombre === nombreItem && i.codigo === codigoItem);
+                
+                if (itemEncontrado) {
+                    mostrarItemFiltrado(categoria, color, itemEncontrado);
+                } else {
+                    mostrarInfoCategoria(categoria, color);
+                }
+                
                 // Limpiar el buscador
                 document.getElementById('buscadorInput').value = '';
             }, 50);
+        }
+
+        function mostrarItemFiltrado(categoria, color, item) {
+            const contenedor = document.getElementById('contenedorDatos');
+            const colores = coloresPorCategoria[categoria] || [];
+            const colorInfo = colores.find(c => c.value === item.color);
+            const itemColorHex = colorInfo ? colorInfo.hex : '#888';
+            const itemColorLabel = colorInfo ? colorInfo.label : item.color || '—';
+            
+            // Encontrar el índice del item en los datos guardados
+            const key = obtenerKey(categoria, color);
+            const items = datosGuardados[key] || [];
+            const itemIndex = items.findIndex(i => i.nombre === item.nombre && i.codigo === item.codigo);
+            
+            // Generar HTML del item (mismo formato que en mostrarInfoCategoria)
+            let itemHtml = `
+                <div style="background: rgba(0,0,0,0.4); border: 2px solid #bb86fc; border-radius: 12px; padding: 10px; margin-bottom: 8px; box-shadow: 0 0 15px rgba(187,134,252,0.3);">
+                    <div style="display: flex; align-items: center; gap: 4px; margin-bottom: 8px;">
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-size: 0.6rem; color: #bb86fc; margin-bottom: 2px;">Nombre</div>
+                            <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 6px 8px; color: #25D366; font-size: 0.85rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${item.nombre}</div>
+                        </div>
+                        ${itemIndex >= 0 ? `
+                        <button onclick="editarItemGuardadoIndex(${itemIndex})" style="padding: 6px 16px; background: #bb86fc; border: none; border-radius: 6px; color: #000; font-size: 0.65rem; font-weight: 600; cursor: pointer; white-space: nowrap; margin-top: 14px;">✏️ Editar</button>
+                        <button onclick="borrarItemGuardado(${itemIndex})" style="padding: 6px 16px; background: #ff4444; border: none; border-radius: 6px; color: #fff; font-size: 0.65rem; font-weight: 600; cursor: pointer; white-space: nowrap; margin-top: 14px;">🗑️ Borrar</button>
+                        ` : ''}
+                    </div>`;
+            
+            if (categoria === 'planchas') {
+                itemHtml += `
+                    <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+                        <div style="flex: 1;">
+                            <div style="font-size: 0.6rem; color: #bb86fc; margin-bottom: 2px;">Stock</div>
+                            <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 6px 8px; color: #25D366; font-size: 0.8rem; font-weight: 500; text-align: center;">${item.stock || 0}</div>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 0.6rem; color: #bb86fc; margin-bottom: 2px;">Color</div>
+                            <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 6px 8px; display: flex; align-items: center; gap: 6px; justify-content: center;">
+                                <div style="width: 14px; height: 14px; border-radius: 50%; background: ${itemColorHex}; border: 1px solid rgba(255,255,255,0.2); flex-shrink: 0;"></div>
+                                <span style="color: #25D366; font-size: 0.7rem; font-weight: 500;">${itemColorLabel}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 4px; margin-bottom: 4px;">
+                        <div style="flex: 1;">
+                            <div style="font-size: 0.55rem; color: #bb86fc; margin-bottom: 2px;">Ancho</div>
+                            <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 5px 6px; color: #25D366; font-size: 0.75rem; font-weight: 600; text-align: center;">${item.ancho ? item.ancho.toFixed(2) : '0.00'}</div>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 0.55rem; color: #bb86fc; margin-bottom: 2px;">Alto</div>
+                            <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 5px 6px; color: #25D366; font-size: 0.75rem; font-weight: 600; text-align: center;">${item.alto ? item.alto.toFixed(2) : '0.00'}</div>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 0.55rem; color: #bb86fc; margin-bottom: 2px;">Pie²</div>
+                            <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 5px 6px; color: #25D366; font-size: 0.75rem; font-weight: 600; text-align: center;">${item.pie2 ? item.pie2.toFixed(2) : '0.00'}</div>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 0.55rem; color: #bb86fc; margin-bottom: 2px;">Compra</div>
+                            <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 5px 6px; color: #25D366; font-size: 0.75rem; font-weight: 600; text-align: center;">S/ ${item.compra.toFixed(2)}</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 4px;">
+                        <div style="flex: 1;">
+                            <div style="font-size: 0.55rem; color: #bb86fc; margin-bottom: 2px;">Venta</div>
+                            <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 5px 6px; color: #ffffff; font-size: 0.75rem; font-weight: 600; text-align: center;">S/ ${item.venta.toFixed(2)}</div>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 0.55rem; color: #bb86fc; margin-bottom: 2px;">Pie Compra</div>
+                            <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 5px 6px; color: #25D366; font-size: 0.75rem; font-weight: 600; text-align: center;">${item.pieCompra ? item.pieCompra.toFixed(2) : '0.00'}</div>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 0.55rem; color: #bb86fc; margin-bottom: 2px;">Pie Venta</div>
+                            <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 5px 6px; color: #448AFF; font-size: 0.75rem; font-weight: 600; text-align: center;">${item.pieVenta ? item.pieVenta.toFixed(2) : '0.00'}</div>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 0.55rem; color: #bb86fc; margin-bottom: 2px;">APK</div>
+                            <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 5px 6px; color: #25D366; font-size: 0.75rem; font-weight: 600; text-align: center;">${item.apk.toFixed(2)}</div>
+                        </div>
+                    </div>`;
+            } else {
+                itemHtml += `
+                    <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+                        <div style="flex: 1;">
+                            <div style="font-size: 0.6rem; color: #bb86fc; margin-bottom: 2px;">Código</div>
+                            <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 6px 8px; color: #25D366; font-size: 0.8rem; font-weight: 500; text-align: center;">${item.codigo}</div>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 0.6rem; color: #bb86fc; margin-bottom: 2px;">Medida</div>
+                            <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 6px 8px; color: #25D366; font-size: 0.8rem; font-weight: 500; text-align: center;">${item.medida}</div>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 0.6rem; color: #bb86fc; margin-bottom: 2px;">Stock</div>
+                            <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 6px 8px; color: #25D366; font-size: 0.8rem; font-weight: 500; text-align: center;">${item.stock || 0}</div>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 0.6rem; color: #bb86fc; margin-bottom: 2px;">Color</div>
+                            <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 6px 8px; display: flex; align-items: center; gap: 6px; justify-content: center;">
+                                <div style="width: 14px; height: 14px; border-radius: 50%; background: ${itemColorHex}; border: 1px solid rgba(255,255,255,0.2); flex-shrink: 0;"></div>
+                                <span style="color: #25D366; font-size: 0.7rem; font-weight: 500;">${itemColorLabel}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 4px;">
+                        <div style="flex: 1;">
+                            <div style="font-size: 0.55rem; color: #bb86fc; margin-bottom: 2px;">Compra</div>
+                            <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 5px 6px; color: #25D366; font-size: 0.75rem; font-weight: 600; text-align: center;">S/ ${item.compra.toFixed(2)}</div>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 0.55rem; color: #bb86fc; margin-bottom: 2px;">Venta</div>
+                            <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 5px 6px; color: #ffffff; font-size: 0.75rem; font-weight: 600; text-align: center;">S/ ${item.venta.toFixed(2)}</div>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 0.55rem; color: #bb86fc; margin-bottom: 2px;">Vta x m</div>
+                            <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 5px 6px; color: #448AFF; font-size: 0.75rem; font-weight: 600; text-align: center;">S/ ${item.ventaMetro.toFixed(2)}</div>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 0.55rem; color: #bb86fc; margin-bottom: 2px;">APK</div>
+                            <div style="background: #2c2c3e; border: 1px solid #444; border-radius: 6px; padding: 5px 6px; color: #25D366; font-size: 0.75rem; font-weight: 600; text-align: center;">${item.apk.toFixed(2)}</div>
+                        </div>
+                    </div>`;
+            }
+            
+            itemHtml += `
+                    ${item.vendidos ? `
+                    <div style="display: flex; gap: 4px; margin-top: 6px; padding-top: 6px; border-top: 1px solid #333;">
+                        <div style="flex: 1;">
+                            <div style="font-size: 0.55rem; color: #03dac6; margin-bottom: 2px;">Stock Disp.</div>
+                            <div style="background: #1a1a2e; border: 1px solid #03dac6; border-radius: 6px; padding: 5px 6px; color: #03dac6; font-size: 0.75rem; font-weight: 600; text-align: center;">${Math.max(0, (item.stock || 0) - item.vendidos)}</div>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 0.55rem; color: #ff9800; margin-bottom: 2px;">Vendidos</div>
+                            <div style="background: #1a1a2e; border: 1px solid #ff9800; border-radius: 6px; padding: 5px 6px; color: #ff9800; font-size: 0.75rem; font-weight: 600; text-align: center;">${item.vendidos}</div>
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>`;
+            
+            contenedor.innerHTML = `
+                <div style="width: 100%;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                        <p style="color: #03dac6; font-size: 0.85rem; margin: 0;">🔍 Item encontrado</p>
+                        <button onclick="mostrarInfoCategoria('${categoria}', '${color}')" style="padding: 6px 14px; background: #bb86fc; border: none; border-radius: 8px; color: #000; font-size: 0.7rem; font-weight: 600; cursor: pointer;">📋 Ver todos</button>
+                    </div>
+                    ${itemHtml}
+                </div>
+            `;
         }
 
         // ========== FUNCIONES DE BOTONES ==========
@@ -2026,8 +2234,8 @@
             const colorTexto = colorPrincipal ? document.getElementById('colorSelect').options[document.getElementById('colorSelect').selectedIndex].text : '';
             const vendidos = parseInt(document.getElementById('inputVendidos').value) || 0;
 
-            if (!nombre) {
-                mostrarToast('❌ El nombre del material es obligatorio');
+            if (!nombre && !codigo) {
+                mostrarToast('❌ Debes ingresar al menos un nombre o un código');
                 document.getElementById('inputNombre').focus();
                 return;
             }
