@@ -544,6 +544,35 @@ async function cargarConfiguracion() {
             configuracionCompleta = await response.json();
             console.log('Configuración cargada desde JSON');
         }
+        // ========== CARGAR VIDRIOS DESDE BASE DE DATOS (localStorage) ==========
+        const baseDatosItems = localStorage.getItem('baseDatosItems');
+        if (baseDatosItems) {
+            try {
+                const items = JSON.parse(baseDatosItems);
+                const vidriosBD = items['otros_general'] || [];
+                if (vidriosBD.length > 0) {
+                    // Convertir formato BD (nombre, venta) a formato JSON (n, p)
+                    const vidriosConvertidos = vidriosBD.map(v => ({
+                        n: v.nombre,
+                        p: v.venta || 0
+                    }));
+                    
+                    // Reemplazar vidrios en todas las series
+                    if (configuracionCompleta.sistema && configuracionCompleta.sistema.vidrios) {
+                        configuracionCompleta.sistema.vidrios = vidriosConvertidos;
+                    }
+                    if (configuracionCompleta.serie80 && configuracionCompleta.serie80.vidrios) {
+                        configuracionCompleta.serie80.vidrios = vidriosConvertidos;
+                    }
+                    if (configuracionCompleta.serie60 && configuracionCompleta.serie60.vidrios) {
+                        configuracionCompleta.serie60.vidrios = vidriosConvertidos;
+                    }
+                    console.log(`✅ Vidrios cargados desde base de datos (${vidriosConvertidos.length} items)`);
+                }
+            } catch (e) {
+                console.warn('⚠️ Error al cargar vidrios desde base de datos:', e.message);
+            }
+        }
     } catch (error) {
         console.error('Error cargando configuración:', error);
         alert('Error cargando materiales.json');
