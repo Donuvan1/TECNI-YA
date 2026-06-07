@@ -171,6 +171,29 @@
     </style>
 </head>
 <body>
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+    
+    const firebaseConfig = {
+        apiKey: "AIzaSyB4W_0bdRoL-VnN6FAiSWhnQWNO-fRairc",
+        authDomain: "proyecto-libertad-38c2a.firebaseapp.com",
+        projectId: "proyecto-libertad-38c2a",
+        storageBucket: "proyecto-libertad-38c2a.firebasestorage.app",
+        messagingSenderId: "115380076439",
+        appId: "1:115380076439:web:85383b2c32cdb40c798ed2"
+    };
+    
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    
+    // Exponer db y auth globalmente para que el otro script pueda usarlos
+    window.db = db;
+    window.auth = auth;
+    window.firebaseAuth = auth;
+</script>
 
 <div class="container py-4">
     <div class="mb-3">
@@ -544,46 +567,80 @@ async function cargarConfiguracion() {
             configuracionCompleta = await response.json();
             console.log('Configuración cargada desde JSON');
         }
-        // ========== CARGAR VIDRIOS DESDE BASE DE DATOS (localStorage) ==========
-        const baseDatosItems = localStorage.getItem('baseDatosItems');
-        if (baseDatosItems) {
+        // ========== CARGAR VIDRIOS DESDE FIRESTORE ==========
+        async function cargarVidriosDesdeFirestore() {
             try {
-                const items = JSON.parse(baseDatosItems);
-                // Los vidrios se guardan en la categoría "Planchas" → clave 'planchas_general'
-                // También puede haber datos en 'otros_general' (datos iniciales)
-                const clavesVidrio = ['planchas_general', 'otros_general'];
-                let vidriosBD = [];
+                const db = window.db;
+                const auth = window.auth || window.firebaseAuth;
+                if (!db || !auth) { cargarVidriosDesdeLocalStorage(); return; }
                 
-                clavesVidrio.forEach(clave => {
-                    if (items[clave] && Array.isArray(items[clave])) {
-                        vidriosBD = vidriosBD.concat(items[clave]);
-                    }
-                });
+                const user = auth.currentUser;
+                if (!user) { cargarVidriosDesdeLocalStorage(); return; }
                 
-                if (vidriosBD.length > 0) {
-                    // Convertir formato BD a formato JSON (n, p)
-                    // En planchas: el precio está en "apk" (y "venta" como fallback)
-                    const vidriosConvertidos = vidriosBD.map(v => ({
-                        n: v.nombre,
-                        p: v.apk || v.venta || 0
-                    }));
+                const doc = await db.collection('usuarios').doc(user.uid).get();
+                if (doc.exists && doc.data().items) {
+                    const items = doc.data().items;
+                    const clavesVidrio = ['planchas_general'];
+                    let vidriosBD = [];
                     
-                    // Reemplazar vidrios en todas las series
-                    if (configuracionCompleta.sistema && configuracionCompleta.sistema.vidrios) {
-                        configuracionCompleta.sistema.vidrios = vidriosConvertidos;
+                    clavesVidrio.forEach(clave => {
+                        if (items[clave] && Array.isArray(items[clave])) {
+                            vidriosBD = vidriosBD.concat(items[clave]);
+                        }
+                    });
+                    
+                    if (vidriosBD.length > 0) {
+                        const vidriosConvertidos = vidriosBD.map(v => ({
+                            n: v.nombre,
+                            p: v.apk || v.venta || 0
+                        }));
+                        
+                        if (configuracionCompleta.sistema) configuracionCompleta.sistema.vidrios = vidriosConvertidos;
+                        if (configuracionCompleta.serie80) configuracionCompleta.serie80.vidrios = vidriosConvertidos;
+                        if (configuracionCompleta.serie60) configuracionCompleta.serie60.vidrios = vidriosConvertidos;
+                        console.log(`✅ Vidrios cargados desde Firestore (${vidriosConvertidos.length} items)`);
+                        return;
                     }
-                    if (configuracionCompleta.serie80 && configuracionCompleta.serie80.vidrios) {
-                        configuracionCompleta.serie80.vidrios = vidriosConvertidos;
-                    }
-                    if (configuracionCompleta.serie60 && configuracionCompleta.serie60.vidrios) {
-                        configuracionCompleta.serie60.vidrios = vidriosConvertidos;
-                    }
-                    console.log(`✅ Vidrios cargados desde base de datos (${vidriosConvertidos.length} items)`);
                 }
+                cargarVidriosDesdeLocalStorage();
             } catch (e) {
-                console.warn('⚠️ Error al cargar vidrios desde base de datos:', e.message);
+                console.warn('⚠️ Error Firestore, usando localStorage:', e.message);
+                cargarVidriosDesdeLocalStorage();
             }
         }
+        
+        function cargarVidriosDesdeLocalStorage() {
+            const baseDatosItems = localStorage.getItem('baseDatosItems');
+            if (!baseDatosItems) return;
+            try {
+                const items = JSON.parse(baseDatosItems);
+                const clavesVidrio = ['planchas_general'];
+                let vidriosBD = [];
+                clavesVidrio.forEach(clave => {
+                    if (items[clave] && Array.isArray(items[clave])) vidriosBD = vidriosBD.concat(items[clave]);
+                });
+                if (vidriosBD.length > 0) {
+                    const vidriosConvertidos = vidriosBD.map(v => ({ n: v.nombre, p: v.apk || v.venta || 0 }));
+                    if (configuracionCompleta.sistema) configuracionCompleta.sistema.vidrios = vidriosConvertidos;
+                    if (configuracionCompleta.serie80) configuracionCompleta.serie80.vidrios = vidriosConvertidos;
+                    if (configuracionCompleta.serie60) configuracionCompleta.serie60.vidrios = vidriosConvertidos;
+                    console.log(`✅ Vidrios cargados desde localStorage (${vidriosConvertidos.length} items)`);
+                }
+            } catch (e) { console.warn('⚠️ Error localStorage:', e.message); }
+        }
+        
+        // Intentar Firestore primero - esperar a que el módulo cargue
+        function esperarFirebaseYcargar() {
+            if (window.db && window.auth) {
+                window.auth.onAuthStateChanged(user => {
+                    if (user) cargarVidriosDesdeFirestore();
+                    else cargarVidriosDesdeLocalStorage();
+                });
+            } else {
+                setTimeout(esperarFirebaseYcargar, 500);
+            }
+        }
+        esperarFirebaseYcargar();
     } catch (error) {
         console.error('Error cargando configuración:', error);
         alert('Error cargando materiales.json');
