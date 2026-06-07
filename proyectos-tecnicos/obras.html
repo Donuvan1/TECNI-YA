@@ -549,12 +549,23 @@ async function cargarConfiguracion() {
         if (baseDatosItems) {
             try {
                 const items = JSON.parse(baseDatosItems);
-                const vidriosBD = items['otros_general'] || [];
+                // Los vidrios se guardan en la categoría "Planchas" → clave 'planchas_general'
+                // También puede haber datos en 'otros_general' (datos iniciales)
+                const clavesVidrio = ['planchas_general', 'otros_general'];
+                let vidriosBD = [];
+                
+                clavesVidrio.forEach(clave => {
+                    if (items[clave] && Array.isArray(items[clave])) {
+                        vidriosBD = vidriosBD.concat(items[clave]);
+                    }
+                });
+                
                 if (vidriosBD.length > 0) {
-                    // Convertir formato BD (nombre, venta) a formato JSON (n, p)
+                    // Convertir formato BD a formato JSON (n, p)
+                    // En planchas: el precio está en "apk" (y "venta" como fallback)
                     const vidriosConvertidos = vidriosBD.map(v => ({
                         n: v.nombre,
-                        p: v.venta || 0
+                        p: v.apk || v.venta || 0
                     }));
                     
                     // Reemplazar vidrios en todas las series
