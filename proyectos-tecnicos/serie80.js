@@ -166,6 +166,10 @@ function inicializarSerie80(configuracion) {
         }
     }
     
+    // ========== VARIABLES GLOBALES DEL MÓDULO ==========
+    let vidrioSeleccionadoIndexS80 = 0;
+    let vidriosListaS80 = [];
+    
     function cargarCostosVidrios() {
         if (!configuracionCompleta) return;
         
@@ -870,9 +874,6 @@ let anchoAbajoCorrediza = anchoPorHoja;
     contenedor.innerHTML = html;
 }
 // ========== FUNCIONES PARA EL SELECTOR DE VIDRIOS CON BÚSQUEDA ==========
-    let vidrioSeleccionadoIndexS80 = 0;
-    let vidriosListaS80 = [];
-    
     function cargarListaVidriosS80(filtro = '') {
     const listaContainer = document.getElementById('lista_vidrios_s80');
     if (!listaContainer) return;
