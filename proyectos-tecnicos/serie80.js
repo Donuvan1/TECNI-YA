@@ -109,11 +109,14 @@ function inicializarSerie80(configuracion) {
         const tbody = document.getElementById('tabla_precios_body_s80');
         
         if (tbody) {
-            tbody.innerHTML = perfiles.map(p => `
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <span><span class="num-fila">📐</span> ${p.n}</span>
-                    <span class="codigo-resaltado">${p.c}</span>
-                    <span class="corte-medida">S/ ${p.p.toFixed(2)}</span>
+            tbody.innerHTML = perfiles.map((p, index) => `
+                <li class="list-group-item d-flex align-items-center">
+                    <div class="col-5 text-uppercase small"><span class="num-fila">${index + 1}. </span>${p.n}</div>
+                    <div class="col-3 text-center"><span class="caja-dato">${p.c}</span></div>
+                    <div class="col-4 text-center">
+                        <input type="number" step="0.01" class="caja-dato price-input" 
+                        data-index="${index}" value="${p.p}" oninput="actualizarPrecioManualS80(this)" onfocus="this.select()">
+                    </div>
                 </li>
             `).join('');
         }
@@ -127,11 +130,15 @@ function inicializarSerie80(configuracion) {
         const tbody = document.getElementById('tabla_accesorios_body_s80');
         
         if (tbody) {
-            tbody.innerHTML = accesorios.map(a => `
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <span><span class="num-fila">🔧</span> ${a.n}</span>
-                    <span class="codigo-resaltado">${a.c}</span>
-                    <span class="corte-medida">S/ ${a.p.toFixed(2)}</span>
+            tbody.innerHTML = accesorios.map((item, index) => `
+                <li class="list-group-item d-flex align-items-center">
+                    <div class="col-5 text-uppercase small"><span class="num-fila">${index + 1}. </span>${item.n}</div>
+                    <div class="col-3 text-center"><span class="caja-dato">${item.c}</span></div>
+                    <div class="col-4 text-center">
+                        <input type="number" step="0.01" class="caja-dato price-input" 
+                        data-accesorio-index="${index}" value="${item.p.toFixed(2)}" 
+                        oninput="actualizarPrecioAccesorioS80(this, ${index})" onfocus="this.select()">
+                    </div>
                 </li>
             `).join('');
         }
@@ -145,11 +152,15 @@ function inicializarSerie80(configuracion) {
         const tbody = document.getElementById('tabla_tiras_body_s80');
         
         if (tbody) {
-            tbody.innerHTML = tiras.map(t => `
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <span><span class="num-fila">📏</span> ${t.n}</span>
-                    <span class="codigo-resaltado">${t.c}</span>
-                    <span class="corte-medida">S/ ${t.p.toFixed(2)}</span>
+            tbody.innerHTML = tiras.map((item, index) => `
+                <li class="list-group-item d-flex align-items-center">
+                    <div class="col-5 text-uppercase small"><span class="num-fila">${index + 1}. </span>${item.n}</div>
+                    <div class="col-3 text-center"><span class="caja-dato">${item.c}</span></div>
+                    <div class="col-4 text-center">
+                        <input type="number" step="0.01" class="caja-dato price-input" 
+                        data-tira-index="${index}" value="${item.p.toFixed(2)}" 
+                        oninput="actualizarPrecioTiraS80(this, ${index})" onfocus="this.select()">
+                    </div>
                 </li>
             `).join('');
         }
@@ -162,12 +173,68 @@ function inicializarSerie80(configuracion) {
         const tbody = document.getElementById('tabla_vidrios_body_s80');
         
         if (tbody) {
-            tbody.innerHTML = vidrios.map(v => `
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <span><span class="num-fila">🪟</span> ${v.n}</span>
-                    <span class="corte-medida">S/ ${v.p.toFixed(2)}</span>
+            tbody.innerHTML = vidrios.map((v, index) => `
+                <li class="list-group-item d-flex align-items-center">
+                    <div class="col-1">
+                        <input class="form-check-input" type="radio" name="radioVidrioS80" 
+                        ${index === vidrioSeleccionadoIndexS80 ? 'checked' : ''} onchange="cambiarVidrioSeleccionadoS80(${index})">
+                    </div>
+                    <div class="col-6 text-uppercase small">
+                        <span class="num-fila">${index + 1}. </span>${v.n}
+                    </div>
+                    <div class="col-5 text-end">
+                        <input type="number" step="0.01" class="caja-dato price-input w-75" 
+                        value="${v.p.toFixed(2)}" oninput="actualizarPrecioVidrioS80(this, ${index})" onfocus="this.select()">
+                    </div>
                 </li>
             `).join('');
+        }
+    }
+    
+    function cambiarVidrioSeleccionadoS80(index) {
+        vidrioSeleccionadoIndexS80 = index;
+    }
+    
+    function actualizarPrecioManualS80(input) {
+        const index = parseInt(input.dataset.index);
+        const tipo = document.querySelector('input[name="opt_alum_s80"]:checked')?.value || 'estandar';
+        
+        if (window.configuracionCompleta && window.tipoPedidoActual) {
+            const datos = window.configuracionCompleta[window.tipoPedidoActual];
+            if (datos && datos.perfiles && datos.perfiles[tipo] && datos.perfiles[tipo][index]) {
+                datos.perfiles[tipo][index].p = parseFloat(input.value) || 0;
+            }
+        }
+    }
+    
+    function actualizarPrecioAccesorioS80(input, index) {
+        const tipo = document.querySelector('input[name="opt_alum_s80"]:checked')?.value || 'estandar';
+        
+        if (window.configuracionCompleta && window.tipoPedidoActual) {
+            const datos = window.configuracionCompleta[window.tipoPedidoActual];
+            if (datos && datos.accesorios && datos.accesorios[tipo] && datos.accesorios[tipo][index]) {
+                datos.accesorios[tipo][index].p = parseFloat(input.value) || 0;
+            }
+        }
+    }
+    
+    function actualizarPrecioTiraS80(input, index) {
+        const tipo = document.querySelector('input[name="opt_alum_s80"]:checked')?.value || 'estandar';
+        
+        if (window.configuracionCompleta && window.tipoPedidoActual) {
+            const datos = window.configuracionCompleta[window.tipoPedidoActual];
+            if (datos && datos.tiras && datos.tiras[tipo] && datos.tiras[tipo][index]) {
+                datos.tiras[tipo][index].p = parseFloat(input.value) || 0;
+            }
+        }
+    }
+    
+    function actualizarPrecioVidrioS80(input, index) {
+        if (window.configuracionCompleta && window.tipoPedidoActual) {
+            const datos = window.configuracionCompleta[window.tipoPedidoActual];
+            if (datos && datos.vidrios && datos.vidrios[index]) {
+                datos.vidrios[index].p = parseFloat(input.value) || 0;
+            }
         }
     }
     
