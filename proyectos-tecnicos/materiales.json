@@ -1,0 +1,200 @@
+{
+  "sistema": {
+    "nombre": "Ventanas Sistema",
+    "perfiles": {
+      "estandar": [
+        {"n": "m fija corrediza", "c": "3185", "p": 3.64},
+        {"n": "m doble corrediza", "c": "3188", "p": 4.45},
+        {"n": "puente standar", "c": "5283", "p": 8.26},
+        {"n": "puente doble corr", "c": "5284", "p": 10.14},
+        {"n": "riel inferior", "c": "8413", "p": 1.86},
+        {"n": "riel doble", "c": "8444", "p": 3.51},
+        {"n": "u-12", "c": "u-12", "p": 2.30},
+        {"n": "perfil H", "c": "8220", "p": 5.55},
+        {"n": "portafelpa", "c": "8116", "p": 0.81},
+        {"n": "angulo", "c": "4104", "p": 0.83},
+        {"n": "soporte", "c": "0000", "p": 20.00},
+        {"n": "U-13", "c": "U-13", "p": 2.50},
+        {"n": "u bajita", "c": "3206", "p": 2.00}
+      ],
+      "pesados": [
+        {"n": "m fija corrediza", "c": "3185", "p": 3.64},
+        {"n": "m doble corrediza", "c": "3188", "p": 4.45},
+        {"n": "puente pesado", "c": "5282", "p": 10.54},
+        {"n": "puente doble corr", "c": "5284", "p": 10.14},
+        {"n": "riel inferior", "c": "83132", "p": 2.77},
+        {"n": "riel doble", "c": "8445", "p": 3.61},
+        {"n": "U baja", "c": "3003", "p": 2.80},
+        {"n": "perfil H", "c": "8221", "p": 6.38},
+        {"n": "portafelpa", "c": "8115", "p": 0.85},
+        {"n": "ángulo", "c": "4103", "p": 1.02},
+        {"n": "soporte", "c": "0000", "p": 20.00},
+        {"n": "u-alta", "c": "7955", "p": 3.00},
+        {"n": "u alta pesada", "c": "3009", "p": 3.50}
+      ]
+    },
+    "accesorios": {
+      "estandar": [
+        {"n": "Seguro F C", "c": "s-s", "p": 2.50},
+        {"n": "Seguro C C", "c": "s-b", "p": 1.50},
+        {"n": "Garruchas", "c": "r-15", "p": 1.05},
+        {"n": "Plaquitas", "c": "p-q", "p": 0.50}
+      ],
+      "pesados": [
+        {"n": "Seguro F C", "c": "s-s", "p": 2.50},
+        {"n": "Seguro C C", "c": "s-b", "p": 1.50},
+        {"n": "Garruchas", "c": "r-15", "p": 1.05},
+        {"n": "Plaquitas", "c": "p-q", "p": 0.50}
+      ]
+    },
+    "tiras": {
+      "estandar": [
+        {"n": "Felpa 10", "c": "f-10", "p": 0.50},
+        {"n": "Felpa 15", "c": "f-15", "p": 0.75}
+      ],
+      "pesados": [
+        {"n": "Felpa 10", "c": "f-10", "p": 0.50},
+        {"n": "Felpa 15", "c": "f-15", "p": 0.75}
+      ]
+    },
+    "vidrios": [
+      {"n": "Incoloro 2 mm", "p": 1.50},
+      {"n": "Incoloro 4 mm", "p": 3.00},
+      {"n": "Incoloro 5.5 mm", "p": 4.50},
+      {"n": "Reflejante 6 mm", "p": 8.50},
+      {"n": "Catedral 4 mm", "p": 5.00}
+    ]
+  },
+  "serie80": {
+    "nombre": "Serie 80",
+    "perfiles": {
+      "estandar": [
+        {"n": "m fija corrediza", "c": "3185", "p": 3.64},
+        {"n": "m doble corrediza", "c": "3188", "p": 4.45},
+        {"n": "puente standar", "c": "5283", "p": 8.26},
+        {"n": "puente doble corr", "c": "5284", "p": 10.14},
+        {"n": "riel inferior", "c": "8413", "p": 1.86},
+        {"n": "riel doble", "c": "8444", "p": 3.51},
+        {"n": "u-12", "c": "u-12", "p": 2.30},
+        {"n": "perfil H", "c": "8220", "p": 5.55},
+        {"n": "portafelpa", "c": "8116", "p": 0.81},
+        {"n": "angulo", "c": "4104", "p": 0.83},
+        {"n": "soporte", "c": "0000", "p": 20.00},
+        {"n": "U-13", "c": "U-13", "p": 2.50},
+        {"n": "u bajita", "c": "3206", "p": 2.00}
+      ],
+      "pesados": [
+        {"n": "m fija corrediza", "c": "3185", "p": 3.64},
+        {"n": "m doble corrediza", "c": "3188", "p": 4.45},
+        {"n": "puente pesado", "c": "5282", "p": 10.54},
+        {"n": "puente doble corr", "c": "5284", "p": 10.14},
+        {"n": "riel inferior", "c": "83132", "p": 2.77},
+        {"n": "riel doble", "c": "8445", "p": 3.61},
+        {"n": "U baja", "c": "3003", "p": 2.80},
+        {"n": "perfil H", "c": "8221", "p": 6.38},
+        {"n": "portafelpa", "c": "8115", "p": 0.85},
+        {"n": "ángulo", "c": "4103", "p": 1.02},
+        {"n": "soporte", "c": "0000", "p": 20.00},
+        {"n": "u-alta", "c": "7955", "p": 3.00},
+        {"n": "u alta pesada", "c": "3009", "p": 3.50}
+      ]
+    },
+    "accesorios": {
+      "estandar": [
+        {"n": "Seguro F C", "c": "s-s", "p": 2.50},
+        {"n": "Seguro C C", "c": "s-b", "p": 1.50},
+        {"n": "Garruchas", "c": "r-15", "p": 1.05},
+        {"n": "Plaquitas", "c": "p-q", "p": 0.50}
+      ],
+      "pesados": [
+        {"n": "Seguro F C", "c": "s-s", "p": 2.50},
+        {"n": "Seguro C C", "c": "s-b", "p": 1.50},
+        {"n": "Garruchas", "c": "r-15", "p": 1.05},
+        {"n": "Plaquitas", "c": "p-q", "p": 0.50}
+      ]
+    },
+    "tiras": {
+      "estandar": [
+        {"n": "Felpa 10", "c": "f-10", "p": 0.50},
+        {"n": "Felpa 15", "c": "f-15", "p": 0.75}
+      ],
+      "pesados": [
+        {"n": "Felpa 10", "c": "f-10", "p": 0.50},
+        {"n": "Felpa 15", "c": "f-15", "p": 0.75}
+      ]
+    },
+    "vidrios": [
+      {"n": "Incoloro 2 mm", "p": 1.50},
+      {"n": "Incoloro 4 mm", "p": 3.00},
+      {"n": "Incoloro 5.5 mm", "p": 4.50},
+      {"n": "Reflejante 6 mm", "p": 8.50},
+      {"n": "Catedral 4 mm", "p": 5.00}
+    ]
+  },
+  "serie60": {
+    "nombre": "Serie 60",
+    "perfiles": {
+      "estandar": [
+        {"n": "m fija corrediza", "c": "3185", "p": 3.64},
+        {"n": "m doble corrediza", "c": "3188", "p": 4.45},
+        {"n": "puente standar", "c": "5283", "p": 8.26},
+        {"n": "puente doble corr", "c": "5284", "p": 10.14},
+        {"n": "riel inferior", "c": "8413", "p": 1.86},
+        {"n": "riel doble", "c": "8444", "p": 3.51},
+        {"n": "u-12", "c": "u-12", "p": 2.30},
+        {"n": "perfil H", "c": "8220", "p": 5.55},
+        {"n": "portafelpa", "c": "8116", "p": 0.81},
+        {"n": "angulo", "c": "4104", "p": 0.83},
+        {"n": "soporte", "c": "0000", "p": 20.00},
+        {"n": "U-13", "c": "U-13", "p": 2.50},
+        {"n": "u bajita", "c": "3206", "p": 2.00}
+      ],
+      "pesados": [
+        {"n": "m fija corrediza", "c": "3185", "p": 3.64},
+        {"n": "m doble corrediza", "c": "3188", "p": 4.45},
+        {"n": "puente pesado", "c": "5282", "p": 10.54},
+        {"n": "puente doble corr", "c": "5284", "p": 10.14},
+        {"n": "riel inferior", "c": "83132", "p": 2.77},
+        {"n": "riel doble", "c": "8445", "p": 3.61},
+        {"n": "U baja", "c": "3003", "p": 2.80},
+        {"n": "perfil H", "c": "8221", "p": 6.38},
+        {"n": "portafelpa", "c": "8115", "p": 0.85},
+        {"n": "ángulo", "c": "4103", "p": 1.02},
+        {"n": "soporte", "c": "0000", "p": 20.00},
+        {"n": "u-alta", "c": "7955", "p": 3.00},
+        {"n": "u alta pesada", "c": "3009", "p": 3.50}
+      ]
+    },
+    "accesorios": {
+      "estandar": [
+        {"n": "Seguro F C", "c": "s-s", "p": 2.50},
+        {"n": "Seguro C C", "c": "s-b", "p": 1.50},
+        {"n": "Garruchas", "c": "r-15", "p": 1.05},
+        {"n": "Plaquitas", "c": "p-q", "p": 0.50}
+      ],
+      "pesados": [
+        {"n": "Seguro F C", "c": "s-s", "p": 2.50},
+        {"n": "Seguro C C", "c": "s-b", "p": 1.50},
+        {"n": "Garruchas", "c": "r-15", "p": 1.05},
+        {"n": "Plaquitas", "c": "p-q", "p": 0.50}
+      ]
+    },
+    "tiras": {
+      "estandar": [
+        {"n": "Felpa 10", "c": "f-10", "p": 0.50},
+        {"n": "Felpa 15", "c": "f-15", "p": 0.75}
+      ],
+      "pesados": [
+        {"n": "Felpa 10", "c": "f-10", "p": 0.50},
+        {"n": "Felpa 15", "c": "f-15", "p": 0.75}
+      ]
+    },
+    "vidrios": [
+      {"n": "Incoloro 2 mm", "p": 1.50},
+      {"n": "Incoloro 4 mm", "p": 3.00},
+      {"n": "Incoloro 5.5 mm", "p": 4.50},
+      {"n": "Reflejante 6 mm", "p": 8.50},
+      {"n": "Catedral 4 mm", "p": 5.00}
+    ]
+  }
+}
