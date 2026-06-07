@@ -1534,8 +1534,15 @@
                 const esCompleto = coloresCompletos.includes(color);
                 const item = esCompleto ? { ...itemCompleto, color } : { ...itemBase, color };
 
-                // Buscar si el item ya existe en este color por nombre+código
-                const idxEnColor = datosGuardados[key].findIndex(i => i.nombre === itemCompleto.nombre && i.codigo === itemCompleto.codigo);
+                // Buscar si el item ya existe en este color por código (o por nombre si no hay código)
+                const idxEnColor = datosGuardados[key].findIndex(i => {
+                    // Si hay código, buscar solo por código (el código es el identificador principal)
+                    if (itemCompleto.codigo && itemCompleto.codigo !== '—') {
+                        return i.codigo === itemCompleto.codigo;
+                    }
+                    // Si no hay código, buscar por nombre
+                    return i.nombre === itemCompleto.nombre;
+                });
                 if (idxEnColor >= 0) {
                     // Ya existe: actualizar según corresponda
                     if (esCompleto) {
@@ -1555,6 +1562,7 @@
         }
 
         function navegarColorForm(direccion) {
+
             const categoria = document.getElementById('categoriaSelect').value;
             const colores = coloresPorCategoria[categoria];
             if (!colores) return;
@@ -2541,8 +2549,15 @@
                 const esCompleto = coloresCompletos.includes(color);
                 const item = esCompleto ? { ...itemCompleto, color: color } : { ...itemBase, color: color };
 
-                // Buscar si el item ya existe en este color por nombre+código
-                const idxEnColor = datosGuardados[key].findIndex(i => i.nombre === itemCompleto.nombre && i.codigo === itemCompleto.codigo);
+            // Buscar si el item ya existe en este color por código (o por nombre si no hay código)
+                const idxEnColor = datosGuardados[key].findIndex(i => {
+                    // Si hay código, buscar solo por código (el código es el identificador principal)
+                    if (itemCompleto.codigo && itemCompleto.codigo !== '—') {
+                        return i.codigo === itemCompleto.codigo;
+                    }
+                    // Si no hay código, buscar por nombre
+                    return i.nombre === itemCompleto.nombre;
+                });
                 if (idxEnColor >= 0) {
                     // Ya existe: actualizar según corresponda
                     if (esCompleto) {
