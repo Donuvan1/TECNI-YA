@@ -2734,109 +2734,106 @@ if (radioPesados) {
     });
 }
 // ========== RENDERIZAR RESUMEN DE PRODUCCIÓN ==========
-// ========== RENDERIZAR RESUMEN DE PRODUCCIÓN (COMPACTO) ==========
+// ========== RENDERIZAR RESUMEN DE PRODUCCIÓN (COMPACTO - estilo sistema) ==========
 function renderResumenS80() {
     const contenedor = document.getElementById('contenedor_resumen_s80');
     if (!contenedor) return;
     
-    // ========== DATOS DEL CLIENTE/PEDIDO ==========
+    let texto = '';
+    let totalGeneral = 0;
+    
+    // ========== CLIENTE / PEDIDO ==========
     const nombre = document.getElementById('nombre_ventana')?.value || '1';
-    const cantidad = document.getElementById('cantidad')?.value || '1';
     const colorSelect = document.getElementById('color_aluminio');
-    let color = 'Blanco';
-    if (colorSelect) {
-        const selectedOption = colorSelect.options[colorSelect.selectedIndex];
-        color = selectedOption ? selectedOption.text : 'Blanco';
-    }
+    const color = colorSelect?.options[colorSelect.selectedIndex]?.text || 'Blanco';
     const pedidoSelect = document.getElementById('pedido');
-    let pedidoTexto = 'Ventanas Sistema';
+    let pedidoTexto = '';
     if (pedidoSelect) {
         const selectedOption = pedidoSelect.options[pedidoSelect.selectedIndex];
         pedidoTexto = selectedOption ? selectedOption.text : 'Ventanas Sistema';
     }
+    const cantidadVentanas = document.getElementById('cantidad')?.value || '1';
     
-    // ========== MODELO ==========
-    const hojas = parseInt(document.getElementById('cant_hojas_s80')?.value) || 2;
-    const fijas = parseInt(document.getElementById('cant_fijas_s80')?.value) || 0;
-    const corredizas = hojas - fijas;
+    const hojas = document.getElementById('cant_hojas_s80')?.value || '2';
+    const fijas = document.getElementById('cant_fijas_s80')?.value || '0';
+    const corredizas = parseInt(hojas) - parseInt(fijas);
     let modelo = '';
-    if (fijas > 0 && corredizas > 0) modelo = `${fijas}F + ${corredizas}C`;
-    else if (fijas > 0) modelo = `${fijas}F`;
+    if (parseInt(fijas) > 0 && corredizas > 0) modelo = `${fijas}F + ${corredizas}C`;
+    else if (parseInt(fijas) > 0) modelo = `${fijas}F`;
     else if (corredizas > 0) modelo = `${corredizas}C`;
     else modelo = `${hojas}H`;
     
-    let lineas = [];
-    let totalGeneral = 0;
+    texto += 'RESUMEN DE PRODUCCIÓN\n\n';
     
-    // Cabecera
-    lineas.push(`${'='.repeat(50)}`);
-    lineas.push(`Cliente/Nombre: ${nombre}`);
-    lineas.push(`Color: ${color}`);
-    lineas.push(`Pedido: ${pedidoTexto}`);
-    lineas.push(`Modelo: ${modelo}`);
-    lineas.push(`Cantidad: ${cantidad} und`);
-    lineas.push(``);
+    texto += `Cliente/Nombre: ${nombre}\n`;
+    texto += `Color: ${color}\n`;
+    texto += `Pedido: ${pedidoTexto}\n`;
+    texto += `Modelo: ${modelo}\n`;
+    texto += `Cantidad: ${cantidadVentanas} und\n\n`;
     
     // ========== ALUMINIOS ==========
     const listaAluminios = document.getElementById('lista_requeridos_body_s80');
     if (listaAluminios) {
-        let items = [];
+        let aluminiosTexto = '';
+        
         listaAluminios.querySelectorAll('li').forEach(item => {
             if (item.classList.contains('border-top')) return;
+            if (item.innerText.includes('TOTAL ALUMINIOS')) return;
             
-            const nombreDiv = item.querySelector('.col-5 .text-uppercase');
-            let perfil = nombreDiv ? nombreDiv.innerText.trim() : '';
-            if (!perfil) {
-                const nombreSpan = item.querySelector('.col-5');
-                perfil = nombreSpan ? nombreSpan.innerText.trim() : '';
-            }
-            
+            // Extraer código (badge bg-secondary)
             const codigoSpan = item.querySelector('.badge.bg-secondary');
             let codigo = codigoSpan ? codigoSpan.innerText.replace('Código:', '').trim() : '';
             
-            const medidaSpan = item.querySelector('.text-info.fw-bold');
+            // Extraer medida
+            let medidaSpan = item.querySelector('.text-info.fw-bold');
             let medida = medidaSpan ? medidaSpan.innerText.trim() : '';
+            const medidaSinCm = medida.replace(' cm', '');
             
+            // Extraer cantidad
             const cantSpan = item.querySelector('.badge.bg-warning');
-            let cantidadItem = cantSpan ? cantSpan.innerText.replace('x', '').trim() : '1';
+            let cantidad = cantSpan ? cantSpan.innerText.replace('x', '').trim() : '1';
             
+            // Extraer subtotal
             const totalSpan = item.querySelector('.text-success.fw-bold');
             let subtotal = 0;
             if (totalSpan) {
                 subtotal = parseFloat(totalSpan.innerText.replace('S/.', '').trim());
             }
             
-            if (perfil && subtotal > 0) {
+            if (codigo && subtotal > 0 && medidaSinCm && medidaSinCm !== '0') {
+                const linea = `${codigo.padEnd(8)} ${medidaSinCm.padEnd(8)} =${cantidad.padEnd(4)} S/. ${subtotal.toFixed(2)}`;
+                aluminiosTexto += linea + '\n';
                 totalGeneral += subtotal;
-                items.push(`${perfil.padEnd(22)} ${codigo.padEnd(8)} ${medida.padEnd(8)} x${cantidadItem.padEnd(4)} S/. ${subtotal.toFixed(2)}`);
             }
         });
         
-        if (items.length > 0) {
-            lineas.push(`--- ALUMINIOS ---`);
-            lineas.push(...items);
-            lineas.push(``);
+        if (aluminiosTexto) {
+            texto += '--- ALUMINIOS ---\n';
+            texto += aluminiosTexto + '\n';
         }
     }
     
     // ========== VIDRIOS ==========
     const listaVidrios = document.getElementById('lista_vidrios_req_body_s80');
     if (listaVidrios) {
-        let items = [];
+        let vidriosTexto = '';
+        let totalVidrios = 0;
+        
         listaVidrios.querySelectorAll('li').forEach(item => {
             if (item.classList.contains('border-top')) return;
             
             const tipoDiv = item.querySelector('.fw-bold.text-uppercase');
-            let tipo = tipoDiv ? tipoDiv.innerText.trim() : '';
+            const tipo = tipoDiv ? tipoDiv.innerText.trim() : '';
             
             const vidrioSpan = item.querySelector('.small.text-muted');
             let vidrio = vidrioSpan ? vidrioSpan.innerText.trim() : '';
+            if (vidrio.length > 20) vidrio = vidrio.substring(0, 18) + '..';
             
             const medidaSpan = item.querySelector('.text-success.fw-bold');
             let medida = medidaSpan ? medidaSpan.innerText.trim() : '';
             
             const cantSpan = item.querySelector('.badge.bg-secondary');
-            let cantidadItem = cantSpan ? cantSpan.innerText.replace('Cant:', '').trim() : '1';
+            let cantidad = cantSpan ? cantSpan.innerText.replace('Cant:', '').trim() : '1';
             
             const totalSpan = item.querySelector('.col-4.text-end.text-success.fw-bold');
             let subtotal = 0;
@@ -2844,34 +2841,42 @@ function renderResumenS80() {
                 subtotal = parseFloat(totalSpan.innerText.replace('S/.', '').trim());
             }
             
-            if (tipo && subtotal > 0) {
-                totalGeneral += subtotal;
-                items.push(`${vidrio.padEnd(20)} ${tipo.padEnd(14)} ${medida.padEnd(15)} x${cantidadItem.padEnd(4)} S/. ${subtotal.toFixed(2)}`);
+            if (subtotal > 0) {
+                totalVidrios += subtotal;
+                let tipoAbrev = tipo;
+                if (tipo === 'FIJA') tipoAbrev = 'F';
+                else if (tipo === 'CORREDIZA') tipoAbrev = 'C';
+                
+                const tipoMedida = `${tipoAbrev}- ${medida} =${cantidad}`;
+                const linea = `${vidrio.padEnd(20)} ${tipoMedida.padEnd(20)} S/. ${subtotal.toFixed(2)}`;
+                vidriosTexto += linea + '\n';
             }
         });
         
-        if (items.length > 0) {
-            lineas.push(`--- VIDRIOS ---`);
-            lineas.push(...items);
-            lineas.push(``);
+        if (vidriosTexto) {
+            texto += '--- VIDRIOS ---\n';
+            texto += vidriosTexto + '\n';
+            totalGeneral += totalVidrios;
         }
     }
     
     // ========== ACCESORIOS ==========
     const listaAccesorios = document.getElementById('lista_accesorios_req_body_s80');
     if (listaAccesorios) {
-        let items = [];
+        let accesoriosTexto = '';
+        let totalAccesorios = 0;
+        
         listaAccesorios.querySelectorAll('li').forEach(item => {
             if (item.classList.contains('border-top')) return;
             
             const nombreDiv = item.querySelector('.col-5');
-            let nombre = nombreDiv ? nombreDiv.innerText.trim() : '';
+            const nombre = nombreDiv ? nombreDiv.innerText.trim() : '';
             
             const codigoSpan = item.querySelector('.col-3 .badge');
-            let codigo = codigoSpan ? codigoSpan.innerText.trim() : '';
+            const codigo = codigoSpan ? codigoSpan.innerText.trim() : '';
             
             const cantSpan = item.querySelector('.col-2 .badge');
-            let cantidadItem = cantSpan ? cantSpan.innerText.trim() : '1';
+            let cantidad = cantSpan ? cantSpan.innerText.trim() : '1';
             
             const totalSpan = item.querySelector('.col-2.text-end.text-success.fw-bold');
             let subtotal = 0;
@@ -2880,72 +2885,64 @@ function renderResumenS80() {
             }
             
             if (nombre && subtotal > 0) {
-                totalGeneral += subtotal;
-                items.push(`${nombre.padEnd(25)} ${codigo.padEnd(12)} x${cantidadItem.padEnd(6)} S/. ${subtotal.toFixed(2)}`);
+                totalAccesorios += subtotal;
+                const linea = `${nombre.padEnd(18)} =${cantidad.padEnd(6)} S/. ${subtotal.toFixed(2)}`;
+                accesoriosTexto += linea + '\n';
             }
         });
         
-        if (items.length > 0) {
-            lineas.push(`--- ACCESORIOS ---`);
-            lineas.push(...items);
-            lineas.push(``);
+        if (accesoriosTexto) {
+            texto += '--- ACCESORIOS ---\n';
+            texto += accesoriosTexto + '\n';
+            totalGeneral += totalAccesorios;
         }
     }
     
-            // ========== OBTENER PRECIOS DE TIRAS ==========
+    // ========== TIRAS ==========
     const tipoAluminio = document.querySelector('input[name="opt_alum_s80"]:checked')?.value || 'estandar';
     const tirasConfig = configuracionCompleta?.serie80?.tiras?.[tipoAluminio] || [];
     const precioFelpa = tirasConfig.find(t => t.n === 'felpa hermetik')?.p || 0;
-const precioBurlete = tirasConfig.find(t => t.n === 'burlete cuña S-80')?.p || 0;
+    const precioBurlete = tirasConfig.find(t => t.n === 'burlete cuña S-80')?.p || 0;
     
-    // ========== LEER SUBTOTALES DE TIRAS REQUERIDAS ==========
     let totalFelpaMetros = 0;
     let totalBurleteMetros = 0;
     
     const listaTiras = document.getElementById('lista_tiras_req_body_s80');
     if (listaTiras) {
         listaTiras.querySelectorAll('li').forEach(item => {
-            const texto = item.innerText;
-            if (texto.includes('SUBTOTAL FELPA:')) {
-                const match = texto.match(/(\d+(?:\.\d+)?)\s*m/);
+            const textoItem = item.innerText;
+            if (textoItem.includes('SUBTOTAL FELPA:')) {
+                const match = textoItem.match(/(\d+(?:\.\d+)?)\s*m/);
                 if (match) totalFelpaMetros = parseFloat(match[1]);
             }
-            if (texto.includes('SUBTOTAL BURLETE:')) {
-                const match = texto.match(/(\d+(?:\.\d+)?)\s*m/);
+            if (textoItem.includes('SUBTOTAL BURLETE:')) {
+                const match = textoItem.match(/(\d+(?:\.\d+)?)\s*m/);
                 if (match) totalBurleteMetros = parseFloat(match[1]);
             }
         });
     }
     
-    const totalFelpaSoles = totalFelpaMetros * precioFelpa;
-    const totalBurleteSoles = totalBurleteMetros * precioBurlete;
-    
-    // ========== TIRAS ==========
-    let tirasItems = [];
-    
+    let tirasTexto = '';
     if (totalFelpaMetros > 0) {
-        tirasItems.push(`Felpa Hermetik         F-HER     ${totalFelpaMetros.toFixed(2)} m   S/. ${totalFelpaSoles.toFixed(2)}`);
-        totalGeneral += totalFelpaSoles;
+        const costo = totalFelpaMetros * precioFelpa;
+        tirasTexto += `Felpa Hermetik         F-HER     ${totalFelpaMetros.toFixed(2)} m  S/. ${costo.toFixed(2)}\n`;
+        totalGeneral += costo;
     }
-    
     if (totalBurleteMetros > 0) {
-        tirasItems.push(`Burlete Cuña           bu-3mm    ${totalBurleteMetros.toFixed(2)} m   S/. ${totalBurleteSoles.toFixed(2)}`);
-        totalGeneral += totalBurleteSoles;
+        const costo = totalBurleteMetros * precioBurlete;
+        tirasTexto += `Burlete Cuña           bu-3mm    ${totalBurleteMetros.toFixed(2)} m  S/. ${costo.toFixed(2)}\n`;
+        totalGeneral += costo;
     }
     
-    if (tirasItems.length > 0) {
-        lineas.push(`--- TIRAS ---`);
-        lineas.push(...tirasItems);
-        lineas.push(``);
+    if (tirasTexto) {
+        texto += '--- TIRAS ---\n';
+        texto += tirasTexto + '\n';
     }
-    
     
     // ========== TOTAL GENERAL ==========
-    lineas.push(`${'='.repeat(50)}`);
-    lineas.push(`TOTAL GENERAL: S/. ${totalGeneral.toFixed(2)}`);
-    lineas.push(`${'='.repeat(50)}`);
+    texto += `\nTOTAL GENERAL: S/. ${totalGeneral.toFixed(2)}\n`;
     
-    contenedor.innerHTML = lineas.join('\n');
+    contenedor.innerHTML = texto;
 }
 
 // ========== EVENTOS PARA RESUMEN ==========
