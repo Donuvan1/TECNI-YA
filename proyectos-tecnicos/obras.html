@@ -577,7 +577,8 @@ async function cargarConfiguracion() {
                 const user = auth.currentUser;
                 if (!user) { cargarVidriosDesdeLocalStorage(); return; }
                 
-                const doc = await db.collection('usuarios').doc(user.uid).get();
+                const usuarioUID = localStorage.getItem('tecniya_uid') || user.uid;
+                const doc = await db.collection('baseDatosV2').doc(usuarioUID).get();
                 if (doc.exists && doc.data().items) {
                     const items = doc.data().items;
                     const clavesVidrio = ['planchas_general'];
