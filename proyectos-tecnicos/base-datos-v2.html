@@ -592,6 +592,11 @@
             color: #000;
         }
 
+        .btn-firestore {
+            background: #bb86fc;
+            color: #000;
+        }
+
         /* ========== CÍRCULOS DE COLORES ========== */
         .colores-container {
             display: none;
@@ -873,6 +878,7 @@
         <div class="acciones" id="accionesContainer" style="display:none;">
             <button class="btn-accion btn-importar" onclick="importarDatos()">📥 Importar</button>
             <button class="btn-accion btn-agregar" id="btnAgregar" onclick="agregarNuevo()">➕ Agregar Nuevo</button>
+            <button class="btn-accion btn-firestore" onclick="subirAhora()">☁️ Subir a Firestore</button>
         </div>
 
         <!-- CÍRCULOS DE COLORES (se muestran según categoría) -->
@@ -2182,6 +2188,19 @@
         }
 
         // ========== FUNCIONES DE BOTONES ==========
+
+        function subirAhora() {
+            if (typeof window.guardarEnFirestore === 'function') {
+                mostrarToast('☁️ Subiendo a Firestore...');
+                window.guardarEnFirestore().then(() => {
+                    mostrarToast('✅ Datos subidos a Firestore');
+                }).catch(e => {
+                    mostrarToast('❌ Error: ' + e.message);
+                });
+            } else {
+                mostrarToast('❌ Firestore no disponible');
+            }
+        }
 
         function importarDatos() {
             mostrarModalImportar();
