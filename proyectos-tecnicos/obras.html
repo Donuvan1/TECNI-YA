@@ -189,10 +189,12 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
     
-    // Exponer db y auth globalmente para que el otro script pueda usarlos
+    // Exponer db, auth y funciones de Firestore globalmente
     window.db = db;
     window.auth = auth;
     window.firebaseAuth = auth;
+    window.getDoc = getDoc;
+    window.doc = doc;
 </script>
 
 <div class="container py-4">
@@ -728,9 +730,10 @@ function cargarConfiguracion() {
             if (!user) { cargarVidriosDesdeLocalStorage(); return; }
             
             const usuarioUID = localStorage.getItem('tecniya_uid') || user.uid;
-            const doc = await db.collection('baseDatosV2').doc(usuarioUID).get();
-            if (doc.exists && doc.data().items) {
-                const items = doc.data().items;
+            // Usar sintaxis modular de Firebase v11
+            const docSnap = await window.getDoc(window.doc(db, 'baseDatosV2', usuarioUID));
+            if (docSnap.exists() && docSnap.data().items) {
+                const items = docSnap.data().items;
                 const clavesVidrio = ['planchas_general'];
                 let vidriosBD = [];
                 
