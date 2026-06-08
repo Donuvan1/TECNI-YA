@@ -2933,6 +2933,9 @@ if (btnImprimir) {
     window.calcularBurleteCuna = calcularBurleteCuna;
     window.renderResumenS80 = renderResumenS80;
     window.seleccionarVidrioS80 = seleccionarVidrioS80;
+    window.buscarVidrioS80 = buscarVidrioS80;
+    window.mostrarListaVidriosS80 = mostrarListaVidriosS80;
+    window.cargarCostosVidrios = cargarCostosVidrios;
 }
 
 function setMaterialReqS80(tipo) {
