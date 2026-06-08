@@ -312,7 +312,8 @@
             
             const script = document.createElement('script');
             script.id = 'script-seccion';
-            script.src = archivoJs;
+            // Agregar timestamp para evitar caché
+            script.src = archivoJs + '?v=' + Date.now();
             document.body.appendChild(script);
             
             script.onload = function() {
