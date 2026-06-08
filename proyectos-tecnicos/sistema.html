@@ -45,15 +45,14 @@
         </div>
     </div>
 
-    <div class="form-check form-switch mb-3">
-        <input class="form-check-input" type="checkbox" id="switch_vidrios" onchange="gestionarVidriosUI()">
-        <label class="form-check-label texto-resaltado" for="switch_vidrios">COSTO DE VIDRIOS (S/. P2)</label>
-    </div>
-    <div id="seccion_vidrios" class="seccion-oculta mb-4">
-        <div class="contenedor-materiales">
-            <p class="text-center small text-muted">Seleccione el vidrio para el cálculo automático</p>
-            <ul class="list-group list-group-flush" id="tabla_vidrios_body"></ul>
+    <div class="mb-3">
+        <label class="form-label texto-resaltado">COSTO DE VIDRIOS (S/. P2)</label>
+        <div class="input-group">
+            <input type="text" class="form-control" id="buscador_vidrios_sistema" placeholder="Escriba para buscar vidrio..." oninput="buscarVidrioSistema(this.value)" onfocus="this.select()">
+            <button class="btn btn-outline-secondary" type="button" onclick="mostrarListaVidriosSistema()" title="Ver lista completa">📋</button>
         </div>
+        <div id="lista_vidrios_sistema" class="list-group mt-1" style="max-height: 200px; overflow-y: auto; display: none;"></div>
+        <ul class="list-group list-group-flush mt-2" id="tabla_vidrios_body"></ul>
     </div>
 
     <div class="row g-2 mb-3">

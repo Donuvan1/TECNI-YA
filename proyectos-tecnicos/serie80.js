@@ -167,36 +167,121 @@ function inicializarSerie80(configuracion) {
     }
     
     // ========== VARIABLES GLOBALES DEL MÓDULO ==========
-    let vidrioSeleccionadoIndexS80 = 0;
+    // Buscar "Incoloro 5.5 mm" en el array de vidrios para ponerlo por defecto
+    let vidrioSeleccionadoIndexS80 = (() => {
+        const vidrios = configuracionCompleta?.serie80?.vidrios || [];
+        const idx = vidrios.findIndex(v => v.n.toLowerCase().includes("5.5"));
+        return idx >= 0 ? idx : 0;
+    })();
     let vidriosListaS80 = [];
     
     function cargarCostosVidrios() {
         if (!configuracionCompleta) return;
         
         const vidrios = configuracionCompleta.serie80?.vidrios || [];
+        const buscador = document.getElementById('buscador_vidrios_s80');
         const tbody = document.getElementById('tabla_vidrios_body_s80');
         
         if (tbody) {
-            tbody.innerHTML = vidrios.map((v, index) => `
-                <li class="list-group-item d-flex align-items-center">
-                    <div class="col-1">
-                        <input class="form-check-input" type="radio" name="radioVidrioS80" 
-                        ${index === vidrioSeleccionadoIndexS80 ? 'checked' : ''} onchange="cambiarVidrioSeleccionadoS80(${index})">
-                    </div>
-                    <div class="col-6 text-uppercase small">
-                        <span class="num-fila">${index + 1}. </span>${v.n}
-                    </div>
-                    <div class="col-5 text-end">
-                        <input type="number" step="0.01" class="caja-dato price-input w-75" 
-                        value="${v.p.toFixed(2)}" oninput="actualizarPrecioVidrioS80(this, ${index})" onfocus="this.select()">
-                    </div>
-                </li>
-            `).join('');
+            if (vidrioSeleccionadoIndexS80 >= 0 && vidrioSeleccionadoIndexS80 < vidrios.length) {
+                const v = vidrios[vidrioSeleccionadoIndexS80];
+                tbody.innerHTML = `
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><span class="num-fila">🪟</span> ${v.n}</span>
+                        <span class="corte-medida">S/ ${v.p.toFixed(2)} / P2</span>
+                    </li>
+                `;
+                if (buscador) buscador.value = v.n;
+            } else {
+                tbody.innerHTML = '<li class="list-group-item text-center text-muted">Seleccione un vidrio</li>';
+                if (buscador) buscador.value = '';
+            }
         }
     }
     
-    function cambiarVidrioSeleccionadoS80(index) {
+    function buscarVidrioS80(texto) {
+        const vidrios = configuracionCompleta?.serie80?.vidrios || [];
+        const listaDiv = document.getElementById('lista_vidrios_s80');
+        
+        if (!texto || texto.trim() === '') {
+            listaDiv.style.display = 'none';
+            return;
+        }
+        
+        const filtro = texto.toLowerCase().trim();
+        const resultados = vidrios
+            .map((v, i) => ({ v, i }))
+            .filter(item => item.v.n.toLowerCase().includes(filtro));
+        
+        if (resultados.length === 0) {
+            listaDiv.innerHTML = '<div class="list-group-item text-muted">Sin resultados</div>';
+            listaDiv.style.display = 'block';
+            return;
+        }
+        
+        listaDiv.innerHTML = resultados.map(item => 
+            `<div class="list-group-item list-group-item-action" onclick="seleccionarVidrioS80(${item.i})" style="cursor: pointer; padding: 6px 12px; font-size: 0.85rem;">
+                ${item.v.n}
+            </div>`
+        ).join('');
+        listaDiv.style.display = 'block';
+    }
+    
+    function mostrarListaVidriosS80() {
+        const vidrios = configuracionCompleta?.serie80?.vidrios || [];
+        const listaDiv = document.getElementById('lista_vidrios_s80');
+        
+        if (listaDiv.style.display === 'block') {
+            listaDiv.style.display = 'none';
+            return;
+        }
+        
+        listaDiv.innerHTML = vidrios.map((v, i) => 
+            `<div class="list-group-item list-group-item-action" onclick="seleccionarVidrioS80(${i})" style="cursor: pointer; padding: 6px 12px; font-size: 0.85rem;">
+                ${v.n}
+            </div>`
+        ).join('');
+        listaDiv.style.display = 'block';
+    }
+    
+    function seleccionarVidrioS80(index) {
+        const vidrios = configuracionCompleta?.serie80?.vidrios || [];
+        
+        if (index < 0 || index >= vidrios.length) {
+            vidrioSeleccionadoIndexS80 = -1;
+            const tbody = document.getElementById('tabla_vidrios_body_s80');
+            if (tbody) tbody.innerHTML = '<li class="list-group-item text-center text-muted">Seleccione un vidrio</li>';
+            document.getElementById('buscador_vidrios_s80').value = '';
+            document.getElementById('lista_vidrios_s80').style.display = 'none';
+            return;
+        }
+        
         vidrioSeleccionadoIndexS80 = index;
+        const v = vidrios[index];
+        
+        document.getElementById('buscador_vidrios_s80').value = v.n;
+        document.getElementById('lista_vidrios_s80').style.display = 'none';
+        
+        const tbody = document.getElementById('tabla_vidrios_body_s80');
+        if (tbody) {
+            tbody.innerHTML = `
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span><span class="num-fila">🪟</span> ${v.n}</span>
+                    <span class="corte-medida">S/ ${v.p.toFixed(2)} / P2</span>
+                </li>
+            `;
+        }
+        
+        // Siempre actualizar vidrios requeridos
+        if (typeof renderVidriosRequeridos === 'function') {
+            renderVidriosRequeridos();
+        }
+        
+        // Actualizar resumen si está visible
+        const switchResumen = document.getElementById('switch_resumen_s80');
+        if (switchResumen && switchResumen.checked && typeof renderResumenS80 === 'function') {
+            renderResumenS80();
+        }
     }
     
     function actualizarPrecioManualS80(input) {
@@ -280,20 +365,6 @@ function inicializarSerie80(configuracion) {
         });
     }
     
-        const switchVidrios = document.getElementById('switch_vidrios_s80');
-    if (switchVidrios) {
-        switchVidrios.addEventListener('change', () => {
-            toggleSeccion('switch_vidrios_s80', 'seccion_vidrios_s80');
-            cargarCostosVidrios();
-            // Inicializar el selector de vidrios cuando se abre la sección
-            if (switchVidrios.checked) {
-                setTimeout(() => {
-                    inicializarSelectorVidriosS80();
-                }, 100);
-            }
-        });
-    }
-    
     const radioEstandar = document.getElementById('alum_estandar_s80');
 const radioPesados = document.getElementById('alum_pesados_s80');
 
@@ -319,49 +390,6 @@ if (radioPesados) {
     cargarCostosAccesorios();
     cargarCostosTiras();
     cargarCostosVidrios();
-    // Inicializar selector de vidrios con búsqueda
-    function inicializarSelectorVidriosS80() {
-    const buscador = document.getElementById('buscador_vidrio_s80');
-    const listaContainer = document.getElementById('lista_vidrios_s80');
-    
-    if (!buscador) {
-        console.log('Selector de vidrios no encontrado, reintentando en 500ms...');
-        setTimeout(inicializarSelectorVidriosS80, 500);
-        return;
-    }
-    
-        buscador.addEventListener('click', () => {
-        console.log('Click en buscador, cargando lista...');
-        // Si hay un vidrio seleccionado, limpiar el campo al hacer clic
-        if (buscador.dataset.selectedValue) {
-            buscador.value = '';
-            buscador.dataset.selectedValue = '';
-        }
-        cargarListaVidriosS80(buscador.value);
-    });
-    
-    buscador.addEventListener('input', (e) => {
-        const texto = e.target.value;
-        // Si el texto actual es igual al valor seleccionado previamente, limpiar
-        if (texto === buscador.dataset.selectedValue) {
-            buscador.value = '';
-            cargarListaVidriosS80('');
-        } else {
-            cargarListaVidriosS80(texto);
-        }
-    });
-    
-    document.addEventListener('click', (e) => {
-        if (!buscador.contains(e.target) && !listaContainer.contains(e.target)) {
-            if (listaContainer) listaContainer.style.display = 'none';
-        }
-    });
-    
-    const vidrios = configuracionCompleta?.serie80?.vidrios || [];
-    if (vidrios.length > 0) {
-        seleccionarVidrioS80(0);
-    }
-}
     
     // ========== FUNCIÓN PARA VALIDAR COLOR ROJO ==========
     function validarColor(input, esInvalido) {
@@ -872,115 +900,6 @@ let anchoAbajoCorrediza = anchoPorHoja;
     }
     
     contenedor.innerHTML = html;
-}
-// ========== FUNCIONES PARA EL SELECTOR DE VIDRIOS CON BÚSQUEDA ==========
-    function cargarListaVidriosS80(filtro = '') {
-    const listaContainer = document.getElementById('lista_vidrios_s80');
-    if (!listaContainer) return;
-    
-    const vidrios = configuracionCompleta?.serie80?.vidrios || [];
-    
-    const filtroLower = filtro.toLowerCase();
-    const vidriosFiltrados = vidrios.filter((v) => {
-        return filtro === '' || v.n.toLowerCase().includes(filtroLower);
-    });
-    
-    if (vidriosFiltrados.length === 0) {
-        listaContainer.innerHTML = '<div class="list-group-item text-muted">No se encontraron vidrios</div>';
-        listaContainer.style.display = 'block';
-        return;
-    }
-    
-    listaContainer.innerHTML = vidriosFiltrados.map((v) => {
-        const originalIndex = vidrios.findIndex(vid => vid.n === v.n);
-        const isSelected = (originalIndex === vidrioSeleccionadoIndexS80);
-        return `
-            <div class="list-group-item vidrio-item" 
-                 data-index="${originalIndex}"
-                 style="cursor: pointer; background-color: ${isSelected ? '#0d6efd' : '#2c2c2c'}; color: white; padding: 10px; border: 1px solid #444; border-radius: 5px; margin-bottom: 5px;">
-                <div class="d-flex justify-content-between align-items-center">
-                    <span>${v.n}</span>
-                    <span class="badge bg-success">S/ ${v.p.toFixed(2)} / P2</span>
-                </div>
-            </div>
-        `;
-    }).join('');
-    
-    // Agregar eventos a los divs
-    listaContainer.querySelectorAll('.vidrio-item').forEach(div => {
-        div.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const index = parseInt(div.dataset.index);
-            seleccionarVidrioS80(index);
-            listaContainer.style.display = 'none';
-            document.getElementById('buscador_vidrio_s80').value = vidrios[index].n;
-        });
-    });
-    
-    listaContainer.style.display = 'block';
-}
-    
-    
-    function seleccionarVidrioS80(index) {
-    vidrioSeleccionadoIndexS80 = index;
-    const vidrios = configuracionCompleta?.serie80?.vidrios || [];
-    const vidrio = vidrios[index];
-    
-    if (vidrio) {
-        const buscador = document.getElementById('buscador_vidrio_s80');
-        if (buscador) {
-            buscador.value = vidrio.n;
-            buscador.dataset.selectedValue = vidrio.n;
-        }
-        
-        const tbody = document.getElementById('tabla_vidrios_body_s80');
-        if (tbody) {
-            tbody.innerHTML = `
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <span><span class="num-fila">🪟</span> ${vidrio.n}</span>
-                    <span class="corte-medida">S/ ${vidrio.p.toFixed(2)} / P2</span>
-                </li>
-            `;
-        }
-        
-        const switchVidriosReq = document.getElementById('switch_vidrios_req_s80');
-        if (switchVidriosReq && switchVidriosReq.checked) {
-            if (typeof renderVidriosRequeridos === 'function') {
-                renderVidriosRequeridos();
-            }
-        }
-    }
-}
-    
-    function inicializarSelectorVidriosS80() {
-    const buscador = document.getElementById('buscador_vidrio_s80');
-    const listaContainer = document.getElementById('lista_vidrios_s80');
-    
-    if (!buscador) {
-        console.log('Buscador no encontrado');
-        return;
-    }
-    
-    buscador.addEventListener('click', () => {
-        console.log('Click en buscador, cargando lista...');
-        cargarListaVidriosS80(buscador.value);
-    });
-    
-    buscador.addEventListener('input', (e) => {
-        console.log('Input en buscador:', e.target.value);
-        cargarListaVidriosS80(e.target.value);
-    });
-    
-    document.addEventListener('click', (e) => {
-        if (!buscador.contains(e.target) && !listaContainer.contains(e.target)) {
-            if (listaContainer) listaContainer.style.display = 'none';
-        }
-    });
-    
-    const vidrios = configuracionCompleta?.serie80?.vidrios || [];
-    if (vidrios.length > 0) {
-        seleccionarVidrioS80(0);
-    }
 }
  
 // ========== RENDERIZAR VIDRIOS REQUERIDOS ==========
@@ -3013,6 +2932,7 @@ if (btnImprimir) {
     window.calcularFelpaHermetik = calcularFelpaHermetik;
     window.calcularBurleteCuna = calcularBurleteCuna;
     window.renderResumenS80 = renderResumenS80;
+    window.seleccionarVidrioS80 = seleccionarVidrioS80;
 }
 
 function setMaterialReqS80(tipo) {

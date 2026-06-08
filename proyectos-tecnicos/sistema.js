@@ -64,7 +64,11 @@ const tiras = {
     ]
 };
 
-let vidrioSeleccionadoIndex = 0;
+// Buscar "Incoloro 5.5 mm" en el array de vidrios para ponerlo por defecto
+let vidrioSeleccionadoIndex = (() => {
+    const idx = vidrios.findIndex(v => v.n.toLowerCase().includes("5.5"));
+    return idx >= 0 ? idx : 0;
+})();
 let materialSeleccionadoReq = 'estandar';
 
 function gestionarMateriales() {
@@ -101,45 +105,107 @@ function gestionarMateriales() {
 }
 
 function gestionarVidriosUI() {
-    const sw = document.getElementById('switch_vidrios').checked;
-    document.getElementById('seccion_vidrios').classList.toggle('seccion-oculta', !sw);
+    if (!window.configuracionCompleta) return;
     
-    let vidriosActuales = [];
+    const datos = window.configuracionCompleta[window.tipoPedidoActual];
+    const vidriosActuales = (datos && datos.vidrios) ? datos.vidrios : vidrios;
+    const buscador = document.getElementById('buscador_vidrios_sistema');
+    const tbody = document.getElementById('tabla_vidrios_body');
     
-    if (window.configuracionCompleta && window.tipoPedidoActual) {
-        const datos = window.configuracionCompleta[window.tipoPedidoActual];
-        if (datos && datos.vidrios) {
-            vidriosActuales = datos.vidrios;
+    // Mostrar el vidrio seleccionado actualmente
+    if (tbody) {
+        if (vidrioSeleccionadoIndex >= 0 && vidrioSeleccionadoIndex < vidriosActuales.length) {
+            const v = vidriosActuales[vidrioSeleccionadoIndex];
+            tbody.innerHTML = `
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span><span class="num-fila">🪟</span> ${v.n}</span>
+                    <span class="corte-medida">S/ ${v.p.toFixed(2)} / P2</span>
+                </li>
+            `;
+            if (buscador) buscador.value = v.n;
+        } else {
+            tbody.innerHTML = '<li class="list-group-item text-center text-muted">Seleccione un vidrio</li>';
+            if (buscador) buscador.value = '';
         }
     }
-    
-    if (vidriosActuales.length === 0) {
-        vidriosActuales = vidrios;
-    }
-    
-    let html = "";
-    vidriosActuales.forEach((v, index) => {
-        const checkeado = (index === vidrioSeleccionadoIndex) ? 'checked' : '';
-        html += `
-        <li class="list-group-item d-flex align-items-center">
-            <div class="col-1">
-                <input class="form-check-input" type="radio" name="radioVidrio" 
-                ${checkeado} onchange="cambiarVidrioSeleccionado(${index})">
-            </div>
-            <div class="col-6 text-uppercase small">
-                <span class="num-fila">${index + 1}. </span>${v.n}
-            </div>
-            <div class="col-5 text-end">
-                <input type="number" step="0.01" class="caja-dato price-input w-75" 
-                value="${v.p.toFixed(2)}" oninput="actualizarPrecioVidrio(this, ${index})" onfocus="this.select()">
-            </div>
-        </li>`;
-    });
-    document.getElementById('tabla_vidrios_body').innerHTML = html;
 }
 
-function cambiarVidrioSeleccionado(index) {
+function buscarVidrioSistema(texto) {
+    const datos = window.configuracionCompleta ? window.configuracionCompleta[window.tipoPedidoActual] : null;
+    const vidriosActuales = (datos && datos.vidrios) ? datos.vidrios : vidrios;
+    const listaDiv = document.getElementById('lista_vidrios_sistema');
+    
+    if (!texto || texto.trim() === '') {
+        listaDiv.style.display = 'none';
+        return;
+    }
+    
+    const filtro = texto.toLowerCase().trim();
+    const resultados = vidriosActuales
+        .map((v, i) => ({ v, i }))
+        .filter(item => item.v.n.toLowerCase().includes(filtro));
+    
+    if (resultados.length === 0) {
+        listaDiv.innerHTML = '<div class="list-group-item text-muted">Sin resultados</div>';
+        listaDiv.style.display = 'block';
+        return;
+    }
+    
+    listaDiv.innerHTML = resultados.map(item => 
+        `<div class="list-group-item list-group-item-action" onclick="seleccionarVidrioSistema(${item.i})" style="cursor: pointer; padding: 6px 12px; font-size: 0.85rem;">
+            ${item.v.n}
+        </div>`
+    ).join('');
+    listaDiv.style.display = 'block';
+}
+
+function mostrarListaVidriosSistema() {
+    const datos = window.configuracionCompleta ? window.configuracionCompleta[window.tipoPedidoActual] : null;
+    const vidriosActuales = (datos && datos.vidrios) ? datos.vidrios : vidrios;
+    const listaDiv = document.getElementById('lista_vidrios_sistema');
+    
+    if (listaDiv.style.display === 'block') {
+        listaDiv.style.display = 'none';
+        return;
+    }
+    
+    listaDiv.innerHTML = vidriosActuales.map((v, i) => 
+        `<div class="list-group-item list-group-item-action" onclick="seleccionarVidrioSistema(${i})" style="cursor: pointer; padding: 6px 12px; font-size: 0.85rem;">
+            ${v.n}
+        </div>`
+    ).join('');
+    listaDiv.style.display = 'block';
+}
+
+function seleccionarVidrioSistema(index) {
+    const datos = window.configuracionCompleta ? window.configuracionCompleta[window.tipoPedidoActual] : null;
+    const vidriosActuales = (datos && datos.vidrios) ? datos.vidrios : vidrios;
+    
+    if (index < 0 || index >= vidriosActuales.length) {
+        vidrioSeleccionadoIndex = -1;
+        const tbody = document.getElementById('tabla_vidrios_body');
+        if (tbody) tbody.innerHTML = '<li class="list-group-item text-center text-muted">Seleccione un vidrio</li>';
+        document.getElementById('buscador_vidrios_sistema').value = '';
+        document.getElementById('lista_vidrios_sistema').style.display = 'none';
+        calcularTodo();
+        return;
+    }
+    
     vidrioSeleccionadoIndex = index;
+    const v = vidriosActuales[index];
+    
+    document.getElementById('buscador_vidrios_sistema').value = v.n;
+    document.getElementById('lista_vidrios_sistema').style.display = 'none';
+    
+    const tbody = document.getElementById('tabla_vidrios_body');
+    if (tbody) {
+        tbody.innerHTML = `
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span><span class="num-fila">🪟</span> ${v.n}</span>
+                <span class="corte-medida">S/ ${v.p.toFixed(2)} / P2</span>
+            </li>
+        `;
+    }
     calcularTodo();
 }
 
@@ -764,7 +830,16 @@ function renderVidriosRequeridos(qV, hI, hD, aI, aS, pVal, hV, hV_SP) {
     const cuerpo = document.getElementById('lista_vidrios_req_body');
     if (!cuerpo) return;
 
-    const vData = vidrios[vidrioSeleccionadoIndex];
+    let vData = null;
+    if (window.configuracionCompleta && window.tipoPedidoActual) {
+        const datos = window.configuracionCompleta[window.tipoPedidoActual];
+        if (datos && datos.vidrios && datos.vidrios[vidrioSeleccionadoIndex]) {
+            vData = datos.vidrios[vidrioSeleccionadoIndex];
+        }
+    }
+    if (!vData) {
+        vData = vidrios[vidrioSeleccionadoIndex];
+    }
     const incluirPuente = document.getElementById('incluir_en_calculos').checked;
     const esPuenteCorredizo = document.getElementById('radio_corr').checked;
     

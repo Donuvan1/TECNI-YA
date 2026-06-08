@@ -213,19 +213,60 @@
         
         async function cargarDeFirestore() {
             try {
-                // Cada usuario carga desde su propio documento usando su UID
+                // Intentar con SDK de Firebase primero
                 const docSnap = await getDoc(doc(db, FIRESTORE_COLLECTION, usuarioUID));
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     if (data.items && Object.keys(data.items).length > 0) {
                         localStorage.setItem('baseDatosItems', JSON.stringify(data.items));
-                        console.log('✅ Datos cargados desde Firestore para usuario:', usuarioUID);
+                        console.log('✅ Datos cargados desde Firestore (SDK) para usuario:', usuarioUID);
                         return true;
                     }
                 }
             } catch (e) {
-                console.warn('⚠️ Error al cargar de Firestore (sin conexión?):', e.message);
+                console.warn('⚠️ Error al cargar con SDK, intentando con API REST:', e.message);
             }
+            
+            // Fallback: intentar con API REST de Firestore (funciona desde file://)
+            try {
+                const projectId = 'proyecto-libertad-38c2a';
+                const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${FIRESTORE_COLLECTION}/${usuarioUID}`;
+                const response = await fetch(url);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.fields && data.fields.items) {
+                        // Convertir de formato Firestore REST a objeto normal
+                        const itemsMap = data.fields.items.mapValue.fields;
+                        const items = {};
+                        Object.keys(itemsMap).forEach(key => {
+                            const arrValue = itemsMap[key].arrayValue;
+                            if (arrValue && arrValue.values) {
+                                items[key] = arrValue.values.map(v => {
+                                    const mapVal = v.mapValue.fields;
+                                    const item = {};
+                                    Object.keys(mapVal).forEach(field => {
+                                        const val = mapVal[field];
+                                        if (val.stringValue !== undefined) item[field] = val.stringValue;
+                                        else if (val.integerValue !== undefined) item[field] = parseInt(val.integerValue);
+                                        else if (val.doubleValue !== undefined) item[field] = val.doubleValue;
+                                    });
+                                    return item;
+                                });
+                            }
+                        });
+                        if (Object.keys(items).length > 0) {
+                            localStorage.setItem('baseDatosItems', JSON.stringify(items));
+                            console.log('✅ Datos cargados desde Firestore (API REST) para usuario:', usuarioUID);
+                            return true;
+                        }
+                    }
+                } else {
+                    console.warn('⚠️ API REST respondió:', response.status, response.statusText);
+                }
+            } catch (e2) {
+                console.warn('⚠️ Error al cargar con API REST:', e2.message);
+            }
+            
             return false;
         }
         
