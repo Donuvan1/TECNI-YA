@@ -14,7 +14,7 @@
         .subtitulo { border-bottom: 2px solid #bb86fc; padding-bottom: 5px; margin-bottom: 20px; text-transform: uppercase; font-size: 1.2rem; }
         .texto-resaltado { color: #ffffff; font-weight: bold; }
         .seccion-oculta { display: none; }
-  o que quiero saber es      input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { -moz-appearance: textfield; }
         .contenedor-materiales { background-color: #252525; border: 1px solid #444; border-radius: 10px; padding: 15px; }
         .radio-materiales { color: #ffffff !important; background-color: #333; padding: 8px 12px; border-radius: 8px; border: 1px solid #555; display: inline-block; cursor: pointer; }
@@ -553,99 +553,245 @@ function guardarCambiosAdmin() {
     cerrarModalAdmin();
 }
 
-// Cargar materiales personalizados si existen
-// Cargar materiales personalizados si existen
-async function cargarConfiguracion() {
-    try {
-        const personalizados = localStorage.getItem('materiales_personalizados');
-        if (personalizados) {
+// ========== CONFIGURACIÓN BASE (hardcodeada, sin depender de materiales.json) ==========
+const CONFIGURACION_BASE = {
+    "sistema": {
+        "nombre": "Ventanas Sistema",
+        "perfiles": {
+            "estandar": [
+                {"n": "m fija corrediza", "c": "3185", "p": 3.64},
+                {"n": "m doble corrediza", "c": "3188", "p": 4.45},
+                {"n": "puente standar", "c": "5283", "p": 8.26},
+                {"n": "puente doble corr", "c": "5284", "p": 10.14},
+                {"n": "riel inferior", "c": "8413", "p": 1.86},
+                {"n": "riel doble", "c": "8444", "p": 3.51},
+                {"n": "u-12", "c": "u-12", "p": 2.30},
+                {"n": "perfil H", "c": "8220", "p": 5.55},
+                {"n": "portafelpa", "c": "8116", "p": 0.81},
+                {"n": "angulo", "c": "4104", "p": 0.83},
+                {"n": "soporte", "c": "0000", "p": 20.00},
+                {"n": "U-13", "c": "U-13", "p": 2.50},
+                {"n": "u bajita", "c": "3206", "p": 2.00}
+            ],
+            "pesados": [
+                {"n": "m fija corrediza", "c": "3185", "p": 3.64},
+                {"n": "m doble corrediza", "c": "3188", "p": 4.45},
+                {"n": "puente pesado", "c": "5282", "p": 10.54},
+                {"n": "puente doble corr", "c": "5284", "p": 10.14},
+                {"n": "riel inferior", "c": "83132", "p": 2.77},
+                {"n": "riel doble", "c": "8445", "p": 3.61},
+                {"n": "U baja", "c": "3003", "p": 2.80},
+                {"n": "perfil H", "c": "8221", "p": 6.38},
+                {"n": "portafelpa", "c": "8115", "p": 0.85},
+                {"n": "ángulo", "c": "4103", "p": 1.02},
+                {"n": "soporte", "c": "0000", "p": 20.00},
+                {"n": "u-alta", "c": "7955", "p": 3.00},
+                {"n": "u alta pesada", "c": "3009", "p": 3.50}
+            ]
+        },
+        "accesorios": {
+            "estandar": [
+                {"n": "Seguro F C", "c": "s-s", "p": 2.50},
+                {"n": "Seguro C C", "c": "s-b", "p": 1.50},
+                {"n": "Garruchas", "c": "r-15", "p": 1.05},
+                {"n": "Plaquitas", "c": "p-q", "p": 0.50}
+            ],
+            "pesados": [
+                {"n": "Seguro F C", "c": "s-s", "p": 2.50},
+                {"n": "Seguro C C", "c": "s-b", "p": 1.50},
+                {"n": "Garruchas", "c": "r-15", "p": 1.05},
+                {"n": "Plaquitas", "c": "p-q", "p": 0.50}
+            ]
+        },
+        "tiras": {
+            "estandar": [
+                {"n": "Felpa 10", "c": "f-10", "p": 0.50},
+                {"n": "Felpa 15", "c": "f-15", "p": 0.75}
+            ],
+            "pesados": [
+                {"n": "Felpa 10", "c": "f-10", "p": 0.50},
+                {"n": "Felpa 15", "c": "f-15", "p": 0.75}
+            ]
+        },
+        "vidrios": [
+            {"n": "Incoloro 2 mm", "p": 1.50},
+            {"n": "Incoloro 4 mm", "p": 3.00},
+            {"n": "Incoloro 5.5 mm", "p": 4.50},
+            {"n": "Reflejante 6 mm", "p": 8.50},
+            {"n": "Catedral 4 mm", "p": 5.00}
+        ]
+    },
+    "serie80": {
+        "nombre": "Serie 80",
+        "perfiles": {
+            "estandar": [
+                {"n": "Marco", "c": "3185", "p": 3.64},
+                {"n": "Hoja", "c": "3188", "p": 4.45},
+                {"n": "Puente", "c": "5283", "p": 8.26}
+            ],
+            "pesados": [
+                {"n": "Marco", "c": "3185", "p": 3.64},
+                {"n": "Hoja", "c": "3188", "p": 4.45},
+                {"n": "Puente Pesado", "c": "5282", "p": 10.54}
+            ]
+        },
+        "accesorios": {
+            "estandar": [
+                {"n": "Seguro", "c": "s-s", "p": 2.50},
+                {"n": "Garruchas", "c": "r-15", "p": 1.05}
+            ],
+            "pesados": [
+                {"n": "Seguro", "c": "s-s", "p": 2.50},
+                {"n": "Garruchas", "c": "r-15", "p": 1.05}
+            ]
+        },
+        "tiras": {
+            "estandar": [
+                {"n": "Felpa 10", "c": "f-10", "p": 0.50}
+            ],
+            "pesados": [
+                {"n": "Felpa 10", "c": "f-10", "p": 0.50}
+            ]
+        },
+        "vidrios": [
+            {"n": "Incoloro 2 mm", "p": 1.50},
+            {"n": "Incoloro 4 mm", "p": 3.00},
+            {"n": "Incoloro 5.5 mm", "p": 4.50},
+            {"n": "Reflejante 6 mm", "p": 8.50},
+            {"n": "Catedral 4 mm", "p": 5.00}
+        ]
+    },
+    "serie60": {
+        "nombre": "Serie 60",
+        "perfiles": {
+            "estandar": [
+                {"n": "Marco", "c": "3185", "p": 3.64},
+                {"n": "Hoja", "c": "3188", "p": 4.45}
+            ],
+            "pesados": [
+                {"n": "Marco", "c": "3185", "p": 3.64},
+                {"n": "Hoja", "c": "3188", "p": 4.45}
+            ]
+        },
+        "accesorios": {
+            "estandar": [
+                {"n": "Seguro", "c": "s-s", "p": 2.50}
+            ],
+            "pesados": [
+                {"n": "Seguro", "c": "s-s", "p": 2.50}
+            ]
+        },
+        "tiras": {
+            "estandar": [
+                {"n": "Felpa 10", "c": "f-10", "p": 0.50}
+            ],
+            "pesados": [
+                {"n": "Felpa 10", "c": "f-10", "p": 0.50}
+            ]
+        },
+        "vidrios": [
+            {"n": "Incoloro 2 mm", "p": 1.50},
+            {"n": "Incoloro 4 mm", "p": 3.00},
+            {"n": "Incoloro 5.5 mm", "p": 4.50},
+            {"n": "Reflejante 6 mm", "p": 8.50},
+            {"n": "Catedral 4 mm", "p": 5.00}
+        ]
+    }
+};
+
+// Cargar configuración (ya no depende de materiales.json)
+function cargarConfiguracion() {
+    // Intentar cargar desde localStorage primero
+    const personalizados = localStorage.getItem('materiales_personalizados');
+    if (personalizados) {
+        try {
             configuracionCompleta = JSON.parse(personalizados);
             console.log('Configuración cargada desde localStorage');
-        } else {
-            const response = await fetch('materiales.json');
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            configuracionCompleta = await response.json();
-            console.log('Configuración cargada desde JSON');
+        } catch (e) {
+            console.warn('Error parsing localStorage, usando base:', e);
+            configuracionCompleta = JSON.parse(JSON.stringify(CONFIGURACION_BASE));
         }
-        // ========== CARGAR VIDRIOS DESDE FIRESTORE ==========
-        async function cargarVidriosDesdeFirestore() {
-            try {
-                const db = window.db;
-                const auth = window.auth || window.firebaseAuth;
-                if (!db || !auth) { cargarVidriosDesdeLocalStorage(); return; }
-                
-                const user = auth.currentUser;
-                if (!user) { cargarVidriosDesdeLocalStorage(); return; }
-                
-                const usuarioUID = localStorage.getItem('tecniya_uid') || user.uid;
-                const doc = await db.collection('baseDatosV2').doc(usuarioUID).get();
-                if (doc.exists && doc.data().items) {
-                    const items = doc.data().items;
-                    const clavesVidrio = ['planchas_general'];
-                    let vidriosBD = [];
-                    
-                    clavesVidrio.forEach(clave => {
-                        if (items[clave] && Array.isArray(items[clave])) {
-                            vidriosBD = vidriosBD.concat(items[clave]);
-                        }
-                    });
-                    
-                    if (vidriosBD.length > 0) {
-                        const vidriosConvertidos = vidriosBD.map(v => ({
-                            n: v.nombre,
-                            p: v.apk || v.venta || 0
-                        }));
-                        
-                        if (configuracionCompleta.sistema) configuracionCompleta.sistema.vidrios = vidriosConvertidos;
-                        if (configuracionCompleta.serie80) configuracionCompleta.serie80.vidrios = vidriosConvertidos;
-                        if (configuracionCompleta.serie60) configuracionCompleta.serie60.vidrios = vidriosConvertidos;
-                        console.log(`✅ Vidrios cargados desde Firestore (${vidriosConvertidos.length} items)`);
-                        return;
-                    }
-                }
-                cargarVidriosDesdeLocalStorage();
-            } catch (e) {
-                console.warn('⚠️ Error Firestore, usando localStorage:', e.message);
-                cargarVidriosDesdeLocalStorage();
-            }
-        }
-        
-        function cargarVidriosDesdeLocalStorage() {
-            const baseDatosItems = localStorage.getItem('baseDatosItems');
-            if (!baseDatosItems) return;
-            try {
-                const items = JSON.parse(baseDatosItems);
+    } else {
+        // Usar configuración base hardcodeada
+        configuracionCompleta = JSON.parse(JSON.stringify(CONFIGURACION_BASE));
+        console.log('Configuración cargada desde base hardcodeada');
+    }
+    
+    // ========== CARGAR VIDRIOS DESDE FIRESTORE ==========
+    async function cargarVidriosDesdeFirestore() {
+        try {
+            const db = window.db;
+            const auth = window.auth || window.firebaseAuth;
+            if (!db || !auth) { cargarVidriosDesdeLocalStorage(); return; }
+            
+            const user = auth.currentUser;
+            if (!user) { cargarVidriosDesdeLocalStorage(); return; }
+            
+            const usuarioUID = localStorage.getItem('tecniya_uid') || user.uid;
+            const doc = await db.collection('baseDatosV2').doc(usuarioUID).get();
+            if (doc.exists && doc.data().items) {
+                const items = doc.data().items;
                 const clavesVidrio = ['planchas_general'];
                 let vidriosBD = [];
+                
                 clavesVidrio.forEach(clave => {
-                    if (items[clave] && Array.isArray(items[clave])) vidriosBD = vidriosBD.concat(items[clave]);
+                    if (items[clave] && Array.isArray(items[clave])) {
+                        vidriosBD = vidriosBD.concat(items[clave]);
+                    }
                 });
+                
                 if (vidriosBD.length > 0) {
-                    const vidriosConvertidos = vidriosBD.map(v => ({ n: v.nombre, p: v.apk || v.venta || 0 }));
+                    const vidriosConvertidos = vidriosBD.map(v => ({
+                        n: v.nombre,
+                        p: v.apk || v.venta || 0
+                    }));
+                    
                     if (configuracionCompleta.sistema) configuracionCompleta.sistema.vidrios = vidriosConvertidos;
                     if (configuracionCompleta.serie80) configuracionCompleta.serie80.vidrios = vidriosConvertidos;
                     if (configuracionCompleta.serie60) configuracionCompleta.serie60.vidrios = vidriosConvertidos;
-                    console.log(`✅ Vidrios cargados desde localStorage (${vidriosConvertidos.length} items)`);
+                    console.log(`✅ Vidrios cargados desde Firestore (${vidriosConvertidos.length} items)`);
+                    return;
                 }
-            } catch (e) { console.warn('⚠️ Error localStorage:', e.message); }
-        }
-        
-        // Intentar Firestore primero - esperar a que el módulo cargue
-        function esperarFirebaseYcargar() {
-            if (window.db && window.auth) {
-                window.auth.onAuthStateChanged(user => {
-                    if (user) cargarVidriosDesdeFirestore();
-                    else cargarVidriosDesdeLocalStorage();
-                });
-            } else {
-                setTimeout(esperarFirebaseYcargar, 500);
             }
+            cargarVidriosDesdeLocalStorage();
+        } catch (e) {
+            console.warn('⚠️ Error Firestore, usando localStorage:', e.message);
+            cargarVidriosDesdeLocalStorage();
         }
-        esperarFirebaseYcargar();
-    } catch (error) {
-        console.error('Error cargando configuración:', error);
-        alert('Error cargando materiales.json');
     }
+    
+    function cargarVidriosDesdeLocalStorage() {
+        const baseDatosItems = localStorage.getItem('baseDatosItems');
+        if (!baseDatosItems) return;
+        try {
+            const items = JSON.parse(baseDatosItems);
+            const clavesVidrio = ['planchas_general'];
+            let vidriosBD = [];
+            clavesVidrio.forEach(clave => {
+                if (items[clave] && Array.isArray(items[clave])) vidriosBD = vidriosBD.concat(items[clave]);
+            });
+            if (vidriosBD.length > 0) {
+                const vidriosConvertidos = vidriosBD.map(v => ({ n: v.nombre, p: v.apk || v.venta || 0 }));
+                if (configuracionCompleta.sistema) configuracionCompleta.sistema.vidrios = vidriosConvertidos;
+                if (configuracionCompleta.serie80) configuracionCompleta.serie80.vidrios = vidriosConvertidos;
+                if (configuracionCompleta.serie60) configuracionCompleta.serie60.vidrios = vidriosConvertidos;
+                console.log(`✅ Vidrios cargados desde localStorage (${vidriosConvertidos.length} items)`);
+            }
+        } catch (e) { console.warn('⚠️ Error localStorage:', e.message); }
+    }
+    
+    // Intentar Firestore primero - esperar a que el módulo cargue
+    function esperarFirebaseYcargar() {
+        if (window.db && window.auth) {
+            window.auth.onAuthStateChanged(user => {
+                if (user) cargarVidriosDesdeFirestore();
+                else cargarVidriosDesdeLocalStorage();
+            });
+        } else {
+            setTimeout(esperarFirebaseYcargar, 500);
+        }
+    }
+    esperarFirebaseYcargar();
 }
 
 // ========== INICIALIZAR ==========
