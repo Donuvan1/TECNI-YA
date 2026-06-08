@@ -65,10 +65,8 @@ const tiras = {
 };
 
 // Buscar "Incoloro 5.5 mm" en el array de vidrios para ponerlo por defecto
-let vidrioSeleccionadoIndex = (() => {
-    const idx = vidrios.findIndex(v => v.n.toLowerCase().includes("5.5"));
-    return idx >= 0 ? idx : 0;
-})();
+// Se recalcula al inicializar con los datos de configuracionCompleta
+let vidrioSeleccionadoIndex = 0;
 let materialSeleccionadoReq = 'estandar';
 
 function gestionarMateriales() {
@@ -1763,6 +1761,12 @@ function inicializarSistema(configuracion) {
     window.configuracionCompleta = configuracion;
     window.tipoPedidoActual = 'sistema';
     
+    // Calcular vidrioSeleccionadoIndex basado en los vidrios de configuracionCompleta
+    const datos = window.configuracionCompleta ? window.configuracionCompleta[window.tipoPedidoActual] : null;
+    const vidriosActuales = (datos && datos.vidrios) ? datos.vidrios : vidrios;
+    const idx = vidriosActuales.findIndex(v => v.n.toLowerCase().includes("5.5"));
+    vidrioSeleccionadoIndex = idx >= 0 ? idx : 0;
+    
     // Inicializar todo (igual que en tu cargarConfiguracion)
     gestionarMateriales();
     gestionarVidriosUI();
@@ -1771,3 +1775,8 @@ function inicializarSistema(configuracion) {
     gestionarSecciones();
     calcularTodo();
 }
+
+// Exportar funciones globalmente para que el HTML pueda llamarlas
+window.buscarVidrioSistema = buscarVidrioSistema;
+window.mostrarListaVidriosSistema = mostrarListaVidriosSistema;
+window.seleccionarVidrioSistema = seleccionarVidrioSistema;
