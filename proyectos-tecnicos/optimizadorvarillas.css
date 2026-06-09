@@ -45,11 +45,6 @@ input.input-field {
     text-align: center; 
     font-size: 1.2rem; 
 }
-input.input-field.text-input { 
-    text-align: left; 
-    font-size: 1rem; 
-    padding: 13.5px 12px; 
-}
 .active-cell { 
     border: 2px solid var(--accent-green) !important; 
     background: #1a3023 !important; 

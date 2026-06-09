@@ -119,7 +119,7 @@ function moveFocus(dir) {
     if (!currentFocus) return;
     const allInputs = Array.from(document.querySelectorAll('.input-field'));
     const globalIndex = allInputs.indexOf(currentFocus);
-    const actualColClass = Array.from(currentFocus.classList).find(c => c !== 'input-field' && c !== 'text-input' && c !== 'active-cell');
+    const actualColClass = Array.from(currentFocus.classList).find(c => c !== 'input-field' && c !== 'active-cell');
     const allInCol = Array.from(document.querySelectorAll(`.${actualColClass}`));
     const colIndex = allInCol.indexOf(currentFocus);
 
@@ -147,7 +147,7 @@ document.addEventListener('click', (e) => {
 function addStockRow() {
     let row = document.createElement("tr");
     row.innerHTML = `
-        <td><input type="text" class="input-field text-input s-name" maxlength="15" placeholder="Cód/Mat" oninput="saveToLocal()"></td>
+        <td><input type="text" inputmode="numeric" class="input-field s-name" placeholder="0" readonly></td>
         <td><input type="text" inputmode="numeric" class="input-field s-len" value="595" readonly></td>
         <td><input type="text" inputmode="numeric" class="input-field s-qty" value="999" readonly></td>
         <td><button class="remove" onclick="this.parentElement.parentElement.remove(); saveToLocal();">×</button></td>
@@ -160,7 +160,7 @@ function addPieceRow() {
     let row = document.createElement("tr");
     row.innerHTML = `
         <td><input type="checkbox" class="use-check" checked onchange="saveToLocal()"></td>
-        <td><input type="text" class="input-field text-input p-name" maxlength="15" placeholder="Cód/Nom" oninput="updateLastCode(this)"></td>
+        <td><input type="text" inputmode="numeric" class="input-field p-name" placeholder="0" readonly></td>
         <td><input type="text" inputmode="numeric" class="input-field p-len" placeholder="0" readonly></td>
         <td><input type="text" inputmode="numeric" class="input-field p-qty" placeholder="0" readonly></td>
         <td><button class="remove" onclick="this.parentElement.parentElement.remove(); saveToLocal();">×</button></td>
@@ -177,11 +177,6 @@ function addPieceRow() {
             setFocus(nuevoCampo);
         }
     }, 80);
-}
-
-function updateLastCode(input) {
-    lastPieceCode = input.value.trim().toUpperCase();
-    saveToLocal();
 }
 
 // Botones de expandir/contraer
@@ -387,8 +382,7 @@ function bindNumpadToNumericFields() {
     document.addEventListener('focusin', (e) => {
         const target = e.target;
         if (target.classList && 
-            target.classList.contains('input-field') && 
-            !target.classList.contains('text-input')) {
+            target.classList.contains('input-field')) {
             showNumpad();
         }
     });

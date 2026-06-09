@@ -1,4 +1,4 @@
-const perfiles = {
+var perfiles = {
     estandar: [
         {n: "m fija corrediza", c: "3185", p: 3.64},
         {n: "m doble corrediza", c: "3188", p: 4.45},
@@ -31,14 +31,14 @@ const perfiles = {
     ]
 };
 
-const vidrios = [
+var vidrios = [
     { n: "Incoloro 2 mm", p: 1.50 },
     { n: "Incoloro 4 mm", p: 3.00 },
     { n: "Incoloro 5.5 mm", p: 4.50 },
     { n: "Reflejante 6 mm", p: 8.50 },
     { n: "Catedral 4 mm", p: 5.00 }
 ];
-const accesorios = {
+var accesorios = {
     estandar: [
         {n: "Seguro F C", c: "s-s", p: 2.50},
         {n: "Seguro C C", c: "s-b", p: 1.50},
@@ -53,7 +53,7 @@ const accesorios = {
     ]
 };
 
-const tiras = {
+var tiras = {
     estandar: [
         {n: "Felpa 10", c: "f-10", p: 0.50},
         {n: "Felpa 15", c: "f-15", p: 0.75}

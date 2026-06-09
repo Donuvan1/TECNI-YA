@@ -735,25 +735,25 @@ function cargarConfiguracion() {
             const docSnap = await window.getDoc(window.doc(db, 'baseDatosV2', usuarioUID));
             if (docSnap.exists() && docSnap.data().items) {
                 const items = docSnap.data().items;
-                const clavesVidrio = ['planchas_general'];
+                // Buscar SOLO en la categoría 'planchas_general' (donde se guardan los vidrios/planchas)
                 let vidriosBD = [];
-                
-                clavesVidrio.forEach(clave => {
-                    if (items[clave] && Array.isArray(items[clave])) {
-                        vidriosBD = vidriosBD.concat(items[clave]);
-                    }
-                });
+                const clavePlanchas = 'planchas_general';
+                if (items[clavePlanchas] && Array.isArray(items[clavePlanchas])) {
+                    items[clavePlanchas].forEach(item => {
+                        if (item && item.nombre && (item.apk || item.venta)) {
+                            vidriosBD.push({
+                                n: item.nombre,
+                                p: item.apk || item.venta || 0
+                            });
+                        }
+                    });
+                }
                 
                 if (vidriosBD.length > 0) {
-                    const vidriosConvertidos = vidriosBD.map(v => ({
-                        n: v.nombre,
-                        p: v.apk || v.venta || 0
-                    }));
-                    
-                    if (configuracionCompleta.sistema) configuracionCompleta.sistema.vidrios = vidriosConvertidos;
-                    if (configuracionCompleta.serie80) configuracionCompleta.serie80.vidrios = vidriosConvertidos;
-                    if (configuracionCompleta.serie60) configuracionCompleta.serie60.vidrios = vidriosConvertidos;
-                    console.log(`✅ Vidrios cargados desde Firestore (${vidriosConvertidos.length} items)`);
+                    if (configuracionCompleta.sistema) configuracionCompleta.sistema.vidrios = vidriosBD;
+                    if (configuracionCompleta.serie80) configuracionCompleta.serie80.vidrios = vidriosBD;
+                    if (configuracionCompleta.serie60) configuracionCompleta.serie60.vidrios = vidriosBD;
+                    console.log(`✅ Vidrios cargados desde Firestore (${vidriosBD.length} items)`);
                     return;
                 }
             }
@@ -769,17 +769,24 @@ function cargarConfiguracion() {
         if (!baseDatosItems) return;
         try {
             const items = JSON.parse(baseDatosItems);
-            const clavesVidrio = ['planchas_general'];
+            // Buscar SOLO en la categoría 'planchas_general' (donde se guardan los vidrios/planchas)
             let vidriosBD = [];
-            clavesVidrio.forEach(clave => {
-                if (items[clave] && Array.isArray(items[clave])) vidriosBD = vidriosBD.concat(items[clave]);
-            });
+            const clavePlanchas = 'planchas_general';
+            if (items[clavePlanchas] && Array.isArray(items[clavePlanchas])) {
+                items[clavePlanchas].forEach(item => {
+                    if (item && item.nombre && (item.apk || item.venta)) {
+                        vidriosBD.push({
+                            n: item.nombre,
+                            p: item.apk || item.venta || 0
+                        });
+                    }
+                });
+            }
             if (vidriosBD.length > 0) {
-                const vidriosConvertidos = vidriosBD.map(v => ({ n: v.nombre, p: v.apk || v.venta || 0 }));
-                if (configuracionCompleta.sistema) configuracionCompleta.sistema.vidrios = vidriosConvertidos;
-                if (configuracionCompleta.serie80) configuracionCompleta.serie80.vidrios = vidriosConvertidos;
-                if (configuracionCompleta.serie60) configuracionCompleta.serie60.vidrios = vidriosConvertidos;
-                console.log(`✅ Vidrios cargados desde localStorage (${vidriosConvertidos.length} items)`);
+                if (configuracionCompleta.sistema) configuracionCompleta.sistema.vidrios = vidriosBD;
+                if (configuracionCompleta.serie80) configuracionCompleta.serie80.vidrios = vidriosBD;
+                if (configuracionCompleta.serie60) configuracionCompleta.serie60.vidrios = vidriosBD;
+                console.log(`✅ Vidrios cargados desde localStorage (${vidriosBD.length} items)`);
             }
         } catch (e) { console.warn('⚠️ Error localStorage:', e.message); }
     }
