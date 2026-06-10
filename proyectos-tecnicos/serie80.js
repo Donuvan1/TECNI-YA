@@ -104,9 +104,41 @@ function inicializarSerie80(configuracion) {
     function cargarCostosAluminios() {
         if (!configuracionCompleta) return;
         
-        const tipo = document.querySelector('input[name="opt_alum_s80"]:checked')?.value || 'estandar';
-        const perfiles = configuracionCompleta.serie80?.perfiles?.[tipo] || [];
+        const perfiles = configuracionCompleta.serie80?.perfiles || [];
         const tbody = document.getElementById('tabla_precios_body_s80');
+        
+        // Obtener color seleccionado
+        const colorSelect = document.getElementById('color_aluminio');
+        const color = colorSelect ? colorSelect.value : '';
+        
+        // Buscar precios desde la BD según el color
+        let preciosBD = {};
+        let errores = [];
+        
+        if (color) {
+            try {
+                const baseDatosItems = JSON.parse(localStorage.getItem('baseDatosItems') || '{}');
+                const varillasColor = baseDatosItems[`varillas_${color}`] || [];
+                
+                perfiles.forEach(p => {
+                    const itemBD = varillasColor.find(item => String(item.codigo) === String(p.c));
+                    if (itemBD && itemBD.apk !== undefined && itemBD.apk !== null && itemBD.apk > 0) {
+                        preciosBD[p.c] = itemBD.apk;
+                    } else {
+                        errores.push(`⚠️ Falta registrar código ${p.c} (${p.n}) en color ${color}`);
+                    }
+                });
+            } catch (e) {
+                console.warn('Error leyendo baseDatosItems:', e.message);
+            }
+        }
+        
+        // Actualizar precios en configuracionCompleta con los de BD
+        perfiles.forEach(p => {
+            if (preciosBD[p.c] !== undefined) {
+                p.p = preciosBD[p.c];
+            }
+        });
         
         if (tbody) {
             tbody.innerHTML = perfiles.map((p, index) => `
@@ -120,13 +152,35 @@ function inicializarSerie80(configuracion) {
                 </li>
             `).join('');
         }
+        
+        // Mostrar errores si hay
+        if (errores.length > 0) {
+            console.warn('⚠️ Serie 80 - Perfiles faltantes en BD:', errores);
+            // Mostrar en la UI como advertencia sutil
+            const contenedor = document.getElementById('resultados_requeridos_s80');
+            if (contenedor) {
+                // Crear o actualizar un div de advertencia
+                let warningDiv = document.getElementById('warning_precios_s80');
+                if (!warningDiv) {
+                    warningDiv = document.createElement('div');
+                    warningDiv.id = 'warning_precios_s80';
+                    warningDiv.className = 'alert alert-warning py-1 px-2 mb-2';
+                    warningDiv.style.fontSize = '0.75rem';
+                    contenedor.parentNode.insertBefore(warningDiv, contenedor);
+                }
+                warningDiv.innerHTML = errores.join('<br>');
+                warningDiv.style.display = 'block';
+            }
+        } else {
+            const warningDiv = document.getElementById('warning_precios_s80');
+            if (warningDiv) warningDiv.style.display = 'none';
+        }
     }
     
     function cargarCostosAccesorios() {
         if (!configuracionCompleta) return;
         
-        const tipo = document.querySelector('input[name="opt_alum_s80"]:checked')?.value || 'estandar';
-        const accesorios = configuracionCompleta.serie80?.accesorios?.[tipo] || [];
+        const accesorios = configuracionCompleta.serie80?.accesorios || [];
         const tbody = document.getElementById('tabla_accesorios_body_s80');
         
         if (tbody) {
@@ -147,8 +201,7 @@ function inicializarSerie80(configuracion) {
     function cargarCostosTiras() {
         if (!configuracionCompleta) return;
         
-        const tipo = document.querySelector('input[name="opt_alum_s80"]:checked')?.value || 'estandar';
-        const tiras = configuracionCompleta.serie80?.tiras?.[tipo] || [];
+        const tiras = configuracionCompleta.serie80?.tiras || [];
         const tbody = document.getElementById('tabla_tiras_body_s80');
         
         if (tbody) {
@@ -286,34 +339,29 @@ function inicializarSerie80(configuracion) {
     
     function actualizarPrecioManualS80(input) {
         const index = parseInt(input.dataset.index);
-        const tipo = document.querySelector('input[name="opt_alum_s80"]:checked')?.value || 'estandar';
         
         if (window.configuracionCompleta && window.tipoPedidoActual) {
             const datos = window.configuracionCompleta[window.tipoPedidoActual];
-            if (datos && datos.perfiles && datos.perfiles[tipo] && datos.perfiles[tipo][index]) {
-                datos.perfiles[tipo][index].p = parseFloat(input.value) || 0;
+            if (datos && datos.perfiles && datos.perfiles[index]) {
+                datos.perfiles[index].p = parseFloat(input.value) || 0;
             }
         }
     }
     
     function actualizarPrecioAccesorioS80(input, index) {
-        const tipo = document.querySelector('input[name="opt_alum_s80"]:checked')?.value || 'estandar';
-        
         if (window.configuracionCompleta && window.tipoPedidoActual) {
             const datos = window.configuracionCompleta[window.tipoPedidoActual];
-            if (datos && datos.accesorios && datos.accesorios[tipo] && datos.accesorios[tipo][index]) {
-                datos.accesorios[tipo][index].p = parseFloat(input.value) || 0;
+            if (datos && datos.accesorios && datos.accesorios[index]) {
+                datos.accesorios[index].p = parseFloat(input.value) || 0;
             }
         }
     }
     
     function actualizarPrecioTiraS80(input, index) {
-        const tipo = document.querySelector('input[name="opt_alum_s80"]:checked')?.value || 'estandar';
-        
         if (window.configuracionCompleta && window.tipoPedidoActual) {
             const datos = window.configuracionCompleta[window.tipoPedidoActual];
-            if (datos && datos.tiras && datos.tiras[tipo] && datos.tiras[tipo][index]) {
-                datos.tiras[tipo][index].p = parseFloat(input.value) || 0;
+            if (datos && datos.tiras && datos.tiras[index]) {
+                datos.tiras[index].p = parseFloat(input.value) || 0;
             }
         }
     }
@@ -365,25 +413,7 @@ function inicializarSerie80(configuracion) {
         });
     }
     
-    const radioEstandar = document.getElementById('alum_estandar_s80');
-const radioPesados = document.getElementById('alum_pesados_s80');
-
-if (radioEstandar) {
-    radioEstandar.addEventListener('change', () => {
-        if (radioEstandar.checked) {
-            cargarCostosAluminios();
-            mostrarAluminiosRequeridos();
-        }
-    });
-}
-if (radioPesados) {
-    radioPesados.addEventListener('change', () => {
-        if (radioPesados.checked) {
-            cargarCostosAluminios();
-            mostrarAluminiosRequeridos();
-        }
-    });
-}
+    // Nota: Serie 80 no tiene radios de estándar/pesado, es único
     
     // Cargar costos al inicio
     cargarCostosAluminios();
@@ -1213,9 +1243,7 @@ function renderAccesoriosRequeridos() {
         });
     }
     
-    // Obtener tipo de aluminio para precios
-    const tipoAluminio = document.querySelector('input[name="opt_alum_s80"]:checked')?.value || 'estandar';
-    const accesorios = configuracionCompleta?.serie80?.accesorios?.[tipoAluminio] || [];
+    const accesorios = configuracionCompleta?.serie80?.accesorios || [];
     
     // ========== CALCULAR CANTIDADES ==========
     const cantidadVentanas = cantidadPedido;
@@ -1926,9 +1954,7 @@ function calcularAluminiosRequeridos() {
     const fijas = parseInt(document.getElementById('cant_fijas_s80').value) || 0;
     const corredizas = hojas - fijas;
     
-    // Tipos de aluminio (estándar o pesado)
-    const tipoAluminio = document.querySelector('input[name="opt_alum_s80"]:checked')?.value || 'estandar';
-    const perfiles = configuracionCompleta.serie80?.perfiles?.[tipoAluminio] || [];
+    const perfiles = configuracionCompleta.serie80?.perfiles || [];
     
     // Calcular alturas base
     const alturaTotal = Math.max(altIzq, altDer);
@@ -2186,8 +2212,7 @@ function mostrarAluminiosRequeridos() {
     const contenedor = document.getElementById('lista_requeridos_body_s80');
     if (!contenedor) return;
     
-    const tipoAluminio = document.querySelector('input[name="opt_alum_s80"]:checked')?.value || 'estandar';
-    const perfiles = configuracionCompleta?.serie80?.perfiles?.[tipoAluminio] || [];
+    const perfiles = configuracionCompleta?.serie80?.perfiles || [];
     const agrupados = new Map();
     const listaCortes = document.getElementById('lista_cortes_detallada_s80');
     
@@ -2494,23 +2519,7 @@ function actualizarTodo() {
         }
     });
     
-    // También cuando cambia el tipo de aluminio (estándar/pesado)
-    const radioEstandarReq = document.getElementById('alum_estandar_s80');
-    const radioPesadosReq = document.getElementById('alum_pesados_s80');
-    if (radioEstandarReq) {
-        radioEstandarReq.addEventListener('change', () => {
-            if (radioEstandarReq.checked && switchReq && switchReq.checked) {
-                mostrarAluminiosRequeridos();
-            }
-        });
-    }
-    if (radioPesadosReq) {
-        radioPesadosReq.addEventListener('change', () => {
-            if (radioPesadosReq.checked && switchReq && switchReq.checked) {
-                mostrarAluminiosRequeridos();
-            }
-        });
-    }
+    // Nota: Serie 80 no tiene radios de estándar/pesado
         // ========== EVENTO PARA MEDIDAS GENERALES ==========
     const switchCortes = document.getElementById('switch_cortes_s80');
     if (switchCortes) {
@@ -2567,21 +2576,7 @@ inputsParaVidrios.forEach(input => {
     }
 });
 
-// También cuando cambia el tipo de aluminio (estándar/pesado) - afecta alturas de hojas
-if (radioEstandar) {
-    radioEstandar.addEventListener('change', () => {
-        if (switchVidriosReq && switchVidriosReq.checked) {
-            renderVidriosRequeridos();
-        }
-    });
-}
-if (radioPesados) {
-    radioPesados.addEventListener('change', () => {
-        if (switchVidriosReq && switchVidriosReq.checked) {
-            renderVidriosRequeridos();
-        }
-    });
-}
+// Nota: Serie 80 no tiene radios de estándar/pesado
 // Eventos para accesorios requeridos
 const switchAccesoriosReq = document.getElementById('switch_accesorios_req_s80');
 if (switchAccesoriosReq) {
@@ -2638,21 +2633,7 @@ inputsParaAccesorios.forEach(input => {
     }
 });
 
-// También cuando cambia el tipo de aluminio (estándar/pesado)
-if (radioEstandar) {
-    radioEstandar.addEventListener('change', () => {
-        if (switchAccesoriosReq && switchAccesoriosReq.checked) {
-            renderAccesoriosRequeridos();
-        }
-    });
-}
-if (radioPesados) {
-    radioPesados.addEventListener('change', () => {
-        if (switchAccesoriosReq && switchAccesoriosReq.checked) {
-            renderAccesoriosRequeridos();
-        }
-    });
-}
+// Nota: Serie 80 no tiene radios de estándar/pesado
 // ========== RENDERIZAR RESUMEN DE PRODUCCIÓN ==========
 // ========== RENDERIZAR RESUMEN DE PRODUCCIÓN (COMPACTO - estilo sistema) ==========
 function renderResumenS80() {
@@ -2819,8 +2800,7 @@ function renderResumenS80() {
     }
     
     // ========== TIRAS ==========
-    const tipoAluminio = document.querySelector('input[name="opt_alum_s80"]:checked')?.value || 'estandar';
-    const tirasConfig = configuracionCompleta?.serie80?.tiras?.[tipoAluminio] || [];
+    const tirasConfig = configuracionCompleta?.serie80?.tiras || [];
     const precioFelpa = tirasConfig.find(t => t.n === 'felpa hermetik')?.p || 0;
     const precioBurlete = tirasConfig.find(t => t.n === 'burlete cuña S-80')?.p || 0;
     
@@ -2938,29 +2918,4 @@ if (btnImprimir) {
     window.cargarCostosVidrios = cargarCostosVidrios;
 }
 
-function setMaterialReqS80(tipo) {
-    const radioEstandar = document.getElementById('alum_estandar_s80');
-    const radioPesados = document.getElementById('alum_pesados_s80');
-    const btnEst = document.getElementById('btn_req_estandar_s80');
-    const btnPes = document.getElementById('btn_req_pesado_s80');
-    
-    if (tipo === 'estandar') {
-        radioEstandar.checked = true;
-        radioPesados.checked = false;
-        if (btnEst) btnEst.classList.add('active');
-        if (btnPes) btnPes.classList.remove('active');
-    } else {
-        radioEstandar.checked = false;
-        radioPesados.checked = true;
-        if (btnEst) btnEst.classList.remove('active');
-        if (btnPes) btnPes.classList.add('active');
-    }
-    
-    // Llamar directamente a las funciones que actualizan los precios
-    if (typeof cargarCostosAluminios === 'function') {
-        cargarCostosAluminios();
-    }
-    if (typeof mostrarAluminiosRequeridos === 'function') {
-        mostrarAluminiosRequeridos();
-    }
-}
+// Nota: Serie 80 no tiene función setMaterialReqS80 (no hay estándar/pesado)

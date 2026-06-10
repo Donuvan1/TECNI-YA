@@ -227,11 +227,8 @@
             </div>
             <div class="col-6">
                 <label class="form-label">Color:</label>
-                <select class="form-select" id="color_aluminio">
-                    <option value="blanco">Blanco</option>
-                    <option value="negro">Negro</option>
-                    <option value="natural">Natural</option>
-                    <option value="madera">Madera</option>
+                <select class="form-select" id="color_aluminio" onchange="cambiarColorAluminio()">
+                    <option value="">-- Cargando colores --</option>
                 </select>
             </div>
         </div>
@@ -417,12 +414,11 @@ function generarTablaPerfiles() {
         
         <h6 class="text-info mt-3">Serie 80</h6>
         <table class="table table-sm table-dark">
-            <thead><tr><th>Estándar (S/.)</th><th>Pesado (S/.)</th></tr></thead>
+            <thead><tr><th>Precio (S/.)</th></tr></thead>
             <tbody>
-                ${serie80.estandar.map((p, i) => `
+                ${serie80.map((p, i) => `
                     <tr>
-                        <td><input type="text" class="form-control form-control-sm" value="${p.p}" data-tipo="perfil" data-sistema="serie80" data-categoria="estandar" data-indice="${i}" data-nombre="${p.n}" data-codigo="${p.c}" style="width: 100px;"></td>
-                        <td><input type="text" class="form-control form-control-sm" value="${serie80.pesados[i]?.p || ''}" data-tipo="perfil" data-sistema="serie80" data-categoria="pesados" data-indice="${i}" data-nombre="${p.n}" data-codigo="${p.c}" style="width: 100px;"></td>
+                        <td><span class="text-white">${p.n} (${p.c}): </span><input type="text" class="form-control form-control-sm d-inline-block" value="${p.p}" data-tipo="perfil" data-sistema="serie80" data-indice="${i}" data-nombre="${p.n}" data-codigo="${p.c}" style="width: 100px;"></td>
                     </tr>
                 `).join('')}
             </tbody>
@@ -453,7 +449,7 @@ function generarTablaAccesorios() {
         ${generarTablaItems(sistema.estandar, sistema.pesados, 'sistema', 'accesorio')}
         
         <h6 class="text-info mt-3">Serie 80</h6>
-        ${generarTablaItems(serie80.estandar, serie80.pesados, 'serie80', 'accesorio')}
+        ${generarTablaItemsUnicos(serie80, 'serie80', 'accesorio')}
 
         <h6 class="text-info mt-3">Serie 60</h6>
         ${generarTablaItems(serie60.estandar, serie60.pesados, 'serie60', 'accesorio')}
@@ -470,10 +466,26 @@ function generarTablaTiras() {
         ${generarTablaItems(sistema.estandar, sistema.pesados, 'sistema', 'tira')}
         
         <h6 class="text-info mt-3">Serie 80</h6>
-        ${generarTablaItems(serie80.estandar, serie80.pesados, 'serie80', 'tira')}
+        ${generarTablaItemsUnicos(serie80, 'serie80', 'tira')}
 
         <h6 class="text-info mt-3">Serie 60</h6>
         ${generarTablaItems(serie60.estandar, serie60.pesados, 'serie60', 'tira')}
+    `;
+}
+
+function generarTablaItemsUnicos(items, sistema, tipo) {
+    return `
+        <table class="table table-sm table-dark">
+            <thead><tr><th>Nombre</th><th>Precio (S/.)</th></tr></thead>
+            <tbody>
+                ${items.map((item, i) => `
+                    <tr>
+                        <td>${item.n}</td>
+                        <td><input type="text" class="form-control form-control-sm" value="${item.p}" data-tipo="${tipo}" data-sistema="${sistema}" data-indice="${i}" style="width: 100px;"></td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
     `;
 }
 
@@ -540,11 +552,24 @@ function guardarCambiosAdmin() {
         if (tipo === 'vidrio') {
             configuracionCompleta[sistema].vidrios[indice].p = nuevoValor;
         } else if (tipo === 'perfil') {
-            configuracionCompleta[sistema].perfiles[categoria][indice].p = nuevoValor;
+            // Serie 80 tiene estructura única (array simple), Sistema/60 tiene estandar/pesados
+            if (Array.isArray(configuracionCompleta[sistema].perfiles)) {
+                configuracionCompleta[sistema].perfiles[indice].p = nuevoValor;
+            } else {
+                configuracionCompleta[sistema].perfiles[categoria][indice].p = nuevoValor;
+            }
         } else if (tipo === 'accesorio') {
-            configuracionCompleta[sistema].accesorios[categoria][indice].p = nuevoValor;
+            if (Array.isArray(configuracionCompleta[sistema].accesorios)) {
+                configuracionCompleta[sistema].accesorios[indice].p = nuevoValor;
+            } else {
+                configuracionCompleta[sistema].accesorios[categoria][indice].p = nuevoValor;
+            }
         } else if (tipo === 'tira') {
-            configuracionCompleta[sistema].tiras[categoria][indice].p = nuevoValor;
+            if (Array.isArray(configuracionCompleta[sistema].tiras)) {
+                configuracionCompleta[sistema].tiras[indice].p = nuevoValor;
+            } else {
+                configuracionCompleta[sistema].tiras[categoria][indice].p = nuevoValor;
+            }
         }
     });
     
@@ -626,36 +651,20 @@ const CONFIGURACION_BASE = {
     },
     "serie80": {
         "nombre": "Serie 80",
-        "perfiles": {
-            "estandar": [
-                {"n": "Marco", "c": "3185", "p": 3.64},
-                {"n": "Hoja", "c": "3188", "p": 4.45},
-                {"n": "Puente", "c": "5283", "p": 8.26}
-            ],
-            "pesados": [
-                {"n": "Marco", "c": "3185", "p": 3.64},
-                {"n": "Hoja", "c": "3188", "p": 4.45},
-                {"n": "Puente Pesado", "c": "5282", "p": 10.54}
-            ]
-        },
-        "accesorios": {
-            "estandar": [
-                {"n": "Seguro", "c": "s-s", "p": 2.50},
-                {"n": "Garruchas", "c": "r-15", "p": 1.05}
-            ],
-            "pesados": [
-                {"n": "Seguro", "c": "s-s", "p": 2.50},
-                {"n": "Garruchas", "c": "r-15", "p": 1.05}
-            ]
-        },
-        "tiras": {
-            "estandar": [
-                {"n": "Felpa 10", "c": "f-10", "p": 0.50}
-            ],
-            "pesados": [
-                {"n": "Felpa 10", "c": "f-10", "p": 0.50}
-            ]
-        },
+        "perfiles": [
+            {"n": "Marco doble", "c": "8001", "p": 3.64},
+            {"n": "Marco triple", "c": "8002", "p": 4.45},
+            {"n": "Traslape", "c": "8003", "p": 2.50},
+            {"n": "Adaptador de hoja", "c": "8004", "p": 1.50},
+            {"n": "Marco de hoja", "c": "8005", "p": 4.45}
+        ],
+        "accesorios": [
+            {"n": "Seguro", "c": "s-s", "p": 2.50},
+            {"n": "Garruchas", "c": "r-15", "p": 1.05}
+        ],
+        "tiras": [
+            {"n": "Felpa 10", "c": "f-10", "p": 0.50}
+        ],
         "vidrios": [
             {"n": "Incoloro 2 mm", "p": 1.50},
             {"n": "Incoloro 4 mm", "p": 3.00},
@@ -805,8 +814,125 @@ function cargarConfiguracion() {
     esperarFirebaseYcargar();
 }
 
+// ========== CARGAR COLORES DESDE BASE DE DATOS ==========
+function cargarColoresDesdeBD() {
+    const selectColor = document.getElementById('color_aluminio');
+    if (!selectColor) return;
+    
+    // Limpiar opciones actuales
+    selectColor.innerHTML = '<option value="">-- Seleccionar color --</option>';
+    
+    try {
+        const baseDatosItems = localStorage.getItem('baseDatosItems');
+        if (!baseDatosItems) {
+            console.warn('⚠️ No hay datos en baseDatosItems');
+            // Fallback: colores por defecto
+            const coloresFallback = [
+                { value: 'blanco', label: 'Blanco' },
+                { value: 'negro', label: 'Negro' },
+                { value: 'natural', label: 'Natural (Gris)' },
+                { value: 'madera', label: 'Madera' }
+            ];
+            coloresFallback.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.value;
+                opt.textContent = c.label;
+                selectColor.appendChild(opt);
+            });
+            return;
+        }
+        
+        const items = JSON.parse(baseDatosItems);
+        
+        // Extraer colores únicos de varillas (perfiles de aluminio)
+        const coloresSet = new Set();
+        const coloresMap = {}; // value -> label
+        
+        Object.keys(items).forEach(key => {
+            // Buscar claves que empiecen con "varillas_"
+            if (key.startsWith('varillas_')) {
+                const colorValue = key.replace('varillas_', '');
+                if (items[key] && items[key].length > 0) {
+                    const colorTexto = items[key][0].colorTexto || colorValue;
+                    coloresSet.add(colorValue);
+                    coloresMap[colorValue] = colorTexto;
+                }
+            }
+        });
+        
+        if (coloresSet.size > 0) {
+            // Ordenar alfabéticamente
+            const coloresOrdenados = Array.from(coloresSet).sort();
+            
+            coloresOrdenados.forEach(colorValue => {
+                const opt = document.createElement('option');
+                opt.value = colorValue;
+                opt.textContent = coloresMap[colorValue] || colorValue;
+                selectColor.appendChild(opt);
+            });
+            
+            console.log(`✅ Colores cargados desde BD: ${coloresOrdenados.join(', ')}`);
+        } else {
+            // Fallback si no encuentra varillas
+            const coloresFallback = [
+                { value: 'blanco', label: 'Blanco' },
+                { value: 'negro', label: 'Negro' },
+                { value: 'natural', label: 'Natural (Gris)' },
+                { value: 'madera', label: 'Madera' }
+            ];
+            coloresFallback.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.value;
+                opt.textContent = c.label;
+                selectColor.appendChild(opt);
+            });
+        }
+    } catch (e) {
+        console.warn('⚠️ Error cargando colores desde BD:', e.message);
+        // Fallback
+        const coloresFallback = [
+            { value: 'blanco', label: 'Blanco' },
+            { value: 'negro', label: 'Negro' },
+            { value: 'natural', label: 'Natural (Gris)' },
+            { value: 'madera', label: 'Madera' }
+        ];
+        coloresFallback.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.value;
+            opt.textContent = c.label;
+            selectColor.appendChild(opt);
+        });
+    }
+}
+
+// Función que se ejecuta al cambiar el color
+function cambiarColorAluminio() {
+    const color = document.getElementById('color_aluminio').value;
+    console.log('🎨 Color seleccionado:', color);
+    
+    // Recargar precios de Serie 80 desde la BD según el color seleccionado
+    if (window.cargarCostosAluminios) {
+        window.cargarCostosAluminios();
+    }
+    
+    // Actualizar cálculos si es necesario
+    if (window.calcularTodo) calcularTodo();
+}
+
+
 // ========== INICIALIZAR ==========
 cargarConfiguracion();
+
+// Cargar colores después de que el DOM esté listo
+document.addEventListener('DOMContentLoaded', function() {
+    // Esperar un poco para que se cargue la configuración
+    setTimeout(cargarColoresDesdeBD, 100);
+});
+
+// También cargar colores si ya se cargó el DOM
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    setTimeout(cargarColoresDesdeBD, 200);
+}
 </script>
 </body>
 </html>

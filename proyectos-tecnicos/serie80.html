@@ -5,17 +5,7 @@
         <label class="form-check-label texto-resaltado" for="switch_materiales_s80">COSTOS DE ALUMINIOS (S/. ML)</label>
     </div>
     <div id="seccion_materiales_s80" class="seccion-oculta mb-4">
-        <div class="contenedor-materiales text-center">
-            <div class="d-flex gap-3 mb-3 justify-content-center">
-                <div class="form-check radio-materiales">
-                    <input class="form-check-input" type="radio" name="opt_alum_s80" id="alum_estandar_s80" value="estandar" checked>
-                    <label class="form-check-label text-white" for="alum_estandar_s80">Aluminio Estandar</label>
-                </div>
-                <div class="form-check radio-materiales">
-                    <input class="form-check-input" type="radio" name="opt_alum_s80" id="alum_pesados_s80" value="pesados">
-                    <label class="form-check-label text-white" for="alum_pesados_s80">Aluminio Pesado</label>
-                </div>
-            </div>
+        <div class="contenedor-materiales">
             <ul class="list-group list-group-flush" id="tabla_precios_body_s80"></ul>
         </div>
     </div>
@@ -210,10 +200,6 @@
         <label class="form-check-label texto-resaltado" for="switch_req_s80">ALUMINIOS REQUERIDOS</label>
     </div>
     <div id="resultados_requeridos_s80" class="seccion-oculta mb-4 contenedor-materiales">
-        <div class="d-flex justify-content-center gap-2 mb-3">
-            <button type="button" id="btn_req_estandar_s80" class="btn btn-sm btn-outline-primary active" onclick="setMaterialReqS80('estandar')">Estándar</button>
-<button type="button" id="btn_req_pesado_s80" class="btn btn-sm btn-outline-warning" onclick="setMaterialReqS80('pesado')">Pesado</button>
-        </div>
         <ul class="list-group list-group-flush" id="lista_requeridos_body_s80"></ul>
     </div>
 
