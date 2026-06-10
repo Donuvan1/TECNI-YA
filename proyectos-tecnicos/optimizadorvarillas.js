@@ -250,16 +250,39 @@ document.getElementById("optimize").onclick = () => {
     pieces.sort((a, b) => b.len - a.len);
 
     let usedRods = [];
+    let globalColor = document.getElementById("globalColor").value;
     let uniqueCodes = [...new Set(pieces.map(p => p.code))];
+    
+    // BEST FIT DECREASING: para cada código, procesar sus piezas
     uniqueCodes.forEach(currentCode => {
         let codePieces = pieces.filter(p => p.code === currentCode);
+        
         codePieces.forEach(p => {
-            let fit = usedRods.find(r => r.code === p.code && r.free >= p.len);
-            if (fit) { fit.parts.push({ x: fit.total - fit.free, len: p.len }); fit.free -= (p.len + kerf); }
-            else {
+            let bestFit = null;
+            let bestIndex = -1;
+            let bestWaste = Infinity;
+            
+            // Buscar la varilla abierta donde mejor quepa (menos desperdicio)
+            for (let i = 0; i < usedRods.length; i++) {
+                let r = usedRods[i];
+                if (r.code === p.code && r.free >= p.len) {
+                    let waste = r.free - p.len;
+                    if (waste < bestWaste) {
+                        bestWaste = waste;
+                        bestFit = r;
+                        bestIndex = i;
+                    }
+                }
+            }
+            
+            if (bestFit) {
+                // Colocar la pieza en la varilla existente con mejor ajuste
+                bestFit.parts.push({ x: bestFit.total - bestFit.free, len: p.len });
+                bestFit.free -= (p.len + kerf);
+            } else {
+                // No cabe en ninguna varilla abierta, abrir una nueva del stock
                 let sItem = stock.find(s => s.code === p.code && s.qty > 0);
                 if (sItem) { 
-                    let globalColor = document.getElementById("globalColor").value;
                     usedRods.push({ 
                         code: p.code, 
                         color: globalColor,
