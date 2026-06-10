@@ -232,9 +232,9 @@ button[data-num="delete"] {
 }
 canvas { 
     width: 100%; 
-    background: #fff; 
+    background: transparent; 
     border-radius: 4px; 
-    margin-top: 10px; 
+    margin-top: 2px; 
 }
 
 .btn-volver {
@@ -265,12 +265,23 @@ canvas {
     transform: scale(1.02);
 }
 
+/* Panel de resultado compacto */
+.result-panel {
+    padding: 5px 10px !important;
+    margin-bottom: 4px !important;
+    border-radius: 0 !important;
+    border: none !important;
+    border-bottom: 1px solid #333 !important;
+}
+
 /* IMPRESIÓN */
 @media print {
     body * { visibility: hidden; }
     #printArea, #printArea * { visibility: visible; }
     #printArea { position: absolute; left: 0; top: 0; width: 100%; background: white !important; padding: 0 !important; color: black !important; }
-    #printArea .panel { border: 1px solid #ccc !important; background: white !important; }
+    #printArea .panel { border: 1px solid #ccc !important; background: white !important; padding: 3px 8px !important; margin-bottom: 3px !important; }
+    #printArea .panel div { font-size: 8px !important; }
+    #printArea .result-panel { border-bottom: 1px solid #ccc !important; }
     .no-print { display: none !important; }
     canvas { border: 1px solid #000; }
 }

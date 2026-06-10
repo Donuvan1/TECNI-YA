@@ -247,51 +247,60 @@ document.getElementById("optimize").onclick = () => {
     }
 
     if (pieces.length === 0) return alert("No hay piezas");
-    pieces.sort((a, b) => b.len - a.len);
+    
+    // Ordenar stock de más pequeño a más grande para procesar primero las varillas más justas
+    stock.sort((a, b) => a.len - b.len);
 
     let usedRods = [];
     let globalColor = document.getElementById("globalColor").value;
     let uniqueCodes = [...new Set(pieces.map(p => p.code))];
     
-    // BEST FIT DECREASING: para cada código, procesar sus piezas
+    // Para cada código, procesar sus piezas
     uniqueCodes.forEach(currentCode => {
+        // Obtener las piezas de este código y ordenarlas de más grande a más pequeña
         let codePieces = pieces.filter(p => p.code === currentCode);
+        codePieces.sort((a, b) => b.len - a.len);
         
-        codePieces.forEach(p => {
-            let bestFit = null;
-            let bestIndex = -1;
-            let bestWaste = Infinity;
-            
-            // Buscar la varilla abierta donde mejor quepa (menos desperdicio)
-            for (let i = 0; i < usedRods.length; i++) {
-                let r = usedRods[i];
-                if (r.code === p.code && r.free >= p.len) {
-                    let waste = r.free - p.len;
-                    if (waste < bestWaste) {
-                        bestWaste = waste;
-                        bestFit = r;
-                        bestIndex = i;
+        // Obtener las varillas base disponibles para este código, ordenadas de más chica a más grande
+        let stockItems = stock.filter(s => s.code === currentCode && s.qty > 0);
+        
+        // Para cada varilla base (de la más chica a la más grande)
+        stockItems.forEach(sItem => {
+            while (sItem.qty > 0) {
+                let rodTotal = sItem.len;
+                let rodFree = rodTotal;
+                let rodParts = [];
+                let piezasAsignadas = [];
+                
+                // Buscar piezas que quepan en esta varilla (de más grande a más chica para mejor ajuste)
+                for (let i = 0; i < codePieces.length; i++) {
+                    let p = codePieces[i];
+                    if (p.len <= rodFree) {
+                        rodParts.push({ x: rodTotal - rodFree, len: p.len });
+                        rodFree -= (p.len + kerf);
+                        piezasAsignadas.push(i);
                     }
                 }
-            }
-            
-            if (bestFit) {
-                // Colocar la pieza en la varilla existente con mejor ajuste
-                bestFit.parts.push({ x: bestFit.total - bestFit.free, len: p.len });
-                bestFit.free -= (p.len + kerf);
-            } else {
-                // No cabe en ninguna varilla abierta, abrir una nueva del stock
-                let sItem = stock.find(s => s.code === p.code && s.qty > 0);
-                if (sItem) { 
-                    usedRods.push({ 
-                        code: p.code, 
+                
+                if (rodParts.length > 0) {
+                    // Eliminar las piezas asignadas (de atrás hacia adelante)
+                    for (let i = piezasAsignadas.length - 1; i >= 0; i--) {
+                        codePieces.splice(piezasAsignadas[i], 1);
+                    }
+                    
+                    usedRods.push({
+                        code: currentCode,
                         color: globalColor,
-                        total: sItem.len, 
-                        free: sItem.len - p.len - kerf, 
-                        parts: [{ x: 0, len: p.len }] 
-                    }); 
-                    sItem.qty--; 
+                        total: rodTotal,
+                        free: rodFree,
+                        parts: rodParts
+                    });
+                    sItem.qty--;
+                } else {
+                    break; // No cabe ninguna pieza más en esta varilla
                 }
+                
+                if (codePieces.length === 0) break; // No quedan más piezas
             }
         });
     });
@@ -350,16 +359,19 @@ function renderFinalSolution(rods) {
     const colorMap = {};
     const colors = ["#3498db", "#e67e22", "#9b59b6", "#1abc9c", "#f1c40f", "#e74c3c", "#95a5a6", "#d35400"];
     let colorIdx = 0;
+    let codeCounters = {};
     rods.forEach((rod, idx) => {
+        if (!codeCounters[rod.code]) codeCounters[rod.code] = 0;
+        codeCounters[rod.code]++;
         const div = document.createElement('div');
-        div.className = 'panel';
-        div.innerHTML = `<div style="font-size:10px; color:#aaa; margin-bottom:4px;">
-${rod.code} (${rod.color || "Sin color"}) - Varilla ${idx+1}
+        div.className = 'panel result-panel';
+        div.innerHTML = `<div style="font-size:10px; color:#aaa; margin-bottom:2px;">
+${rod.code} - ${rod.total}cm (${rod.color || "Sin color"}) - Varilla ${codeCounters[rod.code]}
 </div><canvas id="canv-${idx}" width="450" height="50" style="width:100%;"></canvas>`;
         container.appendChild(div);
         const ctx = document.getElementById(`canv-${idx}`).getContext('2d');
         const scale = 410 / rod.total;
-        ctx.fillStyle = "#333"; ctx.fillRect(20, 10, rod.total * scale, 30);
+        ctx.fillStyle = "#ddd"; ctx.fillRect(20, 10, rod.total * scale, 30);
         rod.parts.forEach(p => {
             if (!colorMap[p.len]) { colorMap[p.len] = colors[colorIdx % colors.length]; colorIdx++; }
             ctx.fillStyle = colorMap[p.len];
