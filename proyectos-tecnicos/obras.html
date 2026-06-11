@@ -879,11 +879,17 @@ function cambiarColorAluminio() {
     
     console.log('🎨 Color seleccionado:', color);
     
-    // Si no hay color, limpiar warning
+    // Si no hay color (Solo descuentos), limpiar warning y recargar con precios 0
     if (!color) {
         if (warningDiv) { warningDiv.style.display = 'none'; warningDiv.innerHTML = ''; }
+        // Recargar precios (se pondrán en 0 por no haber color)
+        if (window.cargarCostosAluminios) window.cargarCostosAluminios();
+        if (window.gestionarMateriales) window.gestionarMateriales();
+        if (window.calcularTodo) calcularTodo();
         return;
     }
+    
+    let hayCodigosFaltantes = false;
     
     // Verificar si los códigos de los perfiles del pedido actual están registrados en BD
     try {
@@ -915,6 +921,7 @@ function cambiarColorAluminio() {
         });
         
         if (codigosFaltantes.length > 0) {
+            hayCodigosFaltantes = true;
             // Mostrar warning debajo del selector de color
             if (warningDiv) {
                 warningDiv.innerHTML = `⚠️ Faltan registrar en BD para color <strong>${color}</strong>: ${codigosFaltantes.join(', ')}`;
@@ -927,8 +934,11 @@ function cambiarColorAluminio() {
         console.warn('Error verificando códigos en BD:', e.message);
     }
     
-    // Si llegamos aquí, todos los códigos existen → limpiar warning
-    if (warningDiv) { warningDiv.style.display = 'none'; warningDiv.innerHTML = ''; }
+    // Si NO hay códigos faltantes, limpiar warning
+    if (!hayCodigosFaltantes && warningDiv) {
+        warningDiv.style.display = 'none';
+        warningDiv.innerHTML = '';
+    }
     
     // Recargar precios de Serie 80 desde la BD según el color seleccionado
     if (window.cargarCostosAluminios) {
