@@ -845,33 +845,55 @@ function cargarColoresDesdeBD() {
         const items = JSON.parse(baseDatosItems);
         
         // Extraer colores únicos de varillas (perfiles de aluminio)
-        const coloresSet = new Set();
-        const coloresMap = {}; // value -> label
+        const coloresMap = new Map(); // value -> { label, count }
         
         Object.keys(items).forEach(key => {
             // Buscar claves que empiecen con "varillas_"
             if (key.startsWith('varillas_')) {
                 const colorValue = key.replace('varillas_', '');
                 if (items[key] && items[key].length > 0) {
-                    const colorTexto = items[key][0].colorTexto || colorValue;
-                    coloresSet.add(colorValue);
-                    coloresMap[colorValue] = colorTexto;
+                    // Buscar el colorTexto más común entre los items de este color
+                    const textos = {};
+                    items[key].forEach(item => {
+                        if (item.colorTexto) {
+                            textos[item.colorTexto] = (textos[item.colorTexto] || 0) + 1;
+                        }
+                    });
+                    // Elegir el texto más frecuente
+                    let mejorTexto = colorValue;
+                    let maxCount = 0;
+                    Object.keys(textos).forEach(t => {
+                        if (textos[t] > maxCount) {
+                            maxCount = textos[t];
+                            mejorTexto = t;
+                        }
+                    });
+                    // Capitalizar primera letra
+                    mejorTexto = mejorTexto.charAt(0).toUpperCase() + mejorTexto.slice(1);
+                    
+                    if (!coloresMap.has(colorValue)) {
+                        coloresMap.set(colorValue, { label: mejorTexto, count: 1 });
+                    } else {
+                        coloresMap.get(colorValue).count++;
+                    }
                 }
             }
         });
         
-        if (coloresSet.size > 0) {
-            // Ordenar alfabéticamente
-            const coloresOrdenados = Array.from(coloresSet).sort();
+        if (coloresMap.size > 0) {
+            // Ordenar alfabéticamente por label
+            const coloresOrdenados = Array.from(coloresMap.entries()).sort((a, b) => 
+                a[1].label.localeCompare(b[1].label)
+            );
             
-            coloresOrdenados.forEach(colorValue => {
+            coloresOrdenados.forEach(([colorValue, info]) => {
                 const opt = document.createElement('option');
                 opt.value = colorValue;
-                opt.textContent = coloresMap[colorValue] || colorValue;
+                opt.textContent = info.label;
                 selectColor.appendChild(opt);
             });
             
-            console.log(`✅ Colores cargados desde BD: ${coloresOrdenados.join(', ')}`);
+            console.log(`✅ Colores cargados desde BD: ${coloresOrdenados.map(([v,i]) => i.label).join(', ')}`);
         } else {
             // Fallback si no encuentra varillas
             const coloresFallback = [
