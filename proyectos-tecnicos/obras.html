@@ -858,7 +858,7 @@ function cargarColoresDesdeBD() {
     // Obtener los colores para el pedido actual, o usar los de sistema por defecto
     const colores = coloresPorPedido[tipoPedido] || coloresPorPedido['sistema'];
     
-    selectColor.innerHTML = '<option value="">-- Seleccionar color --</option>';
+    selectColor.innerHTML = '<option value="">-- Solo descuentos --</option>';
     
     colores.forEach(c => {
         const opt = document.createElement('option');

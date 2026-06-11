@@ -133,13 +133,13 @@ function inicializarSerie80(configuracion) {
             }
         }
         
-        // Actualizar precios: si hay color, usar BD; si no, mantener precio por defecto
+        // Actualizar precios: si hay color, usar BD; si no (Solo descuentos), poner en 0
         perfiles.forEach(p => {
             if (preciosBD[p.c] !== undefined) {
                 p.p = preciosBD[p.c];
             } else if (!color) {
-                // Sin color seleccionado → mantener precio por defecto de configuracionCompleta
-                // (no se modifica)
+                // Solo descuentos → precio 0 (solo medidas, sin costo)
+                p.p = 0;
             }
             // Si hay color pero no se encontró en BD, mantener precio por defecto
         });
