@@ -920,10 +920,8 @@ function cambiarColorAluminio() {
                 warningDiv.innerHTML = `⚠️ Faltan registrar en BD para color <strong>${color}</strong>: ${codigosFaltantes.join(', ')}`;
                 warningDiv.style.display = 'block';
             }
-            // Rechazar la selección: volver al valor vacío
-            selectColor.value = '';
-            console.warn('❌ Color rechazado - faltan códigos:', codigosFaltantes);
-            return;
+            console.warn('⚠️ Color seleccionado pero faltan códigos en BD:', codigosFaltantes);
+            // No rechazar la selección, el usuario puede continuar
         }
     } catch (e) {
         console.warn('Error verificando códigos en BD:', e.message);
