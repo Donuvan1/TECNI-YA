@@ -122,8 +122,8 @@ function inicializarSerie80(configuracion) {
                 
                 perfiles.forEach(p => {
                     const itemBD = varillasColor.find(item => String(item.codigo) === String(p.c));
-                    if (itemBD && itemBD.apk !== undefined && itemBD.apk !== null && itemBD.apk > 0) {
-                        preciosBD[p.c] = itemBD.apk;
+                    if (itemBD && itemBD.apk !== undefined && itemBD.apk !== null && Number(itemBD.apk) > 0) {
+                        preciosBD[p.c] = Number(itemBD.apk);
                     } else {
                         errores.push(`⚠️ Falta registrar código ${p.c} (${p.n}) en color ${color}`);
                     }
