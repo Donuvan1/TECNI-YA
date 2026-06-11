@@ -153,26 +153,19 @@ function inicializarSerie80(configuracion) {
             `).join('');
         }
         
-        // Mostrar errores si hay
+        // Mostrar mensaje único si faltan códigos
+        const warningDiv = document.getElementById('warning_precios_s80');
         if (errores.length > 0) {
             console.warn('⚠️ Serie 80 - Perfiles faltantes en BD:', errores);
-            // Mostrar en la UI como advertencia sutil
-            const contenedor = document.getElementById('resultados_requeridos_s80');
-            if (contenedor) {
-                // Crear o actualizar un div de advertencia
-                let warningDiv = document.getElementById('warning_precios_s80');
-                if (!warningDiv) {
-                    warningDiv = document.createElement('div');
-                    warningDiv.id = 'warning_precios_s80';
-                    warningDiv.className = 'alert alert-warning py-1 px-2 mb-2';
-                    warningDiv.style.fontSize = '0.75rem';
-                    contenedor.parentNode.insertBefore(warningDiv, contenedor);
-                }
-                warningDiv.innerHTML = errores.join('<br>');
+            // Extraer solo los códigos únicos
+            const codigosFaltantes = errores.map(e => e.match(/código (\S+)/)?.[1]).filter(Boolean);
+            const mensaje = `📋 En base de datos, registra los códigos: ${codigosFaltantes.join(', ')} en color ${color}`;
+            
+            if (warningDiv) {
+                warningDiv.innerHTML = mensaje;
                 warningDiv.style.display = 'block';
             }
         } else {
-            const warningDiv = document.getElementById('warning_precios_s80');
             if (warningDiv) warningDiv.style.display = 'none';
         }
     }
