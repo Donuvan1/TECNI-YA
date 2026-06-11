@@ -112,13 +112,15 @@ function gestionarMateriales() {
         }
     }
     
-    // Actualizar precios: si hay color, usar BD; si no, poner a 0
+    // Actualizar precios: si hay color, usar BD; si no, mantener precio por defecto
     perfilesActuales.forEach(p => {
         if (preciosBD[p.c] !== undefined) {
             p.p = preciosBD[p.c];
         } else if (!color) {
-            p.p = 0;  // Sin color seleccionado → precio 0
+            // Sin color seleccionado → mantener precio por defecto
+            // (no se modifica)
         }
+        // Si hay color pero no se encontró en BD, mantener precio por defecto
     });
     
     let html = "";
