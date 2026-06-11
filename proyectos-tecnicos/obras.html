@@ -230,6 +230,7 @@
                 <select class="form-select" id="color_aluminio" onchange="cambiarColorAluminio()">
                     <option value="">-- Cargando colores --</option>
                 </select>
+                <div id="warning_color_faltantes" class="text-warning small mt-1" style="display: none;"></div>
             </div>
         </div>
         <!-- Modal Administrador -->
@@ -871,8 +872,65 @@ function cargarColoresDesdeBD() {
 
 // Función que se ejecuta al cambiar el color
 function cambiarColorAluminio() {
-    const color = document.getElementById('color_aluminio').value;
+    const selectColor = document.getElementById('color_aluminio');
+    const color = selectColor.value;
+    const tipoPedido = document.getElementById('pedido').value;
+    const warningDiv = document.getElementById('warning_color_faltantes');
+    
     console.log('🎨 Color seleccionado:', color);
+    
+    // Si no hay color, limpiar warning
+    if (!color) {
+        if (warningDiv) { warningDiv.style.display = 'none'; warningDiv.innerHTML = ''; }
+        return;
+    }
+    
+    // Verificar si los códigos de los perfiles del pedido actual están registrados en BD
+    try {
+        const baseDatosItems = JSON.parse(localStorage.getItem('baseDatosItems') || '{}');
+        const varillasColor = baseDatosItems[`varillas_${color}`] || [];
+        
+        // Obtener los perfiles según el tipo de pedido
+        let perfilesAValidar = [];
+        if (configuracionCompleta && configuracionCompleta[tipoPedido]) {
+            const datos = configuracionCompleta[tipoPedido];
+            if (datos.perfiles) {
+                if (Array.isArray(datos.perfiles)) {
+                    perfilesAValidar = datos.perfiles;
+                } else {
+                    // Sistema/60 tienen estandar y pesados
+                    if (datos.perfiles.estandar) perfilesAValidar = perfilesAValidar.concat(datos.perfiles.estandar);
+                    if (datos.perfiles.pesados) perfilesAValidar = perfilesAValidar.concat(datos.perfiles.pesados);
+                }
+            }
+        }
+        
+        // Verificar cada código
+        const codigosFaltantes = [];
+        perfilesAValidar.forEach(p => {
+            const itemBD = varillasColor.find(item => String(item.codigo) === String(p.c));
+            if (!itemBD || itemBD.apk === undefined || itemBD.apk === null || Number(itemBD.apk) <= 0) {
+                codigosFaltantes.push(`${p.c} (${p.n})`);
+            }
+        });
+        
+        if (codigosFaltantes.length > 0) {
+            // Mostrar warning debajo del selector de color
+            if (warningDiv) {
+                warningDiv.innerHTML = `⚠️ Faltan registrar en BD para color <strong>${color}</strong>: ${codigosFaltantes.join(', ')}`;
+                warningDiv.style.display = 'block';
+            }
+            // Rechazar la selección: volver al valor vacío
+            selectColor.value = '';
+            console.warn('❌ Color rechazado - faltan códigos:', codigosFaltantes);
+            return;
+        }
+    } catch (e) {
+        console.warn('Error verificando códigos en BD:', e.message);
+    }
+    
+    // Si llegamos aquí, todos los códigos existen → limpiar warning
+    if (warningDiv) { warningDiv.style.display = 'none'; warningDiv.innerHTML = ''; }
     
     // Recargar precios de Serie 80 desde la BD según el color seleccionado
     if (window.cargarCostosAluminios) {

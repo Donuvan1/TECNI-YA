@@ -136,21 +136,7 @@ function gestionarMateriales() {
     });
     document.getElementById('tabla_precios_body').innerHTML = html;
     
-    // Mostrar mensaje único si faltan códigos
-    const warningDiv = document.getElementById('warning_precios_sistema');
-    if (errores.length > 0) {
-        console.warn('⚠️ Sistema - Perfiles faltantes en BD:', errores);
-        // Extraer solo los códigos únicos
-        const codigosFaltantes = errores.map(e => e.match(/código (\S+)/)?.[1]).filter(Boolean);
-        const mensaje = `📋 En base de datos, registra los códigos: ${codigosFaltantes.join(', ')} en color ${color}`;
-        
-        if (warningDiv) {
-            warningDiv.innerHTML = mensaje;
-            warningDiv.style.display = 'block';
-        }
-    } else {
-        if (warningDiv) warningDiv.style.display = 'none';
-    }
+    // Nota: los warnings de códigos faltantes se muestran en cambiarColorAluminio()
 }
 
 
