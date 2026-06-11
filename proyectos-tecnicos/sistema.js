@@ -112,10 +112,12 @@ function gestionarMateriales() {
         }
     }
     
-    // Actualizar precios con los de BD
+    // Actualizar precios: si hay color, usar BD; si no, poner a 0
     perfilesActuales.forEach(p => {
         if (preciosBD[p.c] !== undefined) {
             p.p = preciosBD[p.c];
+        } else if (!color) {
+            p.p = 0;  // Sin color seleccionado → precio 0
         }
     });
     

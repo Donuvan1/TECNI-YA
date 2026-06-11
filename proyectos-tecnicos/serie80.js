@@ -133,10 +133,12 @@ function inicializarSerie80(configuracion) {
             }
         }
         
-        // Actualizar precios en configuracionCompleta con los de BD
+        // Actualizar precios: si hay color, usar BD; si no, poner a 0
         perfiles.forEach(p => {
             if (preciosBD[p.c] !== undefined) {
                 p.p = preciosBD[p.c];
+            } else if (!color) {
+                p.p = 0;  // Sin color seleccionado → precio 0
             }
         });
         
