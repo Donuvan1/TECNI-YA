@@ -321,6 +321,8 @@
                 } else if (tipoPedidoActual === 'serie60' && typeof inicializarSerie60 === 'function') {
                     inicializarSerie60(configuracionCompleta);
                 }
+                // Actualizar colores según el tipo de pedido seleccionado
+                cargarColoresDesdeBD();
             };
         } catch (error) {
             console.error('Error cargando sección:', error);
@@ -711,6 +713,9 @@ const CONFIGURACION_BASE = {
     }
 };
 
+// Exponer CONFIGURACION_BASE globalmente para que otros módulos accedan a precios por defecto
+window.CONFIGURACION_BASE = CONFIGURACION_BASE;
+
 // Cargar configuración (ya no depende de materiales.json)
 function cargarConfiguracion() {
     // Intentar cargar desde localStorage primero
@@ -814,117 +819,54 @@ function cargarConfiguracion() {
     esperarFirebaseYcargar();
 }
 
-// ========== CARGAR COLORES DESDE BASE DE DATOS ==========
+// ========== CARGAR COLORES FIJOS SEGÚN EL PEDIDO ==========
 function cargarColoresDesdeBD() {
     const selectColor = document.getElementById('color_aluminio');
     if (!selectColor) return;
     
-    // Limpiar opciones actuales
+    // Determinar qué colores mostrar según el tipo de pedido actual
+    const tipoPedido = document.getElementById('pedido').value;
+    
+    // Colores por tipo de pedido
+    const coloresPorPedido = {
+        'sistema': [
+            { value: 'natural', label: 'Natural' },
+            { value: 'negro', label: 'Negro' },
+            { value: 'madera', label: 'Madera' }
+        ],
+        'serie80': [
+            { value: 'natural', label: 'Natural' },
+            { value: 'negro', label: 'Negro' },
+            { value: 'negro_brillante', label: 'Negro Brillante' },
+            { value: 'blanco', label: 'Blanco' },
+            { value: 'madera', label: 'Madera' },
+            { value: 'duna', label: 'Duna' }
+        ],
+        'serie60': [
+            { value: 'natural', label: 'Natural' },
+            { value: 'negro', label: 'Negro' },
+            { value: 'madera', label: 'Madera' }
+        ],
+        'serie25': [
+            { value: 'natural', label: 'Natural' },
+            { value: 'negro', label: 'Negro' },
+            { value: 'madera', label: 'Madera' }
+        ]
+    };
+    
+    // Obtener los colores para el pedido actual, o usar los de sistema por defecto
+    const colores = coloresPorPedido[tipoPedido] || coloresPorPedido['sistema'];
+    
     selectColor.innerHTML = '<option value="">-- Seleccionar color --</option>';
     
-    try {
-        const baseDatosItems = localStorage.getItem('baseDatosItems');
-        if (!baseDatosItems) {
-            console.warn('⚠️ No hay datos en baseDatosItems');
-            // Fallback: colores por defecto
-            const coloresFallback = [
-                { value: 'blanco', label: 'Blanco' },
-                { value: 'negro', label: 'Negro' },
-                { value: 'natural', label: 'Natural (Gris)' },
-                { value: 'madera', label: 'Madera' }
-            ];
-            coloresFallback.forEach(c => {
-                const opt = document.createElement('option');
-                opt.value = c.value;
-                opt.textContent = c.label;
-                selectColor.appendChild(opt);
-            });
-            return;
-        }
-        
-        const items = JSON.parse(baseDatosItems);
-        
-        // Extraer colores únicos de varillas (perfiles de aluminio)
-        const coloresMap = new Map(); // value -> { label, count }
-        
-        Object.keys(items).forEach(key => {
-            // Buscar claves que empiecen con "varillas_"
-            if (key.startsWith('varillas_')) {
-                const colorValue = key.replace('varillas_', '');
-                if (items[key] && items[key].length > 0) {
-                    // Buscar el colorTexto más común entre los items de este color
-                    const textos = {};
-                    items[key].forEach(item => {
-                        if (item.colorTexto) {
-                            textos[item.colorTexto] = (textos[item.colorTexto] || 0) + 1;
-                        }
-                    });
-                    // Elegir el texto más frecuente
-                    let mejorTexto = colorValue;
-                    let maxCount = 0;
-                    Object.keys(textos).forEach(t => {
-                        if (textos[t] > maxCount) {
-                            maxCount = textos[t];
-                            mejorTexto = t;
-                        }
-                    });
-                    // Capitalizar primera letra
-                    mejorTexto = mejorTexto.charAt(0).toUpperCase() + mejorTexto.slice(1);
-                    
-                    if (!coloresMap.has(colorValue)) {
-                        coloresMap.set(colorValue, { label: mejorTexto, count: 1 });
-                    } else {
-                        coloresMap.get(colorValue).count++;
-                    }
-                }
-            }
-        });
-        
-        if (coloresMap.size > 0) {
-            // Ordenar alfabéticamente por label
-            const coloresOrdenados = Array.from(coloresMap.entries()).sort((a, b) => 
-                a[1].label.localeCompare(b[1].label)
-            );
-            
-            coloresOrdenados.forEach(([colorValue, info]) => {
-                const opt = document.createElement('option');
-                opt.value = colorValue;
-                opt.textContent = info.label;
-                selectColor.appendChild(opt);
-            });
-            
-            console.log(`✅ Colores cargados desde BD: ${coloresOrdenados.map(([v,i]) => i.label).join(', ')}`);
-        } else {
-            // Fallback si no encuentra varillas
-            const coloresFallback = [
-                { value: 'blanco', label: 'Blanco' },
-                { value: 'negro', label: 'Negro' },
-                { value: 'natural', label: 'Natural (Gris)' },
-                { value: 'madera', label: 'Madera' }
-            ];
-            coloresFallback.forEach(c => {
-                const opt = document.createElement('option');
-                opt.value = c.value;
-                opt.textContent = c.label;
-                selectColor.appendChild(opt);
-            });
-        }
-    } catch (e) {
-        console.warn('⚠️ Error cargando colores desde BD:', e.message);
-        // Fallback
-        const coloresFallback = [
-            { value: 'blanco', label: 'Blanco' },
-            { value: 'negro', label: 'Negro' },
-            { value: 'natural', label: 'Natural (Gris)' },
-            { value: 'madera', label: 'Madera' }
-        ];
-        coloresFallback.forEach(c => {
-            const opt = document.createElement('option');
-            opt.value = c.value;
-            opt.textContent = c.label;
-            selectColor.appendChild(opt);
-        });
-    }
+    colores.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.value;
+        opt.textContent = c.label;
+        selectColor.appendChild(opt);
+    });
+    
+    console.log(`✅ Colores cargados para ${tipoPedido}: ${colores.map(c => c.label).join(', ')}`);
 }
 
 // Función que se ejecuta al cambiar el color
