@@ -88,6 +88,37 @@ function gestionarMateriales() {
         perfilesActuales = perfiles[tipo];
     }
     
+    // ========== BUSCAR PRECIOS DESDE BD SEGÚN COLOR ==========
+    const colorSelect = document.getElementById('color_aluminio');
+    const color = colorSelect ? colorSelect.value : '';
+    let preciosBD = {};
+    let errores = [];
+    
+    if (color) {
+        try {
+            const baseDatosItems = JSON.parse(localStorage.getItem('baseDatosItems') || '{}');
+            const varillasColor = baseDatosItems[`varillas_${color}`] || [];
+            
+            perfilesActuales.forEach(p => {
+                const itemBD = varillasColor.find(item => String(item.codigo) === String(p.c));
+                if (itemBD && itemBD.apk !== undefined && itemBD.apk !== null && itemBD.apk > 0) {
+                    preciosBD[p.c] = itemBD.apk;
+                } else {
+                    errores.push(`⚠️ Falta registrar código ${p.c} (${p.n}) en color ${color}`);
+                }
+            });
+        } catch (e) {
+            console.warn('Error leyendo baseDatosItems:', e.message);
+        }
+    }
+    
+    // Actualizar precios con los de BD
+    perfilesActuales.forEach(p => {
+        if (preciosBD[p.c] !== undefined) {
+            p.p = preciosBD[p.c];
+        }
+    });
+    
     let html = "";
     perfilesActuales.forEach((p, index) => {
         html += `<li class="list-group-item d-flex align-items-center">
@@ -100,7 +131,29 @@ function gestionarMateriales() {
         </li>`;
     });
     document.getElementById('tabla_precios_body').innerHTML = html;
+    
+    // Mostrar errores si hay
+    if (errores.length > 0) {
+        console.warn('⚠️ Sistema - Perfiles faltantes en BD:', errores);
+        const contenedor = document.getElementById('resultados_requeridos');
+        if (contenedor) {
+            let warningDiv = document.getElementById('warning_precios_sistema');
+            if (!warningDiv) {
+                warningDiv = document.createElement('div');
+                warningDiv.id = 'warning_precios_sistema';
+                warningDiv.className = 'alert alert-warning py-1 px-2 mb-2';
+                warningDiv.style.fontSize = '0.75rem';
+                contenedor.parentNode.insertBefore(warningDiv, contenedor);
+            }
+            warningDiv.innerHTML = errores.join('<br>');
+            warningDiv.style.display = 'block';
+        }
+    } else {
+        const warningDiv = document.getElementById('warning_precios_sistema');
+        if (warningDiv) warningDiv.style.display = 'none';
+    }
 }
+
 
 function gestionarVidriosUI() {
     if (!window.configuracionCompleta) return;

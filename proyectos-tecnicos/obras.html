@@ -915,9 +915,15 @@ function cambiarColorAluminio() {
         window.cargarCostosAluminios();
     }
     
+    // Recargar precios de Sistema desde la BD según el color seleccionado
+    if (window.gestionarMateriales) {
+        window.gestionarMateriales();
+    }
+    
     // Actualizar cálculos si es necesario
     if (window.calcularTodo) calcularTodo();
 }
+
 
 
 // ========== INICIALIZAR ==========
