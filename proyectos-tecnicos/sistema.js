@@ -6,12 +6,12 @@ var perfiles = {
         {n: "puente doble corr", c: "5284", p: 10.14},
         {n: "riel inferior", c: "8413", p: 1.86},
         {n: "riel doble", c: "8444", p: 3.51},
-        {n: "u-12", c: "u-12", p: 2.30},
+        {n: "u-12", c: "0012", p: 2.30},
         {n: "perfil H", c: "8220", p: 5.55},
         {n: "portafelpa", c: "8116", p: 0.81},
         {n: "angulo", c: "4104", p: 0.83},
-        {n: "soporte", c: "0000", p: 20.00},
-        {n: "U-13", c: "U-13", p: 2.50}, 
+        {n: "soporte", c: "0001", p: 20.00},
+        {n: "U-13", c: "0013", p: 2.50}, 
         {n: "u bajita", c: "3206", p: 2.00}
     ],
     pesados: [
@@ -25,7 +25,7 @@ var perfiles = {
         {n: "perfil H", c: "8221", p: 6.38},
         {n: "portafelpa", c: "8115", p: 0.85},
         {n: "ángulo", c: "4103", p: 1.02},
-        {n: "soporte", c: "0000", p: 20.00},
+        {n: "soporte", c: "0001", p: 20.00},
         {n: "u-alta", c: "7955", p: 3.00}, 
         {n: "u alta pesada", c: "3009", p: 3.50} 
     ]
