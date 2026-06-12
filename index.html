@@ -4,6 +4,9 @@
     <link rel="manifest" href="manifest.json" />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>TECNI-YA - Red Social</title>
     <style>
         * {
@@ -826,6 +829,7 @@
                     <button id="changePhotoBtn" class="change-photo-btn">📷 Cambiar foto</button>
                     <button id="galleryBtn" class="gallery-btn">📸 Mi Galería</button>
                     <button id="proyectosPanelBtn" class="proyectos-panel-btn">🛠️ Proyectos</button>
+                    <button id="adminPanelBtn" class="proyectos-panel-btn" style="display:none;border-color:#ffd700;color:#ffd700;">👑 Admin</button>
                 </div>
                 <strong id="userNameDisplay">Usuario</strong>
                 <small id="userEmailDisplay" style="color:#999"></small>
@@ -897,8 +901,49 @@
         <button id="deleteMessageBtn">🗑️ Eliminar mensaje</button>
     </div>
 
+    <!-- Modal de Administración -->
+    <div id="adminModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>👑 Administración de Usuarios</h3>
+                <button class="close-modal" id="closeAdminModalBtn">&times;</button>
+            </div>
+            <div style="padding: 20px 24px; overflow-y: auto; max-height: 60vh;">
+                <div id="adminUserList">
+                    <div style="text-align:center;padding:40px;color:#888;">Cargando usuarios...</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="refreshAdminBtn" style="background: #0a84ff;">🔄 Actualizar lista</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Registrar Service Worker para control de caché
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').then((reg) => {
+                    // Detectar cuando hay una nueva versión del Service Worker
+                    reg.addEventListener('updatefound', () => {
+                        const newWorker = reg.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                // Nueva versión disponible - recargar para actualizar
+                                if (confirm('📦 Hay una nueva versión de TECNI-YA disponible. ¿Recargar?')) {
+                                    window.location.reload();
+                                }
+                            }
+                        });
+                    });
+                }).catch(() => {});
+            });
+        }
+    </script>
     <script type="module">
+
         // Configuración de Firebase
+
         const firebaseConfig = {
             apiKey: "AIzaSyB4W_0bdRoL-VnN6FAiSWhnQWNO-fRairc",
             authDomain: "proyecto-libertad-38c2a.firebaseapp.com",
@@ -912,9 +957,12 @@
         
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, updateDoc, collection, query, onSnapshot, addDoc, orderBy, getDoc, arrayUnion, arrayRemove, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, updateDoc, collection, query, onSnapshot, addDoc, orderBy, getDoc, getDocs, arrayUnion, arrayRemove, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
         import { getStorage, ref, uploadBytes, getDownloadURL, listAll, deleteObject } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-storage.js";
         import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-messaging.js";
+        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-functions.js";
+
         
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -922,6 +970,9 @@
         const storage = getStorage(app);
         const messaging = getMessaging(app);
         const googleProvider = new GoogleAuthProvider();
+        const functions = getFunctions(app);
+        const eliminarUsuarioFn = httpsCallable(functions, 'eliminarUsuario');
+
         
         // Elementos DOM
         const loginContainer = document.getElementById('loginContainer');
@@ -1770,13 +1821,108 @@
             }
         });
         
+        // ===== ADMINISTRACIÓN DE USUARIOS =====
+        const adminPanelBtn = document.getElementById('adminPanelBtn');
+        const adminModal = document.getElementById('adminModal');
+        const closeAdminModalBtn = document.getElementById('closeAdminModalBtn');
+        const adminUserList = document.getElementById('adminUserList');
+        const refreshAdminBtn = document.getElementById('refreshAdminBtn');
+        
+        let esAdmin = false;
+        
+        async function verificarAdmin(uid) {
+            try {
+                const userRef = doc(db, "usuarios", uid);
+                const userSnap = await getDoc(userRef);
+                if (userSnap.exists() && userSnap.data().esAdmin === true) {
+                    esAdmin = true;
+                    adminPanelBtn.style.display = 'block';
+                } else {
+                    esAdmin = false;
+                    adminPanelBtn.style.display = 'none';
+                }
+            } catch (e) {
+                esAdmin = false;
+                adminPanelBtn.style.display = 'none';
+            }
+        }
+        
+        async function cargarUsuariosAdmin() {
+            adminUserList.innerHTML = '<div style="text-align:center;padding:40px;color:#888;">Cargando usuarios...</div>';
+            try {
+                const q = query(collection(db, "usuarios"));
+                const snapshot = await getDocs(q);
+                const usuarios = [];
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    if (data.uid !== currentUser?.uid) usuarios.push(data);
+                });
+                
+                if (usuarios.length === 0) {
+                    adminUserList.innerHTML = '<div style="text-align:center;padding:40px;color:#888;">No hay otros usuarios registrados</div>';
+                    return;
+                }
+                
+                adminUserList.innerHTML = usuarios.map(u => `
+                    <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:20px;margin-bottom:8px;background:rgba(30,30,35,0.8);border:1px solid rgba(255,255,255,0.05);">
+                        <img src="${u.fotoURL || 'https://ui-avatars.com/api/?background=444&color=fff&name=' + encodeURIComponent(u.nombre || u.email)}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-weight:600;color:#fff;font-size:14px;">${escapeHtml(u.nombre || u.email)}</div>
+                            <div style="font-size:11px;color:#888;">${u.email || ''} ${u.online ? '🟢' : '⚫'}</div>
+                        </div>
+                        <button class="admin-delete-btn" data-uid="${u.uid}" data-nombre="${escapeHtml(u.nombre || u.email)}" style="background:#ff3b30;padding:6px 12px;font-size:11px;white-space:nowrap;">🗑️ Eliminar</button>
+                    </div>
+                `).join('');
+                
+                document.querySelectorAll('.admin-delete-btn').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        const uid = btn.dataset.uid;
+                        const nombre = btn.dataset.nombre;
+                        if (confirm(`¿Eliminar a "${nombre}"?\nSe borrará de Authentication, Firestore y sus datos.`)) {
+                            if (confirm(`⚠️ ¿Estás SEGURO? Esta acción no se puede deshacer.`)) {
+                                btn.textContent = 'Eliminando...';
+                                btn.disabled = true;
+                                try {
+                                    const result = await eliminarUsuarioFn({ uid: uid });
+                                    showSuccess(`✅ Usuario "${nombre}" eliminado correctamente`);
+                                    btn.textContent = '✅ Eliminado';
+                                    btn.disabled = true;
+                                    setTimeout(() => cargarUsuariosAdmin(), 2000);
+                                } catch (error) {
+                                    const mensaje = error?.message || 'Error al eliminar usuario';
+                                    showError(`❌ ${mensaje}`);
+                                    btn.textContent = '🗑️ Eliminar';
+                                    btn.disabled = false;
+                                }
+
+                            }
+                        }
+                    });
+                });
+            } catch (e) {
+                adminUserList.innerHTML = '<div style="text-align:center;padding:40px;color:#ff6b6b;">Error al cargar usuarios</div>';
+            }
+        }
+        
+        adminPanelBtn.addEventListener('click', () => {
+            adminModal.classList.add('active');
+            cargarUsuariosAdmin();
+        });
+        
+        closeAdminModalBtn.addEventListener('click', () => adminModal.classList.remove('active'));
+        adminModal.addEventListener('click', (e) => { if (e.target === adminModal) adminModal.classList.remove('active'); });
+        refreshAdminBtn.addEventListener('click', cargarUsuariosAdmin);
+        
         onAuthStateChanged(auth, async (user) => {
+
             if (user) {
                 currentUser = user;
                 // Guardar UID en localStorage para que base-datos-v2.html lo use
                 localStorage.setItem('tecniya_uid', user.uid);
                 const fotoActual = await guardarUsuarioOnline(user);
+                await verificarAdmin(user.uid);
                 loginContainer.classList.add('hidden');
+
                 mainContainer.classList.remove('hidden');
                 const nombreMostrar = user.displayName || user.email.split('@')[0];
                 userNameDisplay.textContent = nombreMostrar;

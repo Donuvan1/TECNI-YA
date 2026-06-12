@@ -99,3 +99,58 @@ exports.pushMensajeNuevo = functions.firestore
       return null;
     }
   });
+
+/**
+ * Cloud Function para eliminar un usuario (solo admin)
+ * Llamada desde el frontend: https://us-central1-proyecto-libertad-38c2a.cloudfunctions.net/eliminarUsuario
+ */
+exports.eliminarUsuario = functions.https.onCall(async (data, context) => {
+  // Verificar que el usuario que llama está autenticado
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'Debes iniciar sesión');
+  }
+
+  const adminUid = context.auth.uid;
+  const uidAEliminar = data.uid;
+
+  if (!uidAEliminar) {
+    throw new functions.https.HttpsError('invalid-argument', 'Se requiere el UID del usuario a eliminar');
+  }
+
+  // Verificar que quien llama es admin
+  const adminRef = admin.firestore().doc(`usuarios/${adminUid}`);
+  const adminSnap = await adminRef.get();
+
+  if (!adminSnap.exists || adminSnap.data().esAdmin !== true) {
+    throw new functions.https.HttpsError('permission-denied', 'No tienes permisos de administrador');
+  }
+
+  // No permitir eliminarse a sí mismo
+  if (adminUid === uidAEliminar) {
+    throw new functions.https.HttpsError('invalid-argument', 'No puedes eliminarte a ti mismo');
+  }
+
+  try {
+    // 1. Eliminar de Authentication
+    await admin.auth().deleteUser(uidAEliminar);
+    console.log(`✅ Usuario ${uidAEliminar} eliminado de Authentication`);
+
+    // 2. Eliminar documento de Firestore (colección "usuarios")
+    await admin.firestore().doc(`usuarios/${uidAEliminar}`).delete();
+    console.log(`✅ Documento de ${uidAEliminar} eliminado de Firestore`);
+
+    // 3. Eliminar base de datos del usuario (colección "baseDatosV2")
+    const baseDatosRef = admin.firestore().doc(`baseDatosV2/${uidAEliminar}`);
+    const baseDatosSnap = await baseDatosRef.get();
+    if (baseDatosSnap.exists) {
+      await baseDatosRef.delete();
+      console.log(`✅ Base de datos de ${uidAEliminar} eliminada`);
+    }
+
+    return { success: true, mensaje: `Usuario eliminado correctamente` };
+  } catch (error) {
+    console.error(`❌ Error al eliminar usuario ${uidAEliminar}:`, error);
+    throw new functions.https.HttpsError('internal', 'Error al eliminar el usuario');
+  }
+});
+

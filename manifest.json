@@ -2,8 +2,9 @@
   "name": "TECNI-YA",
   "short_name": "TECNI-YA",
   "description": "Red social para conectar y chatear",
-  "start_url": "https://proyecto-libertad-38c2a.web.app",
-  "scope": "https://proyecto-libertad-38c2a.web.app",
+  "start_url": ".",
+  "scope": ".",
+
   "display": "standalone",
   "theme_color": "#0a84ff",
   "background_color": "#0a0a0a",
