@@ -735,22 +735,26 @@ function cargarConfiguracion() {
         console.log('Configuración cargada desde base hardcodeada');
     }
     
-    // ========== CARGAR VIDRIOS DESDE FIRESTORE ==========
-    async function cargarVidriosDesdeFirestore() {
+    // ========== CARGAR DATOS DESDE FIRESTORE (varillas + vidrios) ==========
+    async function cargarTodoDesdeFirestore() {
         try {
             const db = window.db;
             const auth = window.auth || window.firebaseAuth;
-            if (!db || !auth) { cargarVidriosDesdeLocalStorage(); return; }
+            if (!db || !auth) { cargarTodoDesdeLocalStorage(); return; }
             
             const user = auth.currentUser;
-            if (!user) { cargarVidriosDesdeLocalStorage(); return; }
+            if (!user) { cargarTodoDesdeLocalStorage(); return; }
             
             const usuarioUID = localStorage.getItem('tecniya_uid') || user.uid;
-            // Usar sintaxis modular de Firebase v11
             const docSnap = await window.getDoc(window.doc(db, 'baseDatosV2', usuarioUID));
             if (docSnap.exists() && docSnap.data().items) {
                 const items = docSnap.data().items;
-                // Buscar SOLO en la categoría 'planchas_general' (donde se guardan los vidrios/planchas)
+                
+                // 1️⃣ GUARDAR TODAS LAS VARILLAS en localStorage para que sistema.js y serie80.js las usen
+                localStorage.setItem('baseDatosItems', JSON.stringify(items));
+                console.log('✅ Varillas cargadas desde Firestore a localStorage');
+                
+                // 2️⃣ Cargar vidrios/planchas desde los items
                 let vidriosBD = [];
                 const clavePlanchas = 'planchas_general';
                 if (items[clavePlanchas] && Array.isArray(items[clavePlanchas])) {
@@ -769,22 +773,25 @@ function cargarConfiguracion() {
                     if (configuracionCompleta.serie80) configuracionCompleta.serie80.vidrios = vidriosBD;
                     if (configuracionCompleta.serie60) configuracionCompleta.serie60.vidrios = vidriosBD;
                     console.log(`✅ Vidrios cargados desde Firestore (${vidriosBD.length} items)`);
-                    return;
                 }
+                return;
             }
-            cargarVidriosDesdeLocalStorage();
+            cargarTodoDesdeLocalStorage();
         } catch (e) {
             console.warn('⚠️ Error Firestore, usando localStorage:', e.message);
-            cargarVidriosDesdeLocalStorage();
+            cargarTodoDesdeLocalStorage();
         }
     }
     
-    function cargarVidriosDesdeLocalStorage() {
+    function cargarTodoDesdeLocalStorage() {
         const baseDatosItems = localStorage.getItem('baseDatosItems');
-        if (!baseDatosItems) return;
+        if (!baseDatosItems) {
+            console.warn('⚠️ No hay datos en localStorage. Ve a "Base de Datos" para cargarlos primero.');
+            return;
+        }
         try {
             const items = JSON.parse(baseDatosItems);
-            // Buscar SOLO en la categoría 'planchas_general' (donde se guardan los vidrios/planchas)
+            // Cargar vidrios/planchas desde localStorage
             let vidriosBD = [];
             const clavePlanchas = 'planchas_general';
             if (items[clavePlanchas] && Array.isArray(items[clavePlanchas])) {
@@ -810,14 +817,15 @@ function cargarConfiguracion() {
     function esperarFirebaseYcargar() {
         if (window.db && window.auth) {
             window.auth.onAuthStateChanged(user => {
-                if (user) cargarVidriosDesdeFirestore();
-                else cargarVidriosDesdeLocalStorage();
+                if (user) cargarTodoDesdeFirestore();
+                else cargarTodoDesdeLocalStorage();
             });
         } else {
             setTimeout(esperarFirebaseYcargar, 500);
         }
     }
     esperarFirebaseYcargar();
+
 }
 
 // ========== CARGAR COLORES FIJOS SEGÚN EL PEDIDO ==========
